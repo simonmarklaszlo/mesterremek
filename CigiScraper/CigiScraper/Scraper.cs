@@ -8,29 +8,70 @@ public partial class Scraper
 {
     public const string BaseUrl = "https://nemzetidohanyboltkereso.hu/trafik-lista";
     private readonly string _baseUrl;
+    private bool _throwOnNetCall;
     public Scraper(string baseUrl = BaseUrl)
     {
         _baseUrl = baseUrl;
     }
 
-    public async Task<Bolt[]> ScrapeFull()
+    public async Task<Bolt[]> ScrapeFullHybrid(string[]? pageUrls = null)
     {
+        _throwOnNetCall = false;
         var mainRes = await GetUrlsFromMainPage();
-        //  var tasks = mainRes.Select(GetBoltsFromLocation);
-        //
-        //  var bolts = await Task.WhenAll(tasks);
-        //
-        // return bolts.SelectMany(x => x).ToArray();
 
-        List<Bolt> bolts = [];
-        //int i = 0;
-        foreach (var url in mainRes)
+        List<string> urls = [];
+
+        if (pageUrls is null)
         {
-            //if(i++ == 100)break;
-            var res = (await GetBoltsFromLocation(url)).ToArray();
-            bolts.AddRange(res);
+            foreach (var url in mainRes)
+            {
+                urls.AddRange(await GetBoltUrlsFromLocation(url));
+            }
         }
-        return bolts.ToArray();
+        else
+        {
+            urls = pageUrls.ToList();
+        }
+
+        await LocalCache.SavePageUrls(urls.ToArray());
+
+        List<Bolt> bolt = [];
+        foreach (var pageUrl in urls)
+        {
+            bolt.Add(await ParseBoltFromPage(pageUrl));
+        }
+
+        return bolt.ToArray();
+    }
+
+    public async Task<Bolt[]> ScrapeFromCache()
+    {
+        _throwOnNetCall = true;
+
+        var urls = await LocalCache.GetPageUrls();
+        if (urls.Length == 0)
+        {
+            try
+            {
+                var midUrls = await GetUrlsFromMainPage();
+
+                var t1 = midUrls.Select(GetBoltUrlsFromLocation).ToArray();
+                var r1 = await Task.WhenAll(t1);
+                urls = r1.SelectMany(x => x).ToArray();
+
+                await LocalCache.SavePageUrls(urls);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return [];
+            }
+        }
+        var tasks = urls.Select(ParseBoltFromPage).ToArray();
+        var res = await Task.WhenAll(tasks);
+
+        _throwOnNetCall = false;
+        return res;
     }
 
     /// <summary>
@@ -39,7 +80,7 @@ public partial class Scraper
     /// </summary>
     /// <param name="bolts">An array of <see cref="Bolt"/> objects, potentially containing errors that need to be fixed.</param>
     /// <returns>A tuple containing the count of fixed errors and the count of remaining unrepaired errors.</returns>
-    public static async Task<(int fixedCount, int remainingErrors)> RepairErrors(Bolt[] bolts)
+    public async Task<(int fixedCount, int remainingErrors)> RepairErrors(Bolt[] bolts)
     {
         await LocalCache.Clean();
 
@@ -59,7 +100,7 @@ public partial class Scraper
         return (fixedCount,errorCount-fixedCount);
     }
 
-    public static async Task<(int fixedCount, int remainingErrors)> RepairErrorsWithRetries(Bolt[] bolts, int retries = 1)
+    public async Task<(int fixedCount, int remainingErrors)> RepairErrorsWithRetries(Bolt[] bolts, int retries = 1)
     {
         if (retries < 1) retries = 1;
         int initialErrorCount = -1;
@@ -118,7 +159,7 @@ public partial class Scraper
         return urls;
     }
 
-    private static async Task<IEnumerable<Bolt>> GetBoltsFromLocation(string url)
+    private async Task<IEnumerable<string>> GetBoltUrlsFromLocation(string url)
     {
         Console.WriteLine($"[Location] Starting : {url}");
 
@@ -140,14 +181,11 @@ public partial class Scraper
             return [];
         }
 
-        var urls = nodes.Select(x => x.GetAttributeValue("href", ""));
-        var tasks = urls.Select(ParseBoltFromPage);
-        var res = await Task.WhenAll(tasks);
         Console.WriteLine($"[Location] Finished : {url}");
-        return res;
+        return nodes.Select(x => x.GetAttributeValue("href", ""));
     }
 
-    private static async Task<Bolt> ParseBoltFromPage(string url)
+    private async Task<Bolt> ParseBoltFromPage(string url)
     {
         Console.WriteLine($"[Bolt] Starting : {url}");
 
@@ -200,12 +238,7 @@ public partial class Scraper
         var (lat, lon) = GetCoordinates(scriptNode);
 
         Console.WriteLine($"[Bolt] Finished : {url}");
-        var b = new Bolt(url, lon, lat, locality, street, nyitvatartasok);
-        if (b.HasError)
-        {
-            Console.WriteLine($"Full error : {b.GetErrorString()}");
-        }
-        return b;
+        return new Bolt(url, lon, lat, locality, street, nyitvatartasok);;
     }
 
     private static Nyitvatartas[] GetNyitvatartasok(HtmlNodeCollection? nodes)
@@ -250,8 +283,18 @@ public partial class Scraper
 
         return (double.NaN, double.NaN);
     }
-    private static async Task<string> GetHtml(string url, bool save = true)
+    private async Task<string> GetHtml(string url, bool save = true)
     {
+        if (_throwOnNetCall)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[NET CALL] Not allowed");
+            throw new Exception("Not allowed to make a network call.");
+        }
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[NET CALL] {url}");
+        Console.ResetColor();
+
         var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(url);
         var htmlString = await response.Content.ReadAsStringAsync();

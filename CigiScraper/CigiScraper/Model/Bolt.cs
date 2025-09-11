@@ -34,23 +34,31 @@ public class Bolt
     {
         return $"{Longitude};{Latitude};{Location};{Street};{Nyitvatartas.ToCsvLine(Nyitvatartasok)}";
     }
-    public string GetErrorString()
+
+    public bool EqualsCoordinates(Bolt other)
     {
-        if (Error is BoltError.None) return "None";
-        var errorString = "";
-        if ((Error & BoltError.Longitude) != 0) errorString += "Longitude, ";
-        if ((Error & BoltError.Latitude) != 0) errorString += "Latitude, ";
-        if ((Error & BoltError.Location) != 0) errorString += "Location, ";
-        if ((Error & BoltError.Street) != 0) errorString += "Street, ";
-        if ((Error & BoltError.Nyitvatartasok) != 0) errorString += "Nyitvatartasok, ";
-        return errorString.TrimEnd(',', ' ');
+        const double tolerance = 0.1;
+        return Math.Abs(Longitude - other.Longitude) < tolerance &&
+               Math.Abs(Latitude - other.Latitude) < tolerance;
     }
     public override string ToString()
     {
         return $"{Location}, {Street}";
     }
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Bolt other) return false;
+        return EqualsCoordinates(other) &&
+               Location == other.Location &&
+               Street == other.Street &&
+               Nyitvatartasok.SequenceEqual(other.Nyitvatartasok);
+    }
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Url, Longitude, Latitude, Location, Street, Nyitvatartasok, (int)Error);
+    }
 
-    public static BoltError CheckFullError(double longitude, double latitude, string location, string street, Nyitvatartas[] nyitvatartasok)
+    private static BoltError CheckFullError(double longitude, double latitude, string location, string street, Nyitvatartas[] nyitvatartasok)
     {
         var error = BoltError.None;
 
@@ -70,39 +78,6 @@ public class Bolt
             error |= BoltError.Nyitvatartasok;
 
         return error;
-    }
-
-    public bool Equals(Bolt? other)
-    {
-        if (other is null) return false;
-
-        return Math.Abs(Longitude - other.Longitude) < 0.1 &&
-               Math.Abs(Latitude - other.Latitude) < 0.1 &&
-               Location == other.Location &&
-               Street == other.Street &&
-               Nyitvatartasok.SequenceEqual(other.Nyitvatartasok);
-    }
-
-    public override bool Equals(object? obj) => Equals(obj as Bolt);
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            int hash = 17;
-            hash = hash * 23 + Longitude.GetHashCode();
-            hash = hash * 23 + Latitude.GetHashCode();
-            hash = hash * 23 + Location.GetHashCode();
-            hash = hash * 23 + Street.GetHashCode();
-
-            if (Nyitvatartasok != null)
-            {
-                foreach (var n in Nyitvatartasok)
-                    hash = hash * 23 + n.GetHashCode();
-            }
-
-            return hash;
-        }
     }
 }
 

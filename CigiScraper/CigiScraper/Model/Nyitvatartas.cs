@@ -24,7 +24,7 @@ public class Nyitvatartas
             }
             else
             {
-                str += $"{nyitvatartas.Day}-{nyitvatartas.Idotartam!.Opening}:{nyitvatartas.Idotartam.Closing}|";
+                str += $"{nyitvatartas.Day} {nyitvatartas.Idotartam!.Opening}-{nyitvatartas.Idotartam.Closing}|";
             }
         }
         return str.TrimEnd('|');

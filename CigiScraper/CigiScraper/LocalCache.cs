@@ -7,7 +7,7 @@ namespace CigiScraper;
 public static class LocalCache
 {
     private const string DirectoryPath = "./saves/";
-
+    private const string UrlsFName = "urls.txt";
     static LocalCache()
     {
         Directory.CreateDirectory(DirectoryPath);
@@ -15,12 +15,20 @@ public static class LocalCache
 
     public static async Task Clean()
     {
+        Console.WriteLine("[CACHE] Cleaning");
+        if (!Directory.Exists(DirectoryPath))
+        {
+            Console.WriteLine("[CACHE] Directory does not exist.");
+            return;
+        }
         var files = Directory.GetFiles(DirectoryPath);
 
         var tasks = files.Select(DeleteIfIncorrect);
+        Console.WriteLine("[CLEAN] Checking");
         var res = await Task.WhenAll(tasks);
         var deleted = res.Count(x => x);
-        Console.WriteLine($"[CACHE] Deleted {deleted} incorrect files");
+        if (deleted != 0) Console.WriteLine($"[CACHE] Deleted {deleted} incorrect files");
+        Console.WriteLine("[CACHE] Cleaned");
     }
 
     /// <summary>
@@ -30,6 +38,11 @@ public static class LocalCache
     /// <returns>True if the file was deleted</returns>
     private static async Task<bool> DeleteIfIncorrect(string path)
     {
+        const int kb = 1024;
+        var fileSize = new FileInfo(path).Length;
+
+        if (fileSize > kb*10) return false;
+
         var htmlString = await File.ReadAllTextAsync(path);
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(htmlString);
@@ -51,10 +64,23 @@ public static class LocalCache
         return await File.ReadAllTextAsync(hash);
     }
 
-    public static async Task SavePage(string url, string content)
+    public static Task SavePage(string url, string content)
     {
         var hash = GetPath(url);
-        await File.WriteAllTextAsync(hash, content);
+        return File.WriteAllTextAsync(hash, content);
+    }
+
+    public static Task SavePageUrls(string[] urls)
+    {
+        var path = Path.Combine(DirectoryPath, UrlsFName);
+        return File.WriteAllLinesAsync(path, urls);
+    }
+
+    public static Task<string[]> GetPageUrls()
+    {
+        var path = Path.Combine(DirectoryPath, UrlsFName);
+        if (!File.Exists(path)) return Task.FromResult(Array.Empty<string>());
+        return File.ReadAllLinesAsync(path);
     }
 
     private static string GetPath(string url)
