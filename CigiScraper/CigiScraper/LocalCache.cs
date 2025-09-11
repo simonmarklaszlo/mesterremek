@@ -31,6 +31,22 @@ public static class LocalCache
         Console.WriteLine("[CACHE] Cleaned");
     }
 
+    public static void Detete()
+    {
+        Console.WriteLine("[CACHE] Deleting");
+
+        if (Directory.Exists(DirectoryPath))
+        {
+            var files = Directory.GetFiles(DirectoryPath);
+            foreach (var file in files)
+            {
+                File.Delete(file);
+            }
+        }
+
+        Console.WriteLine("[CACHE] Deleted");
+    }
+
     /// <summary>
     /// Deletes cached page if it's an error page.'
     /// </summary>

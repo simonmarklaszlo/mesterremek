@@ -1,12 +1,11 @@
-﻿using System.Text;
-using CigiScraper;
+﻿using CigiScraper;
 using CigiScraper.Model;
 
 await ReadBack();
 
 return;
 
-async Task ScrapeDefault()
+async Task ScrapeDefault(bool eraseCacheAfter)
 {
     await LocalCache.Clean();
 
@@ -51,6 +50,8 @@ async Task ScrapeDefault()
     Console.WriteLine($"{"Total Fatal Data Count",-30}{fatalData.Length}");
     Console.ResetColor();
     Console.WriteLine("===============");
+
+    if (eraseCacheAfter) LocalCache.Detete();
 }
 
 async Task ReadBack()
