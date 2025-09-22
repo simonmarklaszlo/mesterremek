@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using CigiScraper.Model;
+using CigiScraper.Model.Shop;
+using CigiScraper.Model.Time;
 using HtmlAgilityPack;
 
 namespace CigiScraper;
@@ -14,7 +16,7 @@ public partial class Scraper
         _baseUrl = baseUrl;
     }
 
-    public async Task<Bolt[]> ScrapeFullHybrid(string[]? pageUrls = null)
+    public async Task<UnofficialShop[]> ScrapeFullHybrid(string[]? pageUrls = null)
     {
         _throwOnNetCall = false;
         var mainRes = await GetUrlsFromMainPage();
@@ -35,7 +37,7 @@ public partial class Scraper
 
         await LocalCache.SavePageUrls(urls.ToArray());
 
-        List<Bolt> bolt = [];
+        List<UnofficialShop> bolt = [];
         foreach (var pageUrl in urls)
         {
             bolt.Add(await ParseBoltFromPage(pageUrl));
@@ -44,7 +46,7 @@ public partial class Scraper
         return bolt.ToArray();
     }
 
-    public async Task<Bolt[]> ScrapeFromCache()
+    public async Task<UnofficialShop[]> ScrapeFromCache()
     {
         _throwOnNetCall = true;
 
@@ -78,9 +80,9 @@ public partial class Scraper
     /// Attempts to repair errors in the provided array by re-parsing.
     /// Returns the count of successfully repaired bolts and the count of remaining unrepaired errors after the process.
     /// </summary>
-    /// <param name="bolts">An array of <see cref="Bolt"/> objects, potentially containing errors that need to be fixed.</param>
+    /// <param name="bolts">An array of <see cref="UnofficialShop"/> objects, potentially containing errors that need to be fixed.</param>
     /// <returns>A tuple containing the count of fixed errors and the count of remaining unrepaired errors.</returns>
-    public async Task<(int fixedCount, int remainingErrors)> RepairErrors(Bolt[] bolts)
+    public async Task<(int fixedCount, int remainingErrors)> RepairErrors(UnofficialShop[] bolts)
     {
         await LocalCache.Clean();
 
@@ -100,7 +102,7 @@ public partial class Scraper
         return (fixedCount,errorCount-fixedCount);
     }
 
-    public async Task<(int fixedCount, int remainingErrors)> RepairErrorsWithRetries(Bolt[] bolts, int retries = 1)
+    public async Task<(int fixedCount, int remainingErrors)> RepairErrorsWithRetries(UnofficialShop[] bolts, int retries = 1)
     {
         if (retries < 1) retries = 1;
         int initialErrorCount = -1;
@@ -185,7 +187,7 @@ public partial class Scraper
         return nodes.Select(x => x.GetAttributeValue("href", ""));
     }
 
-    private async Task<Bolt> ParseBoltFromPage(string url)
+    private async Task<UnofficialShop> ParseBoltFromPage(string url)
     {
         Console.WriteLine($"[Bolt] Starting : {url}");
 
@@ -238,16 +240,16 @@ public partial class Scraper
         var (lat, lon) = GetCoordinates(scriptNode);
 
         Console.WriteLine($"[Bolt] Finished : {url}");
-        return new Bolt(url, lon, lat, locality, street, nyitvatartasok);;
+        return new UnofficialShop(url, lon, lat, locality, street, nyitvatartasok);;
     }
 
-    private static Nyitvatartas[] GetNyitvatartasok(HtmlNodeCollection? nodes)
+    private static OpeningSchedule[] GetNyitvatartasok(HtmlNodeCollection? nodes)
     {
         if (nodes is null) return [];
 
         var timeNodesArr = nodes.Where(x => x.Name is "dd" or "dt").ToArray();
 
-        List<Nyitvatartas> nyitvatartasok = [];
+        List<OpeningSchedule> nyitvatartasok = [];
         for (int i = 0; i < timeNodesArr.Length; i += 2)
         {
             var day = timeNodesArr[i].InnerText.Trim();
@@ -260,12 +262,12 @@ public partial class Scraper
                 hours[0] = hours[0].Replace('.',':');
                 hours[1] = hours[1].Replace('.',':');
 
-                var ido = new Idotartam(hours[0], hours[1]);
-                nyitvatartasok.Add(new Nyitvatartas(day,ido));
+                var ido = new OpeningHours(hours[0], hours[1]);
+                nyitvatartasok.Add(new OpeningSchedule(day,ido));
             }
             else
             {
-                nyitvatartasok.Add(new Nyitvatartas(day));
+                nyitvatartasok.Add(new OpeningSchedule(day));
             }
         }
 

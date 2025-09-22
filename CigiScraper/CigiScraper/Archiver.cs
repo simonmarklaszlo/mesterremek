@@ -1,4 +1,6 @@
 using CigiScraper.Model;
+using CigiScraper.Model.Shop;
+using CigiScraper.Model.Time;
 
 namespace CigiScraper;
 
@@ -19,7 +21,7 @@ public class Archiver
         }
     }
 
-    public async Task ArchiveToCsv(string fileName, Bolt[] bolts)
+    public async Task ArchiveToCsv(string fileName, UnofficialShop[] bolts)
     {
         Console.WriteLine($"[ARCHIVER] Writing : {fileName}");
         await using var writer = new StreamWriter(Path.Combine(_dirPath, fileName));
@@ -31,7 +33,7 @@ public class Archiver
         Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
     }
 
-    public async Task ArchiveCoordsToCsv(string fileName, Bolt[] bolts)
+    public async Task ArchiveCoordsToCsv(string fileName, UnofficialShop[] bolts)
     {
         Console.WriteLine($"[ARCHIVER] Writing : {fileName}");
         await using var writer = new StreamWriter(Path.Combine(_dirPath, fileName));
@@ -43,13 +45,25 @@ public class Archiver
         Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
     }
 
-    public async Task<Bolt[]> ReadBackFromArchive(string fileName)
+    public async Task ArchiveToCsv(string fileName, MixedShop[] bolts)
+    {
+        Console.WriteLine($"[ARCHIVER] Writing : {fileName}");
+        await using var writer = new StreamWriter(Path.Combine(_dirPath, fileName));
+        foreach (var bolt in bolts)
+        {
+            await writer.WriteLineAsync(bolt.ToCsvLine());
+        }
+
+        Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
+    }
+
+    public async Task<UnofficialShop[]> ReadBackFromArchive(string fileName)
     {
         var path = Path.Combine(_dirPath, fileName);
         if (!File.Exists(path)) return [];
 
         var lines = await File.ReadAllLinesAsync(path);
-        Bolt[] bolts = new Bolt[lines.Length];
+        UnofficialShop[] bolts = new UnofficialShop[lines.Length];
 
         for (var i = 0; i < lines.Length; i++)
         {
@@ -61,24 +75,24 @@ public class Archiver
             double latitude = latSucc ? lat : double.NaN;
             string location = split[2];
             string street = split[3];
-            Nyitvatartas[] nyitvatartasok = ParseNyitvatartasok(split[4]);
-            bolts[i] = new Bolt("", longitude, latitude, location, street, nyitvatartasok);
+            OpeningSchedule[] nyitvatartasok = ParseNyitvatartasok(split[4]);
+            bolts[i] = new UnofficialShop("", longitude, latitude, location, street, nyitvatartasok);
         }
 
         return bolts;
 
-        Nyitvatartas[] ParseNyitvatartasok(string str)
+        OpeningSchedule[] ParseNyitvatartasok(string str)
         {
             if (string.IsNullOrEmpty(str)) return [];
 
             var split = str.Split('|');
             if (split.Length == 0) return [];
-            List<Nyitvatartas> ny = [];
+            List<OpeningSchedule> ny = [];
             foreach (var day in split)
             {
                 var s = day.Split(' ');
                 string dayName = s[0];
-                Idotartam? nyitvatartas = null;
+                OpeningHours? nyitvatartas = null;
 
                 if (s.Length == 2)
                 {
@@ -86,11 +100,11 @@ public class Archiver
 
                     if (hoursSplit.Length == 2)
                     {
-                        nyitvatartas = new Idotartam(hoursSplit[0], hoursSplit[1]);
+                        nyitvatartas = new OpeningHours(hoursSplit[0], hoursSplit[1]);
                     }
                 }
 
-                ny.Add(new Nyitvatartas(dayName, nyitvatartas));
+                ny.Add(new OpeningSchedule(dayName, nyitvatartas));
             }
 
             return ny.ToArray();

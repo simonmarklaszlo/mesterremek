@@ -1,7 +1,9 @@
 ﻿using CigiScraper;
 using CigiScraper.Model;
+using CigiScraper.Model.Place;
+using CigiScraper.Model.Shop;
 
-await ReadBack();
+await CreateComplete();
 
 return;
 
@@ -11,7 +13,7 @@ async Task ScrapeDefault(bool eraseCacheAfter)
 
     var scraper = new Scraper();
     var res = await scraper.ScrapeFullHybrid();
-    Bolt?[] resNullable = res.Select(Bolt? (x) => x).ToArray();
+    UnofficialShop?[] resNullable = res.Select(UnofficialShop? (x) => x).ToArray();
     for (var i = 0; i < resNullable.Length; i++)
     {
         for (var j = 0; j < resNullable.Length; j++)
@@ -22,7 +24,7 @@ async Task ScrapeDefault(bool eraseCacheAfter)
         }
     }
 
-    Bolt[] distinct = resNullable.OfType<Bolt>().ToArray();
+    UnofficialShop[] distinct = resNullable.OfType<UnofficialShop>().ToArray();
 
 
     var completeData = distinct.Where(x => !x.HasError).ToArray();
@@ -54,7 +56,7 @@ async Task ScrapeDefault(bool eraseCacheAfter)
     if (eraseCacheAfter) LocalCache.Detete();
 }
 
-async Task ReadBack()
+async Task ReadFromArchive()
 {
     var archiver = new Archiver("archive");
     var full = await archiver.ReadBackFromArchive("full.csv");
@@ -71,4 +73,42 @@ async Task ReadBack()
     Console.WriteLine($"{"Total Fatal Data Count",-30}{fatal.Length}");
     Console.ResetColor();
     Console.WriteLine("===============");
+}
+
+async Task<UnofficialShop[]> GetUnofficialFull()
+{
+    var archiver = new Archiver("archive");
+    return await archiver.ReadBackFromArchive("full.csv");
+}
+
+async Task<OfficialShop[]> GetOfficialMapped()
+{
+    var postal = PostalLocation.ParseFile("indata/postalcodes.csv");
+    var officialShops = OfficialShop.ParseFile("indata/official_bolt.csv");
+
+    await Task.WhenAll(postal, officialShops);
+
+    var postalData = postal.Result;
+    var officialData = officialShops.Result;
+
+    officialData.MapTo(postalData);
+
+    //var unmapped = officialData.Where(x => x.PostalLocation is null).ToArray();
+
+    return officialData.Where(x => x.PostalLocation is not null).ToArray();
+}
+
+async Task CreateComplete()
+{
+    var ot = GetOfficialMapped();
+    var ut = GetUnofficialFull();
+    await Task.WhenAll(ot, ut);
+
+    var official = ot.Result;
+    var unofficial = ut.Result;
+
+    var res = official.MixWith(unofficial);
+
+    var archiver = new Archiver("archive");
+    await archiver.ArchiveToCsv("mixed.csv", res);
 }
