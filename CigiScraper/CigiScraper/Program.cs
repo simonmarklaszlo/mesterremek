@@ -83,7 +83,7 @@ async Task<UnofficialShop[]> GetUnofficialFull()
 
 async Task<OfficialShop[]> GetOfficialMapped()
 {
-    var postal = PostalLocation.ParseFile("indata/postalcodes.csv");
+    var postal = PostalLocation.ParseFile("indata/iranyitoszamok.csv");
     var officialShops = OfficialShop.ParseFile("indata/official_bolt.csv");
 
     await Task.WhenAll(postal, officialShops);
