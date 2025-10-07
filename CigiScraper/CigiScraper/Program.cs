@@ -1,9 +1,14 @@
 ﻿using CigiScraper;
+using CigiScraper.Db;
 using CigiScraper.Model;
 using CigiScraper.Model.Place;
 using CigiScraper.Model.Shop;
 
 var comp = await CreateComplete();
+
+await DbUploader.Upload(comp);
+
+
 
 return;
 
@@ -138,7 +143,7 @@ async Task<MixedShop[]> CreateComplete()
     var res = official.MixWith(unofficial);
 
     res = res
-        .OrderBy(x => x.LocationName)
+        .OrderBy(x => x.City)
         .ThenBy(x => x.Address)
         .ToArray();
 
