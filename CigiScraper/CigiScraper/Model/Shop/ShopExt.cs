@@ -16,8 +16,6 @@ public static class ShopExt
     {
         List<MixedShop> mixed = [];
 
-        int doubleCount = 0;
-
         foreach (var shop in shops)
         {
             var byLoc = shop.FindByLocation(unofficialShops);
@@ -25,7 +23,6 @@ public static class ShopExt
 
             if (byLoc is not null && byAdd is not null)
             {
-                doubleCount++;
                 mixed.Add(new MixedShop(shop,byLoc));
                 mixed.Add(new MixedShop(shop,byAdd));
                 continue;
@@ -44,13 +41,33 @@ public static class ShopExt
         return mixed.ToArray();
     }
 
-    public static UnofficialShop? FindByLocation(this OfficialShop shop, UnofficialShop[] unofficialShops)
+    public static MixedShop[] EliminateDuplicates(this MixedShop[] shops)
     {
-        return unofficialShops.FirstOrDefault(unofficial => unofficial.LocationName == shop.Location.LocationName);
+        var filtered= shops
+            .GroupBy(x => x.Address)
+            .Select(x => x.First())
+            .ToArray();
+
+        return filtered;
     }
 
-    public static UnofficialShop? FindByAddress(this OfficialShop shop, UnofficialShop[] unofficialShops)
+    private static UnofficialShop? FindByLocation(this OfficialShop shop, UnofficialShop[] unofficialShops)
     {
-        return unofficialShops.FirstOrDefault(unofficial => unofficial.Address == shop.Location.Address);
+        foreach (var unofficial in unofficialShops)
+        {
+            if (unofficial.LocationName == shop.Location.LocationName) return unofficial;
+        }
+
+        return null;
+    }
+
+    private static UnofficialShop? FindByAddress(this OfficialShop shop, UnofficialShop[] unofficialShops)
+    {
+        foreach (var unofficial in unofficialShops)
+        {
+            if (unofficial.Address == shop.Location.Address) return unofficial;
+        }
+
+        return null;
     }
 }

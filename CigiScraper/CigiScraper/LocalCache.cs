@@ -6,7 +6,7 @@ namespace CigiScraper;
 
 public static class LocalCache
 {
-    private const string DirectoryPath = "./saves/";
+    private const string DirectoryPath = "./archive/htmlsaves/";
     private const string UrlsFName = "urls.txt";
     static LocalCache()
     {

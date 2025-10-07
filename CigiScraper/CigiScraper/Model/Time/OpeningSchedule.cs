@@ -18,11 +18,7 @@ public class OpeningSchedule
         var str = "";
         foreach (var op in openingSchedules)
         {
-            if (op.Closed)
-            {
-                str += $"{op.Day}-Zárva|";
-            }
-            else
+            if (!op.Closed)
             {
                 str += $"{op.Day} {op.OpeningHours!.Opening}-{op.OpeningHours.Closing}|";
             }

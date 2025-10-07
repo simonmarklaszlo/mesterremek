@@ -34,6 +34,6 @@ public class MixedShop
         return $"[{Name}] : {PostalCode}, {County}, {LocationName}, {Address} - ({Latitude}, {Longitude})";
     }
 
-    public string ToCsvLine() => $"{PostalCode};{County};{LocationName};{Address};{Latitude};{Longitude};{OpeningSchedule.ToCsvLine(Schedules)}";
+    public string ToCsvLine() => $"{PostalCode};{County};{LocationName};{Address};{Name};{Latitude};{Longitude};{OpeningSchedule.ToCsvLine(Schedules)}";
 
 }

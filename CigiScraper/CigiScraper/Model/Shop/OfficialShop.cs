@@ -69,6 +69,19 @@ public class OfficialShop
 
         try
         {
+            var commaLess = rawLocation.Split(',')
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x));
+
+            var raw = string.Join(' ', commaLess)
+                .Split(' ')
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToArray();
+
+            postalCode = int.Parse(raw[0]);
+            locationName = raw[1];
+            address = string.Join(' ', raw, 2, raw.Length - 2);
+/*
             if (rawLocation.Contains(','))
             {
                 var fullSplit = rawLocation.Split(',');
@@ -83,7 +96,7 @@ public class OfficialShop
                 postalCode = int.Parse(split[0]);
                 locationName = split[1];
                 address = string.Join(' ', split, 2, split.Length - 2);
-            }
+            }*/
         }
         catch (Exception e)
         {
