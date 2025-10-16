@@ -16,6 +16,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { bonfireOutline, logInOutline } from 'ionicons/icons';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -40,27 +41,50 @@ import { bonfireOutline, logInOutline } from 'ionicons/icons';
 export class LoginPage implements OnInit {
   email: string = '';
   password: string = '';
+  errorMessage: string = '';
+  isLoading: boolean = false;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {
     addIcons({ bonfireOutline, logInOutline });
   }
 
   ngOnInit() {
+    // Ha már be van jelentkezve, átirányítjuk a home-ra
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/tabs/home']);
+    }
   }
 
   onLogin() {
-    console.log('Login attempt:', this.email);
+    this.errorMessage = '';
 
-    // TODO: Itt később majd a tényleges autentikációs logika jön
-    // Egyelőre csak simuláljuk a bejelentkezést
-    if (this.email && this.password) {
-      // Siker esetén navigálunk a home oldalra
-      this.router.navigate(['/tabs/home']);
+    // Validáció
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Kérlek töltsd ki az összes mezőt!';
+      return;
     }
+
+    this.isLoading = true;
+
+    // Bejelentkezés
+    this.authService.login(this.email, this.password).subscribe({
+      next: (response) => {
+        console.log('Sikeres bejelentkezés!', response);
+        this.isLoading = false;
+        this.router.navigate(['/tabs/home']);
+      },
+      error: (error) => {
+        console.error('Bejelentkezési hiba:', error);
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Hibás email vagy jelszó!';
+      }
+    });
   }
 
   goToRegister() {
     this.router.navigate(['/register']);
   }
-
 }

@@ -3,14 +3,13 @@ import { TabsPage } from './tabs.page';
 
 export const routes: Routes = [
   {
-    path: 'tabs',
+    path: '',
     component: TabsPage,
     children: [
       {
         path : 'home',
         loadComponent: () =>
           import('../pages/home/home.page').then(m => m.HomePage),
-
       },
       {
         path : 'map',
@@ -22,13 +21,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('../pages/settings/settings.page').then(m => m.SettingsPage),
       },
-
-
+      {
+        path: '',
+        redirectTo: 'home',
+        pathMatch: 'full',
+      },
     ],
-  },
-  {
-    path: '',
-    redirectTo: '/tabs/home',
-    pathMatch: 'full',
   },
 ];
