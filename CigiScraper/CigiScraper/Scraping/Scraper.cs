@@ -1,39 +1,37 @@
 using System.Text.RegularExpressions;
-using CigiScraper.Model;
+using CigiScraper.LocalData;
 using CigiScraper.Model.Shop;
 using CigiScraper.Model.Time;
 using HtmlAgilityPack;
 
-namespace CigiScraper;
+namespace CigiScraper.Scraping;
 
 public partial class Scraper
 {
-    public const string BaseUrl = "https://nemzetidohanyboltkereso.hu/trafik-lista";
-    private readonly string _baseUrl;
+    private const string BaseUrl ="https://nemzetidohanyboltkereso.hu/trafik-lista";
     private bool _throwOnNetCall;
-    public Scraper(string baseUrl = BaseUrl)
+
+    public Task<UnofficialShop[]> ScrapeAny(bool preferOnline = false)
     {
-        _baseUrl = baseUrl;
+        if (preferOnline)
+        {
+            return ScrapeFromOnline();
+        }
+
+        return ScrapeFromCache();
     }
 
-    public async Task<UnofficialShop[]> ScrapeFullHybrid(string[]? pageUrls = null)
+    private async Task<UnofficialShop[]> ScrapeFromOnline()
     {
         _throwOnNetCall = false;
         var mainRes = await GetUrlsFromMainPage();
 
         List<string> urls = [];
+        foreach (var url in mainRes)
+        {
+            urls.AddRange(await GetBoltUrlsFromLocation(url));
+        }
 
-        if (pageUrls is null)
-        {
-            foreach (var url in mainRes)
-            {
-                urls.AddRange(await GetBoltUrlsFromLocation(url));
-            }
-        }
-        else
-        {
-            urls = pageUrls.ToList();
-        }
 
         await LocalCache.SavePageUrls(urls.ToArray());
 
@@ -46,7 +44,7 @@ public partial class Scraper
         return bolt.ToArray();
     }
 
-    public async Task<UnofficialShop[]> ScrapeFromCache()
+    private async Task<UnofficialShop[]> ScrapeFromCache()
     {
         _throwOnNetCall = true;
 
@@ -76,68 +74,11 @@ public partial class Scraper
         return res;
     }
 
-    /// <summary>
-    /// Attempts to repair errors in the provided array by re-parsing.
-    /// Returns the count of successfully repaired bolts and the count of remaining unrepaired errors after the process.
-    /// </summary>
-    /// <param name="bolts">An array of <see cref="UnofficialShop"/> objects, potentially containing errors that need to be fixed.</param>
-    /// <returns>A tuple containing the count of fixed errors and the count of remaining unrepaired errors.</returns>
-    public async Task<(int fixedCount, int remainingErrors)> RepairErrors(UnofficialShop[] bolts)
-    {
-        await LocalCache.Clean();
-
-        int errorCount = 0;
-        int fixedCount = 0;
-        for (var i = 0; i < bolts.Length; i++)
-        {
-            var b = bolts[i];
-            if(!b.HasError)continue;
-
-            bolts[i] = await ParseBoltFromPage(b.Url);
-
-            errorCount++;
-            if (!bolts[i].HasError)fixedCount++;
-        }
-
-        return (fixedCount,errorCount-fixedCount);
-    }
-
-    public async Task<(int fixedCount, int remainingErrors)> RepairErrorsWithRetries(UnofficialShop[] bolts, int retries = 1)
-    {
-        if (retries < 1) retries = 1;
-        int initialErrorCount = -1;
-        int totalFixedCount = 0;
-
-        while (retries > 0)
-        {
-            int errorCount = 0;
-            int fixedCount = 0;
-            for (var i = 0; i < bolts.Length; i++)
-            {
-                var b = bolts[i];
-                if(!b.HasError)continue;
-
-                bolts[i] = await ParseBoltFromPage(b.Url);
-
-                errorCount++;
-                if (!bolts[i].HasError)fixedCount++;
-            }
-
-            if(initialErrorCount == -1) initialErrorCount = errorCount;
-            totalFixedCount += fixedCount;
-            retries--;
-        }
-
-        if (initialErrorCount == -1) initialErrorCount = 0;
-
-        return (totalFixedCount,initialErrorCount-totalFixedCount);
-    }
-
     private async Task<IEnumerable<string>> GetUrlsFromMainPage()
     {
         Console.WriteLine("[Main] Starting");
 
-        var htmlString = await LocalCache.GetPage(_baseUrl) ?? await GetHtml(_baseUrl);
+        var htmlString = await LocalCache.GetPage(BaseUrl) ?? await GetHtml(BaseUrl);
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(htmlString);
 
@@ -233,17 +174,17 @@ public partial class Scraper
 
 
         //hely - település + utca
-        string locality = localityNode?.InnerText.Trim() ?? "";
+        string city = localityNode?.InnerText.Trim() ?? "";
         var street = streetNode?.InnerText.Trim() ?? "";
 
-        var nyitvatartasok = GetNyitvatartasok(timeNodes);
+        var nyitvatartasok = GetNyitvatartasok(timeNodes, url);
         var (lat, lon) = GetCoordinates(scriptNode);
 
         Console.WriteLine($"[Bolt] Finished : {url}");
-        return new UnofficialShop(url, lon, lat, locality, street, nyitvatartasok);;
+        return new UnofficialShop(url, lon, lat, city, street, nyitvatartasok);
     }
 
-    private static OpeningSchedule[] GetNyitvatartasok(HtmlNodeCollection? nodes)
+    private static OpeningSchedule[] GetNyitvatartasok(HtmlNodeCollection? nodes, string url)
     {
         if (nodes is null) return [];
 
@@ -253,22 +194,10 @@ public partial class Scraper
         for (int i = 0; i < timeNodesArr.Length; i += 2)
         {
             var day = timeNodesArr[i].InnerText.Trim();
-            var hours = timeNodesArr[i + 1].InnerText.Trim().Split('-');
+            var hours = timeNodesArr[i + 1].InnerText;
 
 
-            if (hours.Length == 2)
-            {
-                //vhol 5.00-22.00
-                hours[0] = hours[0].Replace('.',':');
-                hours[1] = hours[1].Replace('.',':');
-
-                var ido = new OpeningHours(hours[0], hours[1]);
-                nyitvatartasok.Add(new OpeningSchedule(day,ido));
-            }
-            else
-            {
-                nyitvatartasok.Add(new OpeningSchedule(day));
-            }
+            nyitvatartasok.Add(new OpeningSchedule(day, OpeningHours.Parse(hours, url, nyitvatartasok)));
         }
 
         return nyitvatartasok.ToArray();

@@ -1,8 +1,7 @@
-using CigiScraper.Model;
 using CigiScraper.Model.Shop;
 using CigiScraper.Model.Time;
 
-namespace CigiScraper;
+namespace CigiScraper.LocalData;
 
 public class Archiver
 {
@@ -13,7 +12,7 @@ public class Archiver
         _dirPath = dirPath;
         Directory.CreateDirectory(dirPath);
     }
-    public void DeleteAllArchives()
+    public void ClearFiles()
     {
         foreach (var file in Directory.GetFiles(_dirPath))
         {
@@ -30,7 +29,7 @@ public class Archiver
             await writer.WriteLineAsync(bolt.ToCsvLine());
         }
 
-        Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
+        Console.WriteLine($"[ARCHIVER] Complete: {fileName}");
     }
 
     public async Task ArchiveCoordsToCsv(string fileName, UnofficialShop[] bolts)
@@ -42,7 +41,7 @@ public class Archiver
             await writer.WriteLineAsync($"{bolt.Longitude};{bolt.Latitude}");
         }
 
-        Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
+        Console.WriteLine($"[ARCHIVER] Complete: {fileName}");
     }
 
     public async Task ArchiveToCsv(string fileName, MixedShop[] bolts)
@@ -54,7 +53,7 @@ public class Archiver
             await writer.WriteLineAsync(bolt.ToCsvLine());
         }
 
-        Console.WriteLine($"[ARCHIVER] Writing complete: {fileName}");
+        Console.WriteLine($"[ARCHIVER] Complete: {fileName}");
     }
 
     public async Task<UnofficialShop[]> ReadBackFromArchive(string fileName)
@@ -100,7 +99,7 @@ public class Archiver
 
                     if (hoursSplit.Length == 2)
                     {
-                        nyitvatartas = new OpeningHours(hoursSplit[0], hoursSplit[1]);
+                        nyitvatartas = new OpeningHours(TimeOnly.Parse(hoursSplit[0]), TimeOnly.Parse(hoursSplit[1]));
                     }
                 }
 

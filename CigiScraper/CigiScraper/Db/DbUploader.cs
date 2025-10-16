@@ -28,11 +28,16 @@ public static class DbUploader
 
     public static async Task Upload(MixedShop[] shops)
     {
+        if(shops.Length == 0) return;
+
         await using NpgsqlConnection conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();
 
+        Console.WriteLine("Uploading Shops");
         var ids = await UploadShops(conn, shops);
+        Console.WriteLine("Uploading Schedules");
         await UploadSchedules(conn, ids, shops);
+        Console.WriteLine("Upload complete");
     }
 
     private static async Task<int[]> UploadShops(NpgsqlConnection connection, MixedShop[] shops)

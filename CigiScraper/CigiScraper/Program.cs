@@ -1,104 +1,43 @@
 ﻿using CigiScraper;
 using CigiScraper.Db;
-using CigiScraper.Model;
+using CigiScraper.LocalData;
 using CigiScraper.Model.Place;
 using CigiScraper.Model.Shop;
+using Scraper = CigiScraper.Scraping.Scraper;
 
-var comp = await CreateComplete();
+//cylex.hu
+//nyitva.hu
 
-await DbUploader.Upload(comp);
+var comp = await GetMixed();
+
+//await DbUploader.Upload(comp);
 
 
 
 return;
 
-async Task ScrapeDefault(bool eraseCacheAfter)
-{
-    await LocalCache.Clean();
-
-    var scraper = new Scraper();
-    var res = await scraper.ScrapeFullHybrid();
-    UnofficialShop?[] resNullable = res.Select(UnofficialShop? (x) => x).ToArray();
-    for (var i = 0; i < resNullable.Length; i++)
-    {
-        for (var j = 0; j < resNullable.Length; j++)
-        {
-            if (i == j) continue;
-            bool equal = resNullable[i]?.Equals(resNullable[j]) ?? false;
-            if (equal) resNullable[i] = null;
-        }
-    }
-
-    UnofficialShop[] distinct = resNullable.OfType<UnofficialShop>().ToArray();
-
-
-    var completeData = distinct.Where(x => !x.HasError).ToArray();
-    var incompleteData = distinct.Where(x => x.HasError).ToArray();
-    var fatalData = distinct.Where(x => x.FatalError).ToArray();
-
-
-    var archiver = new Archiver("archive/scraped");
-    archiver.DeleteAllArchives();
-    await archiver.ArchiveToCsv("full.csv", completeData);
-    await archiver.ArchiveCoordsToCsv("full_coords.csv", completeData);
-    await archiver.ArchiveToCsv("incomplete.csv", incompleteData);
-    await archiver.ArchiveToCsv("fatal.csv", fatalData);
-
-    await ReadFromArchive();
-
-    if (eraseCacheAfter) LocalCache.Detete();
-}
-
-async Task ScrapeLocal()
+async Task<UnofficialShop[]> Scrape()
 {
     var scraper = new Scraper();
-    var res = await scraper.ScrapeFromCache();
-    UnofficialShop?[] resNullable = res.Select(UnofficialShop? (x) => x).ToArray();
-    for (var i = 0; i < resNullable.Length; i++)
-    {
-        for (var j = 0; j < resNullable.Length; j++)
-        {
-            if (i == j) continue;
-            bool equal = resNullable[i]?.Equals(resNullable[j]) ?? false;
-            if (equal) resNullable[i] = null;
-        }
-    }
-
-    UnofficialShop[] distinct = resNullable.OfType<UnofficialShop>().ToArray();
+    var res = await scraper.ScrapeAny();
+    res = res.EliminateDuplicates();
 
 
-    var completeData = distinct.Where(x => !x.HasError).ToArray();
-    var incompleteData = distinct.Where(x => x.HasError).ToArray();
-    var fatalData = distinct.Where(x => x.FatalError).ToArray();
+    var completeData = res.Where(x => !x.HasError).ToArray();
+    var incompleteData = res.Where(x => x.HasError).ToArray();
+    var fatalData = res.Where(x => x.FatalError).ToArray();
 
+
+    await Logger.Flush();
 
     var archiver = new Archiver("archive/scraped");
-    archiver.DeleteAllArchives();
     await archiver.ArchiveToCsv("full.csv", completeData);
-    await archiver.ArchiveCoordsToCsv("full_coords.csv", completeData);
     await archiver.ArchiveToCsv("incomplete.csv", incompleteData);
     await archiver.ArchiveToCsv("fatal.csv", fatalData);
+    await archiver.ArchiveCoordsToCsv("full_coords.csv", completeData);
 
-    await ReadFromArchive();
-}
 
-async Task ReadFromArchive()
-{
-    var archiver = new Archiver("archive/scraped");
-    var full = await archiver.ReadBackFromArchive("full.csv");
-    var incomplete = await archiver.ReadBackFromArchive("incomplete.csv");
-    var fatal = await archiver.ReadBackFromArchive("fatal.csv");
-
-    Console.WriteLine("===============");
-    Console.WriteLine($"{"Total Data Count",-30}{full.Length + incomplete.Length + fatal.Length}");
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine($"{"Total Complete Data Count",-30}{full.Length}");
-    Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine($"{"Total Incomplete Data Count",-30}{incomplete.Length}");
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"{"Total Fatal Data Count",-30}{fatal.Length}");
-    Console.ResetColor();
-    Console.WriteLine("===============");
+    return completeData;
 }
 
 async Task<UnofficialShop[]> GetUnofficialFull()
@@ -107,14 +46,15 @@ async Task<UnofficialShop[]> GetUnofficialFull()
     var res = await archiver.ReadBackFromArchive("full.csv");
     if (res.Length == 0)
     {
-        await ScrapeLocal();
-        res = await archiver.ReadBackFromArchive("full.csv");
+        res = await Scrape();
     }
+
+    Console.WriteLine("Loaded Unofficial");
 
     return res;
 }
 
-async Task<OfficialShop[]> GetOfficialMapped()
+async Task<OfficialShop[]> GetOfficialFull()
 {
     var postal = PostalLocation.ParseFile("archive/input/postalcodes.csv");
     var officialShops = OfficialShop.ParseFile("archive/input/official_bolt.csv");
@@ -126,32 +66,33 @@ async Task<OfficialShop[]> GetOfficialMapped()
 
     officialData.MapTo(postalData);
 
-    //var unmapped = officialData.Where(x => x.PostalLocation is null).ToArray();
+    Console.WriteLine("Loaded Official");
 
     return officialData.Where(x => x.PostalLocation is not null).ToArray();
 }
 
-async Task<MixedShop[]> CreateComplete()
+async Task<MixedShop[]> GetMixed()
 {
-    var ot = GetOfficialMapped();
+    var ot = GetOfficialFull();
     var ut = GetUnofficialFull();
     await Task.WhenAll(ot, ut);
 
     var official = ot.Result;
     var unofficial = ut.Result;
 
-    var res = official.MixWith(unofficial);
-
-    res = res
-        .OrderBy(x => x.City)
-        .ThenBy(x => x.Address)
-        .ToArray();
-
-    var resFiltered = res.EliminateDuplicates();
+    var exact = official.FindExactMatches(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
+    var mix = official.MixWith(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
+    var complete = ((MixedShop[])[..exact,..mix]).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
+    var old = official.MixOld(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
 
     var archiver = new Archiver("archive");
-    await archiver.ArchiveToCsv("completeWithDuplicated.csv", res);
-    await archiver.ArchiveToCsv("complete.csv", resFiltered);
+    archiver.ClearFiles();
 
-    return resFiltered;
+    await archiver.ArchiveToCsv("exact.csv", exact);
+    await archiver.ArchiveToCsv("mix.csv", mix);
+    await archiver.ArchiveToCsv("complete.csv", complete);
+    await archiver.ArchiveToCsv("comp_old.csv", old);
+
+
+    return [];
 }

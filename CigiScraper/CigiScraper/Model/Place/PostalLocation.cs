@@ -3,13 +3,13 @@ namespace CigiScraper.Model.Place;
 public class PostalLocation
 {
     public int PostalCode { get; }
-    public string LocationName { get; }
+    public string City { get; }
     public string County { get; }
 
-    private PostalLocation(int postalCode, string locationName, string county)
+    private PostalLocation(int postalCode, string city, string county)
     {
         PostalCode = postalCode;
-        LocationName = locationName;
+        City = city;
         County = county;
     }
     public static async Task<PostalLocation[]> ParseFile(string file)
@@ -37,6 +37,6 @@ public class PostalLocation
 
     public override string ToString()
     {
-        return $"{PostalCode}, {County}, {LocationName}";
+        return $"{PostalCode}, {County}, {City}";
     }
 }

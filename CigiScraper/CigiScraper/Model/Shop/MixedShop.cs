@@ -20,7 +20,7 @@ public class MixedShop
     {
         PostalCode = o.PostalLocation!.PostalCode;
         County = o.PostalLocation.County;
-        City = o.PostalLocation.LocationName;
+        City = o.PostalLocation.City;
         Address = o.Location.Address;
         Name = o.Name;
 
@@ -29,11 +29,7 @@ public class MixedShop
         Schedules = u.OpeningSchedules;
     }
 
-    public override string ToString()
-    {
-        return $"[{Name}] : {PostalCode}, {County}, {City}, {Address} - ({Latitude}, {Longitude})";
-    }
+    public override string ToString() => $"{Latitude} {Longitude}";
 
     public string ToCsvLine() => $"{PostalCode};{County};{City};{Address};{Name};{Latitude};{Longitude};{OpeningSchedule.ToCsvLine(Schedules)}";
-
 }

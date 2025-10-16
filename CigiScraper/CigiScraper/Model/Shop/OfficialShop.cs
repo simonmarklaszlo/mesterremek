@@ -6,22 +6,36 @@ public class OfficialShop
 {
     private readonly string _rawName;
     private readonly string _rawLocation;
-    public string Name => GetCleanName(_rawName);
-    public ShopLocation Location => GetLocation(_rawLocation);
+
+    public string Name
+    {
+        get
+        {
+            if(_name is not null)return _name;
+            _name = GetCleanName(_rawName);
+            return _name;
+        }
+    }
+    private string? _name;
+
+    public ShopLocation Location
+    {
+        get
+        {
+            if (_location is not null) return _location;
+            _location = GetLocation(_rawLocation);
+            return _location;
+        }
+    }
+    private ShopLocation? _location;
     public PostalLocation? PostalLocation { get; set; }
+    private static readonly char[] AddressSeparators = [',', ' ' ];
 
 
     private OfficialShop(string rawName, string rawLocation)
     {
         _rawName = rawName;
         _rawLocation = rawLocation;
-    }
-
-
-
-    public override string ToString()
-    {
-        return $"{Name} - {_rawLocation}";
     }
 
 
@@ -63,45 +77,16 @@ public class OfficialShop
     }
     private static ShopLocation GetLocation(string rawLocation)
     {
-        int postalCode = -1;
-        string locationName = "glorbo";
-        string address = "glorbo";
+        var parts = rawLocation
+            .Split(AddressSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => x.Length > 0)
+            .ToArray();
 
-        try
-        {
-            var commaLess = rawLocation.Split(',')
-                .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x));
+        var postalCode = int.Parse(parts[0]);
+        var locationName = parts[1].Replace("u.", "utca");
+        var address = string.Join(' ', parts, 2, parts.Length - 2);
 
-            var raw = string.Join(' ', commaLess)
-                .Split(' ')
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToArray();
-
-            postalCode = int.Parse(raw[0]);
-            locationName = raw[1];
-            address = string.Join(' ', raw, 2, raw.Length - 2);
-/*
-            if (rawLocation.Contains(','))
-            {
-                var fullSplit = rawLocation.Split(',');
-                var firstSplit = fullSplit[0].Split(' ');
-                postalCode = int.Parse(firstSplit[0]);
-                locationName = firstSplit[1];
-                address = fullSplit[1];
-            }
-            else
-            {
-                var split = rawLocation.Split(' ');
-                postalCode = int.Parse(split[0]);
-                locationName = split[1];
-                address = string.Join(' ', split, 2, split.Length - 2);
-            }*/
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
         return new ShopLocation(postalCode, locationName, address);
     }
 }

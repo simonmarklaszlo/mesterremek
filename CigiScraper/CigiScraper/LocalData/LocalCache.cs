@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using HtmlAgilityPack;
 
-namespace CigiScraper;
+namespace CigiScraper.LocalData;
 
 public static class LocalCache
 {

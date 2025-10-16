@@ -4,10 +4,10 @@ namespace CigiScraper.Model.Time;
 
 public class OpeningSchedule
 {
+    [MemberNotNullWhen(false, nameof(OpeningHours))]
     public bool Closed { get; }
     public string Day { get; }
 
-    [MemberNotNullWhen(true, nameof(Closed))]
     public OpeningHours? OpeningHours { get; }
 
     public OpeningSchedule(string day, OpeningHours? openingHours = null)

@@ -7,12 +7,13 @@ public class UnofficialShop
     public string? Url { get; }
     public double Longitude { get; }
     public double Latitude { get; }
-    public string LocationName { get; }
+    public string City { get; }
     public string Address { get; }
     public OpeningSchedule[] OpeningSchedules { get; }
 
     public ShopError Error { get; }
     public bool HasError => Error is not ShopError.None;
+
     public bool FatalError => Error.HasFlag(ShopError.Longitude) &&
                               Error.HasFlag(ShopError.Latitude) &&
                               Error.HasFlag(ShopError.Location) &&
@@ -20,39 +21,41 @@ public class UnofficialShop
                               Error.HasFlag(ShopError.OpeningSchedules);
 
 
-    public UnofficialShop(string url, double longitude, double latitude, string locationName, string address, OpeningSchedule[] openingSchedules)
+    public UnofficialShop(string url, double longitude, double latitude, string city, string address,
+        OpeningSchedule[] openingSchedules)
     {
         Url = url;
         Longitude = longitude;
         Latitude = latitude;
-        LocationName = locationName;
+        City = city;
         Address = address;
         OpeningSchedules = openingSchedules;
 
-        Error = CheckFullError(longitude, latitude, locationName, address, openingSchedules);
+        Error = CheckFullError(longitude, latitude, city, address, openingSchedules);
     }
 
 
-    public bool EqualsCoordinates(UnofficialShop other)
-    {
-        const double tolerance = 0.1;
-        return Math.Abs(Longitude - other.Longitude) < tolerance &&
-               Math.Abs(Latitude - other.Latitude) < tolerance;
-    }
-    public string ToCsvLine() => $"{Longitude};{Latitude};{LocationName};{Address};{OpeningSchedule.ToCsvLine(OpeningSchedules)}";
-    public override string ToString() => $"{LocationName}, {Address}";
+    public override string ToString() => $"{Latitude} {Longitude}";
+
+    public string ToCsvLine() =>
+        $"{Longitude};{Latitude};{City};{Address};{OpeningSchedule.ToCsvLine(OpeningSchedules)}";
+
     public override bool Equals(object? obj)
     {
         if (obj is not UnofficialShop other) return false;
-        return EqualsCoordinates(other) &&
-               LocationName == other.LocationName &&
-               Address == other.Address &&
+        return EqualsCoordinates(other) && City == other.City && Address == other.Address &&
                OpeningSchedules.SequenceEqual(other.OpeningSchedules);
     }
-    public override int GetHashCode() => HashCode.Combine(Url, Longitude, Latitude, LocationName, Address, OpeningSchedules, (int)Error);
 
+    public bool EqualsCoordinates(UnofficialShop other)
+    {
+        const double tolerance = 0.001;
+        return Math.Abs(Longitude - other.Longitude) < tolerance &&
+               Math.Abs(Latitude - other.Latitude) < tolerance;
+    }
 
-    private static ShopError CheckFullError(double longitude, double latitude, string location, string street, OpeningSchedule[] openingSchedules)
+    private static ShopError CheckFullError(double longitude, double latitude, string location, string street,
+        OpeningSchedule[] openingSchedules)
     {
         var error = ShopError.None;
 
@@ -73,15 +76,15 @@ public class UnofficialShop
 
         return error;
     }
-}
 
-[Flags]
-public enum ShopError
-{
-    None = 0,
-    Longitude = 1 << 1,   // 2
-    Latitude = 1 << 2,    // 4
-    Location = 1 << 3,    // 8
-    Street = 1 << 4,      // 16
-    OpeningSchedules = 1 << 5 // 32
+    [Flags]
+    public enum ShopError
+    {
+        None = 0,
+        Longitude = 1 << 1, // 2
+        Latitude = 1 << 2, // 4
+        Location = 1 << 3, // 8
+        Street = 1 << 4, // 16
+        OpeningSchedules = 1 << 5 // 32
+    }
 }
