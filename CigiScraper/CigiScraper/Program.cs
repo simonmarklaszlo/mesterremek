@@ -10,7 +10,7 @@ using Scraper = CigiScraper.Scraping.Scraper;
 
 var comp = await GetMixed();
 
-//await DbUploader.Upload(comp);
+await DbUploader.Upload(comp);
 
 
 
@@ -71,7 +71,7 @@ async Task<OfficialShop[]> GetOfficialFull()
     return officialData.Where(x => x.PostalLocation is not null).ToArray();
 }
 
-async Task<MixedShop[]> GetMixed()
+async Task<Shop[]> GetMixed()
 {
     var ot = GetOfficialFull();
     var ut = GetUnofficialFull();
@@ -80,19 +80,20 @@ async Task<MixedShop[]> GetMixed()
     var official = ot.Result;
     var unofficial = ut.Result;
 
-    var exact = official.FindExactMatches(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
-    var mix = official.MixWith(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
-    var complete = ((MixedShop[])[..exact,..mix]).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
-    var old = official.MixOld(unofficial).OrderBy(x => x.City).ThenBy(x => x.Address).ToArray();
+    var withNames = unofficial.FindWithMatchingAddress(official);
+    var unOffAsShop = unofficial
+        .Select(x => new Shop(null,x.City,x.Address,x.OpeningSchedules,x.Longitude,x.Latitude))
+        .ToArray();
 
-    var archiver = new Archiver("archive");
-    archiver.ClearFiles();
+    var complete = unOffAsShop
+        .Concat(withNames)
+        .GroupBy(x => x.Address)
+        .Select(x => x.FirstOrDefault(y => y.Name is not null) ?? x.First())
+        .ToArray();
 
-    await archiver.ArchiveToCsv("exact.csv", exact);
-    await archiver.ArchiveToCsv("mix.csv", mix);
-    await archiver.ArchiveToCsv("complete.csv", complete);
-    await archiver.ArchiveToCsv("comp_old.csv", old);
+    var archive = new Archiver("archive");
+    archive.ClearFiles();
+    await archive.ArchiveToCsv("complete.csv", complete);
 
-
-    return [];
+    return complete;
 }

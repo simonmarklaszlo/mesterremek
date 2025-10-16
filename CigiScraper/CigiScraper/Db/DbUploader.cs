@@ -26,7 +26,7 @@ public static class DbUploader
         { "Vasárnap", 7 }
     };
 
-    public static async Task Upload(MixedShop[] shops)
+    public static async Task Upload(Shop[] shops)
     {
         if(shops.Length == 0) return;
 
@@ -40,7 +40,7 @@ public static class DbUploader
         Console.WriteLine("Upload complete");
     }
 
-    private static async Task<int[]> UploadShops(NpgsqlConnection connection, MixedShop[] shops)
+    private static async Task<int[]> UploadShops(NpgsqlConnection connection, Shop[] shops)
     {
         const string sqlBase = "INSERT INTO shops (name, address, city, created_at, updated_at, location) VALUES ";
         string[] shopInsertSqls = new string[shops.Length];
@@ -56,7 +56,7 @@ public static class DbUploader
 
         for (var i = 0; i < shops.Length; i++)
         {
-            cmd.Parameters.AddWithValue($"@name{i}", shops[i].Name);
+            cmd.Parameters.AddWithValue($"@name{i}", shops[i].Name ?? "NULL");
             cmd.Parameters.AddWithValue($"@address{i}", shops[i].Address);
             cmd.Parameters.AddWithValue($"@city{i}", shops[i].City);
             cmd.Parameters.AddWithValue($"@longitude{i}", shops[i].Longitude);
@@ -74,7 +74,7 @@ public static class DbUploader
         return ids;
     }
 
-    private static async Task UploadSchedules(NpgsqlConnection connection, int[] shopIds, MixedShop[] shops)
+    private static async Task UploadSchedules(NpgsqlConnection connection, int[] shopIds, Shop[] shops)
     {
         for (var i = 0; i < shops.Length; i++)
         {

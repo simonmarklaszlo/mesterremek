@@ -55,7 +55,17 @@ public class Archiver
 
         Console.WriteLine($"[ARCHIVER] Complete: {fileName}");
     }
+    public async Task ArchiveToCsv(string fileName, Shop[] bolts)
+    {
+        Console.WriteLine($"[ARCHIVER] Writing : {fileName}");
+        await using var writer = new StreamWriter(Path.Combine(_dirPath, fileName));
+        foreach (var bolt in bolts)
+        {
+            await writer.WriteLineAsync(bolt.ToCsvLine());
+        }
 
+        Console.WriteLine($"[ARCHIVER] Complete: {fileName}");
+    }
     public async Task<UnofficialShop[]> ReadBackFromArchive(string fileName)
     {
         var path = Path.Combine(_dirPath, fileName);

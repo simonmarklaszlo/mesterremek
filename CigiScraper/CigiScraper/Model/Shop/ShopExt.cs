@@ -12,61 +12,19 @@ public static class ShopExt
         }
     }
 
-    public static MixedShop[] FindExactMatches(this OfficialShop[] shops, UnofficialShop[] unofficialShops)
+
+    public static Shop[] FindWithMatchingAddress(this UnofficialShop[] unofficialShops, OfficialShop[] shops)
     {
-        List<MixedShop> mixed = [];
+        List<Shop> resShop = [];
 
-        foreach (var shop in shops)
+        foreach (var us in unofficialShops)
         {
-            var byAdd = shop.FindByAddress(unofficialShops);
-
-            if (byAdd is not null && byAdd.City == shop.Location.City) mixed.Add(new MixedShop(shop, byAdd));
+            var byAddress = us.FindByAddress(shops);
+            if(byAddress is not null) resShop.Add(new Shop(byAddress.Name, us.City, us.Address, us.OpeningSchedules , us.Longitude, us.Latitude));
         }
 
-        return mixed.EliminateDuplicates();
-    }
-    public static MixedShop[] MixWith(this OfficialShop[] shops, UnofficialShop[] unofficialShops, MixedShop[]? exclude = null)
-    {
-        List<MixedShop> mixed = [];
 
-        foreach (var shop in shops)
-        {
-            if (exclude?.Any(x => x.Address == shop.Location.Address) ?? false) continue;
-
-            var byLoc = shop.FindByLocation(unofficialShops);
-            var byAdd = shop.FindByAddress(unofficialShops);
-
-            if (byAdd is not null && byAdd.City == shop.Location.City) mixed.Add(new MixedShop(shop, byAdd));
-            if (byLoc is not null) mixed.Add(new MixedShop(shop, byLoc));
-        }
-
-        return mixed.EliminateDuplicates();
-    }
-    public static MixedShop[] MixOld(this OfficialShop[] shops, UnofficialShop[] unofficialShops)
-    {
-        List<MixedShop> mixed = [];
-
-        foreach (var shop in shops)
-        {
-            var byLoc = shop.FindByLocation(unofficialShops);
-            var byAdd = shop.FindByAddress(unofficialShops);
-
-            if (byAdd is not null) mixed.Add(new MixedShop(shop, byAdd));
-            if (byLoc is not null) mixed.Add(new MixedShop(shop, byLoc));
-        }
-
-        return mixed.EliminateDuplicates();
-    }
-
-
-    public static MixedShop[] EliminateDuplicates(this IEnumerable<MixedShop> shops)
-    {
-        var filtered= shops
-            .GroupBy(x => x.Address)
-            .Select(x => x.First())
-            .ToArray();
-
-        return filtered;
+        return resShop.ToArray();
     }
     public static UnofficialShop[] EliminateDuplicates(this UnofficialShop[] shops)
     {
@@ -85,20 +43,11 @@ public static class ShopExt
     }
 
 
-    private static UnofficialShop? FindByLocation(this OfficialShop shop, UnofficialShop[] unofficialShops)
+    private static OfficialShop? FindByAddress(this UnofficialShop shop, OfficialShop[] officialShops)
     {
-        foreach (var unofficial in unofficialShops)
+        foreach (var officialShop in officialShops)
         {
-            if (unofficial.City == shop.Location.City) return unofficial;
-        }
-
-        return null;
-    }
-    private static UnofficialShop? FindByAddress(this OfficialShop shop, UnofficialShop[] unofficialShops)
-    {
-        foreach (var unofficial in unofficialShops)
-        {
-            if (unofficial.Address == shop.Location.Address) return unofficial;
+            if (officialShop.Location.Address == shop.Address) return officialShop;
         }
 
         return null;
