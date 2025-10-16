@@ -1,0 +1,62 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="login-container">
+    <div class="logo-section">
+      <ion-icon name="bonfire-outline" class="logo-icon"></ion-icon>
+      <h1>Szivar Club</h1>
+      <p>Jelentkezz be a folytatáshoz</p>
+    </div>
+
+    <form #loginForm="ngForm" (ngSubmit)="onLogin()">
+      <ion-list lines="none" class="login-form">
+        <ion-item class="input-item">
+          <ion-input
+            label="Email"
+            labelPlacement="floating"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            placeholder="pelda@email.com"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input
+            label="Jelszó"
+            labelPlacement="floating"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            placeholder="••••••••"
+          ></ion-input>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="login-button"
+          [disabled]="!loginForm.valid"
+        >
+          <ion-icon slot="start" name="log-in-outline"></ion-icon>
+          Bejelentkezés
+        </ion-button>
+      </ion-list>
+    </form>
+
+    <div class="footer-links">
+      <ion-button fill="clear" size="small">
+        Elfelejtett jelszó?
+      </ion-button>
+      <ion-text color="medium">
+        <p>Nincs még fiókod? <ion-button fill="clear" size="small" (click)="goToRegister()">Regisztráció</ion-button></p>
+      </ion-text>
+    </div>
+  </div>
+</ion-content>

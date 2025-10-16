@@ -1,0 +1,96 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>register</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="register-container">
+    <div class="logo-section">
+      <ion-icon name="bonfire-outline" class="logo-icon"></ion-icon>
+      <h1>Szivar Club</h1>
+      <p>Hozd létre a fiókodat</p>
+    </div>
+
+    <form #registerForm="ngForm" (ngSubmit)="onRegister()">
+      <ion-list lines="none" class="register-form">
+        <ion-item class="input-item">
+          <ion-input
+            label="Teljes név"
+            labelPlacement="floating"
+            type="text"
+            [(ngModel)]="fullName"
+            name="fullName"
+            required
+            placeholder="Kovács János"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input
+            label="Email"
+            labelPlacement="floating"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            placeholder="pelda@email.com"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input
+            label="Jelszó"
+            labelPlacement="floating"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            placeholder="••••••••"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input
+            label="Jelszó megerősítése"
+            labelPlacement="floating"
+            type="password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            required
+            placeholder="••••••••"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item class="checkbox-item" lines="none">
+          <ion-checkbox [(ngModel)]="acceptTerms" name="acceptTerms" slot="start"></ion-checkbox>
+          <ion-label class="ion-text-wrap">
+            Elfogadom az <a href="#">Általános Szerződési Feltételeket</a>
+          </ion-label>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="register-button"
+          [disabled]="!registerForm.valid || !acceptTerms || password !== confirmPassword"
+        >
+          <ion-icon slot="start" name="person-add-outline"></ion-icon>
+          Regisztráció
+        </ion-button>
+
+        <div *ngIf="password && confirmPassword && password !== confirmPassword" class="error-message">
+          <ion-text color="danger">
+            <small>A jelszavak nem egyeznek!</small>
+          </ion-text>
+        </div>
+      </ion-list>
+    </form>
+
+    <div class="footer-links">
+      <ion-text color="medium">
+        <p>Már van fiókod? <ion-button fill="clear" size="small" (click)="goToLogin()">Bejelentkezés</ion-button></p>
+      </ion-text>
+    </div>
+  </div>
+</ion-content>

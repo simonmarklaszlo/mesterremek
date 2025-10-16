@@ -9,18 +9,18 @@ export const routes: Routes = [
       {
         path : 'home',
         loadComponent: () =>
-          import('../home/home.page').then(m => m.HomePage),
+          import('../pages/home/home.page').then(m => m.HomePage),
 
       },
       {
         path : 'map',
         loadComponent: () =>
-          import('../map/map.page').then(m => m.MapPage),
+          import('../pages/map/map.page').then(m => m.MapPage),
       },
       {
         path : 'settings',
         loadComponent: () =>
-          import('../settings/settings.page').then(m => m.SettingsPage),
+          import('../pages/settings/settings.page').then(m => m.SettingsPage),
       },
 
 
