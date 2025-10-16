@@ -1,0 +1,28 @@
+<ion-content id="main-content" [fullscreen]="true">
+  <ion-header >
+    <ion-toolbar>
+    <table>
+  <tr style="text-align: center;">
+    <td>
+      <ion-title size="large">Térkép</ion-title>
+    </td>
+    <td>
+
+      <ion-input 
+        (keyup.enter)="varos_kereses($event)"
+        placeholder="Város keresése">
+      </ion-input>
+
+    </td>
+  </tr>
+</table>
+
+    </ion-toolbar>
+  </ion-header>
+
+
+  <div id="map" style="height: 95%; width: 100%;">
+    
+  </div>
+
+</ion-content>
