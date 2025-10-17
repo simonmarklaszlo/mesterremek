@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>register</ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Regisztráció</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -12,17 +12,31 @@
       <p>Hozd létre a fiókodat</p>
     </div>
 
-    <form #registerForm="ngForm" (ngSubmit)="onRegister()">
+    <!-- Sikeres üzenet -->
+    <ion-text color="success" *ngIf="successMessage">
+      <div class="message-box success-box">
+        <p><strong>✓ {{ successMessage }}</strong></p>
+      </div>
+    </ion-text>
+
+    <!-- Hibaüzenet -->
+    <ion-text color="danger" *ngIf="errorMessage && !successMessage">
+      <div class="message-box error-box">
+        <p><strong>✗ {{ errorMessage }}</strong></p>
+      </div>
+    </ion-text>
+
+    <form (ngSubmit)="onRegister()">
       <ion-list lines="none" class="register-form">
         <ion-item class="input-item">
           <ion-input
-            label="Teljes név"
+            label="Felhasználónév"
             labelPlacement="floating"
             type="text"
-            [(ngModel)]="fullName"
-            name="fullName"
-            required
-            placeholder="Kovács János"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="kovacs_janos"
+            [disabled]="isLoading"
           ></ion-input>
         </ion-item>
 
@@ -33,8 +47,8 @@
             type="email"
             [(ngModel)]="email"
             name="email"
-            required
             placeholder="pelda@email.com"
+            [disabled]="isLoading"
           ></ion-input>
         </ion-item>
 
@@ -45,10 +59,20 @@
             type="password"
             [(ngModel)]="password"
             name="password"
-            required
             placeholder="••••••••"
+            [disabled]="isLoading"
           ></ion-input>
         </ion-item>
+
+        <!-- Jelszó erősség indikátor -->
+        <div *ngIf="password" class="password-strength">
+          <ion-text [color]="getPasswordStrength() === 'weak' ? 'danger' : getPasswordStrength() === 'medium' ? 'warning' : 'success'">
+            <small>
+              Jelszó erősség:
+              <strong>{{ getPasswordStrength() === 'weak' ? 'Gyenge' : getPasswordStrength() === 'medium' ? 'Közepes' : 'Erős' }}</strong>
+            </small>
+          </ion-text>
+        </div>
 
         <ion-item class="input-item">
           <ion-input
@@ -57,15 +81,34 @@
             type="password"
             [(ngModel)]="confirmPassword"
             name="confirmPassword"
-            required
             placeholder="••••••••"
+            [disabled]="isLoading"
           ></ion-input>
         </ion-item>
 
+        <!-- Jelszó egyezés figyelmeztetés -->
+        <div *ngIf="password && confirmPassword && password !== confirmPassword" class="validation-message">
+          <ion-text color="danger">
+            <small>⚠ A jelszavak nem egyeznek!</small>
+          </ion-text>
+        </div>
+
+        <!-- Jelszó egyezés megerősítés -->
+        <div *ngIf="password && confirmPassword && password === confirmPassword" class="validation-message">
+          <ion-text color="success">
+            <small>✓ A jelszavak egyeznek</small>
+          </ion-text>
+        </div>
+
         <ion-item class="checkbox-item" lines="none">
-          <ion-checkbox [(ngModel)]="acceptTerms" name="acceptTerms" slot="start"></ion-checkbox>
+          <ion-checkbox
+            [(ngModel)]="acceptTerms"
+            name="acceptTerms"
+            slot="start"
+            [disabled]="isLoading"
+          ></ion-checkbox>
           <ion-label class="ion-text-wrap">
-            Elfogadom az <a href="#">Általános Szerződési Feltételeket</a>
+            Elfogadom az <a href="#" (click)="$event.preventDefault()">Általános Szerződési Feltételeket</a>
           </ion-label>
         </ion-item>
 
@@ -73,23 +116,28 @@
           expand="block"
           type="submit"
           class="register-button"
-          [disabled]="!registerForm.valid || !acceptTerms || password !== confirmPassword"
+          [disabled]="!username || !email || !password || !confirmPassword || !acceptTerms || password !== confirmPassword || isLoading"
         >
-          <ion-icon slot="start" name="person-add-outline"></ion-icon>
-          Regisztráció
+          <ion-spinner *ngIf="isLoading" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!isLoading" slot="start" name="person-add-outline"></ion-icon>
+          {{ isLoading ? 'Regisztráció...' : 'Regisztráció' }}
         </ion-button>
-
-        <div *ngIf="password && confirmPassword && password !== confirmPassword" class="error-message">
-          <ion-text color="danger">
-            <small>A jelszavak nem egyeznek!</small>
-          </ion-text>
-        </div>
       </ion-list>
     </form>
 
     <div class="footer-links">
       <ion-text color="medium">
-        <p>Már van fiókod? <ion-button fill="clear" size="small" (click)="goToLogin()">Bejelentkezés</ion-button></p>
+        <p>
+          Már van fiókod?
+          <ion-button
+            fill="clear"
+            size="small"
+            (click)="goToLogin()"
+            [disabled]="isLoading"
+          >
+            Bejelentkezés
+          </ion-button>
+        </p>
       </ion-text>
     </div>
   </div>

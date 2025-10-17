@@ -55,14 +55,33 @@
   margin-top: 2rem;
   text-align: center;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 
   ion-button {
     text-transform: none;
+    margin: 0;
   }
 
-  p {
-    margin: 0.5rem 0;
-    font-size: 0.9rem;
+  ion-text {
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+
+      ion-button {
+        display: inline-flex;
+        vertical-align: middle;
+        height: auto;
+        min-height: auto;
+        padding: 0;
+        margin: 0;
+      }
+    }
   }
 }
-

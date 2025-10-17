@@ -52,9 +52,9 @@ export class LoginPage implements OnInit {
   }
 
   ngOnInit() {
-    // Ha már be van jelentkezve, átirányítjuk a home-ra
+    // Ha már be van jelentkezve, átirányítjuk a list oldalra
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/tabs/home']);
+      this.router.navigate(['/tabs/list']);
     }
   }
 
@@ -74,7 +74,7 @@ export class LoginPage implements OnInit {
       next: (response) => {
         console.log('Sikeres bejelentkezés!', response);
         this.isLoading = false;
-        this.router.navigate(['/tabs/home']);
+        this.router.navigate(['/tabs/list']);
       },
       error: (error) => {
         console.error('Bejelentkezési hiba:', error);

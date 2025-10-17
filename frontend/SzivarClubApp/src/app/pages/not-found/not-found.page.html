@@ -1,0 +1,40 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Hiba</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="not-found-container">
+    <div class="error-section">
+      <div class="error-code">404</div>
+      <h1>Oldal nem található</h1>
+      <p class="error-message">
+        Sajnáljuk, de a keresett oldal nem létezik vagy áthelyezték.
+      </p>
+
+      <div class="illustration">
+        <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
+      </div>
+
+      <ion-text color="medium">
+        <p class="help-text">
+          Ellenőrizd az URL-t, vagy térj vissza a főoldalra.
+        </p>
+      </ion-text>
+    </div>
+
+    <div class="action-buttons">
+      <ion-button expand="block" (click)="goHome()" class="home-button">
+        <ion-icon slot="start" name="home-outline"></ion-icon>
+        Vissza a kezdőlapra
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" (click)="goBack()" class="back-button">
+        <ion-icon slot="start" name="arrow-back-outline"></ion-icon>
+        Vissza az előző oldalra
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
+
