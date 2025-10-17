@@ -33,6 +33,7 @@ import {
   chevronUpOutline,
   syncOutline
 } from 'ionicons/icons';
+import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
 
 interface Shop {
   id: number;
@@ -69,7 +70,8 @@ interface Shop {
     IonButton,
     IonSpinner,
     CommonModule,
-    FormsModule
+    FormsModule,
+    ShopDetailsModalComponent
   ]
 })
 export class ListPage implements OnInit {
@@ -83,6 +85,10 @@ export class ListPage implements OnInit {
   userLocation: { latitude: number; longitude: number } | null = null;
 
   filteredShops: Shop[] = [];
+
+  // Modal állapot
+  isModalOpen: boolean = false;
+  selectedShopId: number | null = null;
 
   constructor() {
     addIcons({
@@ -241,10 +247,16 @@ export class ListPage implements OnInit {
     }, 1000); // 1 másodperces delay a szimulációhoz
   }
 
-  // Bolt részleteinek megjelenítése
+  // Bolt részleteinek megjelenítése modal-ban
   openShopDetails(shop: Shop) {
     console.log('Bolt részletei:', shop);
-    // TODO: Navigálás a bolt részletes oldalára
+    this.selectedShopId = shop.id;
+    this.isModalOpen = true;
+  }
+
+  // Modal bezárása
+  closeModal() {
+    this.isModalOpen = false;
+    this.selectedShopId = null;
   }
 }
-

@@ -117,4 +117,12 @@
     <h3>Keresd meg a közeli szivarboltokat</h3>
     <p>Állítsd be a szűrőket és nyomd meg a "Keresés indítása" gombot!</p>
   </div>
+
+  <!-- Shop Details Modal -->
+  <app-shop-details-modal
+    *ngIf="selectedShopId"
+    [shopId]="selectedShopId"
+    [isOpen]="isModalOpen"
+    (didDismiss)="closeModal()"
+  ></app-shop-details-modal>
 </ion-content>
