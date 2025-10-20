@@ -1,21 +1,10 @@
 import { Router } from "express";
-import shopAccess from "../db/shopAccess";
+import {getAllCities, getCityAllShopLocations} from "./func/city";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
-    res.send({
-        cities : await shopAccess.getCities()
-    })
-});
-
-router.get("/:city", async (req, res) => {
-    const city = req.params.city;
-
-    const shopCoords = await shopAccess.getShopCoordsByCity(city);
-
-    res.send(shopCoords);
-});
+router.get("/", getAllCities);
+router.get("/:city", getCityAllShopLocations);
 
 
 

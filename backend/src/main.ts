@@ -3,6 +3,10 @@ import userRoutes from "./routes/userRoutes";
 import shopRoutes from "./routes/shopRoutes";
 import cityRoutes from "./routes/cityRoutes";
 import cors from 'cors';
+import dotenv from "dotenv";
+
+
+dotenv.config();
 
 const app: Application = express();
 const PORT = 3000;
