@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import {config} from "../../config/config";
 
 export async function handleShopSearch(req: Request, res: Response): Promise<void> {
-    if(!validateAuthToken(req.headers['authorization'])) {
+    if (!validateAuthToken(req.headers['authorization'])) {
         res.status(401).json({
             success: false,
             error: "Unauthorized",
@@ -59,23 +59,61 @@ export async function handleShopSearch(req: Request, res: Response): Promise<voi
         success: true,
         data: page,
         total: page.length,
-        limit : limit,
+        limit: limit,
         offset: offset,
-        hasMore : allCount > page.length
+        hasMore: allCount > page.length
     })
 }
 
-function validateAuthToken(authHeader : string | undefined): boolean{
+export async function handleShopDetails(req: Request, res: Response): Promise<void> {
+    if (!validateAuthToken(req.headers['authorization'])) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Invalid or missing token"
+        });
+        return;
+    }
+
+    const reqId = req.params.id as string | undefined;
+    if (!reqId){
+        res.status(404).json({
+            success: false,
+            error: "Not Found",
+            message: "Shop id missing"
+        });
+        return;
+    }
+
+    const id = parseInt(reqId);
+
+    const details = await shopAccess.getShopDetails(id);
+
+    if(!details){
+        res.status(404).json({
+            success: false,
+            error: "Not Found",
+            message: `Shop with id ${id} not found`
+        });
+        return;
+    }
+
+    res.status(200).json({
+        success: true,
+        data: details,
+    });
+}
+
+function validateAuthToken(authHeader: string | undefined): boolean {
     try {
         const token = authHeader && authHeader.split(' ')[1];
-        if(!token) {
+        if (!token) {
             return false;
         }
-        jwt.verify(token,config.jwt.secret);
+        jwt.verify(token, config.jwt.secret);
 
         return true;
-    }
-    catch (error) {
+    } catch (error) {
         return false;
     }
 }
