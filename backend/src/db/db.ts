@@ -1,11 +1,12 @@
+import {config} from "../config/config";
 import { Pool } from 'pg';
 
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT ?? function(){throw new Error("Missing DB_PORT from .env")}()),
-    database: process.env.DB_DATABASE,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
+    host: config.db.host,
+    port: config.db.port,
+    database: config.db.database,
+    user: config.db.user,
+    password: config.db.password,
 });
 
 // Test connection

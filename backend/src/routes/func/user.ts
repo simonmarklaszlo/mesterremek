@@ -2,16 +2,10 @@ import {Request, Response} from "express";
 import userAccess from "../../db/userAccess";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import {config} from "../../config/config";
+import {JwtPayload} from "../../model/auth";
 
-interface JwtPayload {
-    userId: number;
-    email: string;
-    name: string;
-    role: string;
-    exp?: number; // optional, will be set automatically
-}
 
-const SECRET_KEY = process.env.JWT_SECRET ?? function(){throw new Error("Missing JWT_SECRET from .env");}();
 const currentExpirationTime = (): number => Math.floor(Date.now() / 1000) + expirationTimeAsSeconds;
 const expirationTimeAsSeconds = 60 * 60 * 24 * 7;
 
@@ -19,7 +13,7 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     try {
         const {email, password, name} = req.body;
 
-        if (!email || !password || !name) {
+        if (!email || !password || !name || (password && password.length < 6)) {
             res.status(400).json({message: "Hiányzó vagy érvénytelen mezők"});
             return;
         }
@@ -74,7 +68,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
         };
 
         // Generate token
-        const token = jwt.sign(payload, process.env.JWT_SECRET!);
+        const token = jwt.sign(payload, config.jwt.secret);
 
 
         res.status(200)

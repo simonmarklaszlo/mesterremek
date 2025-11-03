@@ -2,67 +2,9 @@ import shopAccess from "../../db/shopAccess";
 import {Request, Response} from "express";
 import {ShopFilter} from "../../model/shop";
 import jwt from "jsonwebtoken";
+import {config} from "../../config/config";
 
-export async function routeShopAll(req: Request, res: Response) {
-    const {isValid, message, id} = handleId(req);
-
-    if (!isValid) {
-        res.send({err: message, id: id});
-        return;
-    }
-
-    const shopCoords = await shopAccess.getShopCoords(id);
-    const shopDetails = await shopAccess.getShopDetails(id);
-    const shopSchedules = await shopAccess.getShopSchedules(id);
-
-    res.send({
-        coords: shopCoords,
-        details: shopDetails,
-        schedules: shopSchedules,
-    })
-}
-
-export async function routeShopCoords(req: Request, res: Response): Promise<void> {
-    const {isValid, message, id} = handleId(req);
-
-    if (!isValid) {
-        res.send({err: message, id: id});
-        return;
-    }
-
-    const shopCoords = await shopAccess.getShopCoords(id);
-
-    res.send(shopCoords);
-}
-
-export async function routeShopDetails(req: Request, res: Response): Promise<void> {
-    const {isValid, message, id} = handleId(req);
-
-    if (!isValid) {
-        res.send({err: message, id: id});
-        return;
-    }
-
-    const shopDetails = await shopAccess.getShopDetails(id);
-
-    res.send(shopDetails);
-}
-
-export async function routeShopSchedules(req: Request, res: Response): Promise<void> {
-    const {isValid, message, id} = handleId(req);
-
-    if (!isValid) {
-        res.send({err: message, id: id});
-        return;
-    }
-
-    const shopSchedules = await shopAccess.getShopSchedules(id);
-
-    res.send(shopSchedules);
-}
-
-export async function shopSearch(req: Request, res: Response): Promise<void> {
-    const authHeader = req.headers['authorization'];
+export async function handleShopSearch(req: Request, res: Response): Promise<void> {
     if(!validateAuthToken(req.headers['authorization'])) {
         res.status(401).json({
             success: false,
@@ -101,7 +43,7 @@ export async function shopSearch(req: Request, res: Response): Promise<void> {
     const filter: ShopFilter = {
         latitude: latitude,
         longitude: longitude,
-        maxDistance: maxDistance,
+        maxDistanceKm: maxDistance,
         hasCigars: hasCigars,
         search: search,
         itemsPerPage: limit,
@@ -109,42 +51,27 @@ export async function shopSearch(req: Request, res: Response): Promise<void> {
     }
 
     const page = await shopAccess.getShopPage(filter);
+    const allCount = await shopAccess.countShopPages(filter);
+
+    console.log(allCount);
+
+    res.status(200).json({
+        success: true,
+        data: page,
+        total: page.length,
+        limit : limit,
+        offset: offset,
+        hasMore : allCount > page.length
+    })
 }
 
-function handleId(req: Request): { isValid: boolean, message: string | null, id: number } {
-    const reqId = req.params.id;
-
-    if (!reqId) {
-        return {
-            isValid: false,
-            message: "No id",
-            id: -1
-        }
-    }
-
-    const id = parseInt(reqId);
-
-    if (id < 1) {
-        return {
-            isValid: false,
-            message: "Invalid id",
-            id: id
-        }
-    }
-
-    return {
-        isValid: true,
-        message: null,
-        id: id
-    }
-}
 function validateAuthToken(authHeader : string | undefined): boolean{
     try {
         const token = authHeader && authHeader.split(' ')[1];
         if(!token) {
             return false;
         }
-        jwt.verify(token, process.env.JWT_SECRET!);
+        jwt.verify(token,config.jwt.secret);
 
         return true;
     }
