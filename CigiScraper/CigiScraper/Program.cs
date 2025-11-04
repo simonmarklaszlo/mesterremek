@@ -3,14 +3,14 @@ using CigiScraper.Db;
 using CigiScraper.LocalData;
 using CigiScraper.Model.Place;
 using CigiScraper.Model.Shop;
-using Scraper = CigiScraper.Scraping.Scraper;
+using CigiScraper.Scraping;
 
 //cylex.hu
 //nyitva.hu
 
 var comp = await GetMixed();
 
-await DbUploader.Upload(comp);
+// await DbUploader.Upload(comp);
 
 
 
@@ -18,7 +18,7 @@ return;
 
 async Task<UnofficialShop[]> Scrape()
 {
-    var scraper = new Scraper();
+    var scraper = new NdbScraper();
     var res = await scraper.ScrapeAny();
     res = res.EliminateDuplicates();
 
@@ -28,7 +28,7 @@ async Task<UnofficialShop[]> Scrape()
     var fatalData = res.Where(x => x.FatalError).ToArray();
 
 
-    await Logger.Flush();
+    await Logger2.Flush();
 
     var archiver = new Archiver("archive/scraped");
     await archiver.ArchiveToCsv("full.csv", completeData);

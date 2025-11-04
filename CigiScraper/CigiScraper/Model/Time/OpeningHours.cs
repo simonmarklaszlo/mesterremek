@@ -50,7 +50,7 @@ public partial class OpeningHours
 
         if (split.Length != 2)
         {
-            Logger.LogErrorTime(fullTime, TimeParseError.UnabledToParse, url);
+            Logger2.LogErrorTime(fullTime, TimeParseError.UnabledToParse, url);
             return new OpeningHours(MostCommonOpening, MostCommonClosing);
         }
 
@@ -59,13 +59,13 @@ public partial class OpeningHours
 
         const TimeParseError ignoreMask = TimeParseError.None | TimeParseError.Fallback | TimeParseError.UnabledToParse;
 
-        if (openingErr.HasFlag(TimeParseError.UnabledToParse)) Logger.LogErrorTime(split[0], openingErr, url);
-        else if((openingErr & ~ignoreMask) != 0) Logger.LogWarningTime(split[0], opening, openingErr, url, true);
-        else Logger.LogNormalTime(split[0], opening, url,true);
+        if (openingErr.HasFlag(TimeParseError.UnabledToParse)) Logger2.LogErrorTime(split[0], openingErr, url);
+        else if((openingErr & ~ignoreMask) != 0) Logger2.LogWarningTime(split[0], opening, openingErr, url, true);
+        else Logger2.LogNormalTime(split[0], opening, url,true);
 
-        if (closingErr.HasFlag(TimeParseError.UnabledToParse)) Logger.LogErrorTime(split[1], closingErr, url);
-        else if((closingErr & ~ignoreMask) != 0) Logger.LogWarningTime(split[1], closing, closingErr, url, false);
-        else Logger.LogNormalTime(split[1], closing, url,false);
+        if (closingErr.HasFlag(TimeParseError.UnabledToParse)) Logger2.LogErrorTime(split[1], closingErr, url);
+        else if((closingErr & ~ignoreMask) != 0) Logger2.LogWarningTime(split[1], closing, closingErr, url, false);
+        else Logger2.LogNormalTime(split[1], closing, url,false);
 
 
         return new OpeningHours(opening, closing);

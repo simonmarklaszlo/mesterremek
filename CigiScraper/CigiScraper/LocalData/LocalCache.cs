@@ -7,7 +7,7 @@ namespace CigiScraper.LocalData;
 public static class LocalCache
 {
     private const string DirectoryPath = "./archive/htmlsaves/";
-    private const string UrlsFName = "urls.txt";
+
     static LocalCache()
     {
         Directory.CreateDirectory(DirectoryPath);
@@ -21,6 +21,7 @@ public static class LocalCache
             Console.WriteLine("[CACHE] Directory does not exist.");
             return;
         }
+
         var files = Directory.GetFiles(DirectoryPath);
 
         var tasks = files.Select(DeleteIfIncorrect);
@@ -57,7 +58,7 @@ public static class LocalCache
         const int kb = 1024;
         var fileSize = new FileInfo(path).Length;
 
-        if (fileSize > kb*10) return false;
+        if (fileSize > kb * 10) return false;
 
         var htmlString = await File.ReadAllTextAsync(path);
         var htmlDocument = new HtmlDocument();
@@ -86,15 +87,25 @@ public static class LocalCache
         return File.WriteAllTextAsync(hash, content);
     }
 
-    public static Task SavePageUrls(string[] urls)
+    public static Task SavePageUrls(string[] urls, string scrapeName)
     {
-        var path = Path.Combine(DirectoryPath, UrlsFName);
+        if (!scrapeName.EndsWith(".txt"))
+        {
+            scrapeName += ".txt";
+        }
+
+        var path = Path.Combine(DirectoryPath,scrapeName);
         return File.WriteAllLinesAsync(path, urls);
     }
 
-    public static Task<string[]> GetPageUrls()
+    public static Task<string[]> GetPageUrls(string scrapeName)
     {
-        var path = Path.Combine(DirectoryPath, UrlsFName);
+        if (!scrapeName.EndsWith(".txt"))
+        {
+            scrapeName += ".txt";
+        }
+
+        var path = Path.Combine(DirectoryPath, scrapeName);
         if (!File.Exists(path)) return Task.FromResult(Array.Empty<string>());
         return File.ReadAllLinesAsync(path);
     }
@@ -102,6 +113,6 @@ public static class LocalCache
     private static string GetPath(string url)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));
-        return Path.Combine(DirectoryPath,Convert.ToHexString(bytes) + ".html");
+        return Path.Combine(DirectoryPath, Convert.ToHexString(bytes) + ".html");
     }
 }

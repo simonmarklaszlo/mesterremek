@@ -1,243 +1,89 @@
-using System.Text.RegularExpressions;
 using CigiScraper.LocalData;
 using CigiScraper.Model.Shop;
-using CigiScraper.Model.Time;
 using HtmlAgilityPack;
 
 namespace CigiScraper.Scraping;
 
-public partial class Scraper
+public abstract class Scraper : IAsyncDisposable
 {
-    private const string BaseUrl ="https://nemzetidohanyboltkereso.hu/trafik-lista";
-    private bool _throwOnNetCall;
+    private ScrapeType _scrapeType;
+    private bool _allowNetCall;
+    private bool _saveToCache;
+    private readonly HtmlCache _htmlCache;
+    protected readonly Logger Logger;
+    protected Scraper(string scrapeName)
+    {
+        _htmlCache = new HtmlCache(scrapeName);
+        Logger = new Logger(scrapeName);
+    }
 
     public Task<UnofficialShop[]> ScrapeAny(bool preferOnline = false)
     {
+        _saveToCache = true;
         if (preferOnline)
         {
+            _allowNetCall = true;
+            _scrapeType = ScrapeType.Online;
             return ScrapeFromOnline();
         }
 
+        _scrapeType = ScrapeType.Cache;
         return ScrapeFromCache();
     }
 
-    private async Task<UnofficialShop[]> ScrapeFromOnline()
+    protected abstract Task<UnofficialShop[]> ScrapeFromOnline();
+    protected abstract Task<UnofficialShop[]> ScrapeFromCache();
+
+    protected async Task<HtmlDocument> LoadHtml(string url)
     {
-        _throwOnNetCall = false;
-        var mainRes = await GetUrlsFromMainPage();
-
-        List<string> urls = [];
-        foreach (var url in mainRes)
-        {
-            urls.AddRange(await GetBoltUrlsFromLocation(url));
-        }
-
-
-        await LocalCache.SavePageUrls(urls.ToArray());
-
-        List<UnofficialShop> bolt = [];
-        foreach (var pageUrl in urls)
-        {
-            bolt.Add(await ParseBoltFromPage(pageUrl));
-        }
-
-        return bolt.ToArray();
-    }
-
-    private async Task<UnofficialShop[]> ScrapeFromCache()
-    {
-        _throwOnNetCall = true;
-
-        var urls = await LocalCache.GetPageUrls();
-        if (urls.Length == 0)
-        {
-            try
-            {
-                var midUrls = await GetUrlsFromMainPage();
-
-                var t1 = midUrls.Select(GetBoltUrlsFromLocation).ToArray();
-                var r1 = await Task.WhenAll(t1);
-                urls = r1.SelectMany(x => x).ToArray();
-
-                await LocalCache.SavePageUrls(urls);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return [];
-            }
-        }
-        var tasks = urls.Select(ParseBoltFromPage).ToArray();
-        var res = await Task.WhenAll(tasks);
-
-        _throwOnNetCall = false;
-        return res;
-    }
-
-    private async Task<IEnumerable<string>> GetUrlsFromMainPage()
-    {
-        Console.WriteLine("[Main] Starting");
-
-        var htmlString = await LocalCache.GetPage(BaseUrl) ?? await GetHtml(BaseUrl);
         var htmlDocument = new HtmlDocument();
-        htmlDocument.LoadHtml(htmlString);
+        htmlDocument.LoadHtml(await GetHtml(url));
 
-        /*
-         <li class="cat-item cat-item-99">
-            <a href="https://...">...</a>
-        </li>
-         */
-        var nodes = htmlDocument.DocumentNode.SelectNodes("//li[contains(@class,'cat-item')]/a");
-
-
-        if (nodes is null)
+        return htmlDocument;
+    }
+    private async Task<string> GetHtml(string url)
+    {
+        if (_scrapeType is not ScrapeType.Cache)
         {
-            Console.WriteLine("[Main] Elements not found");
-            Console.WriteLine("[Main] Finished with Error");
-            return [];
+            return await PageFromOnline(url);
         }
 
-        var urls = nodes.Select(x => x.GetAttributeValue("href", ""));
-        Console.WriteLine("[Main] Finished");
-        return urls;
+        var cachePage = await PageFromCache(url);
+        if (cachePage is not null) return cachePage;
+
+        if (!_allowNetCall) throw new Exception("Not allowed to make a network call.");
+
+        return await PageFromOnline(url);
     }
 
-    private async Task<IEnumerable<string>> GetBoltUrlsFromLocation(string url)
+    private Task<string?> PageFromCache(string url)
     {
-        Console.WriteLine($"[Location] Starting : {url}");
-
-        var htmlString = await LocalCache.GetPage(url) ?? await GetHtml(url);
-        var htmlDocument = new HtmlDocument();
-        htmlDocument.LoadHtml(htmlString);
-
-        /*
-         <a href="...">
-                <svg>...</svg>
-                Részletek
-            </a>
-         */
-        var nodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(., 'Részletek')]");
-        if (nodes is null)
-        {
-            Console.WriteLine("[Location] Elements not found");
-            Console.WriteLine($"[Location] Finished with Error: {url}");
-            return [];
-        }
-
-        Console.WriteLine($"[Location] Finished : {url}");
-        return nodes.Select(x => x.GetAttributeValue("href", ""));
+        return _htmlCache.GetPage(url);
     }
 
-    private async Task<UnofficialShop> ParseBoltFromPage(string url)
+    private async Task<string> PageFromOnline(string url)
     {
-        Console.WriteLine($"[Bolt] Starting : {url}");
-
-        var htmlString = await LocalCache.GetPage(url) ?? await GetHtml(url);
-        var htmlDocument = new HtmlDocument();
-        htmlDocument.LoadHtml(htmlString);
-        /*
-         <dl>
-            <dt>Hétfő</dt>
-            <dd>6:00-22:00</dd>
-
-            <dt>Kedd</dt>
-            <dd>6:00-22:00</dd>
-
-            <dt>Szerda</dt>
-            <dd>6:00-22:00</dd>
-
-            <dt>Csütörtök</dt>
-            <dd>6:00-22:00</dd>
-
-            <dt>Péntek</dt>
-            <dd>6:00-22:00</dd>
-
-            <dt>Szombat</dt>
-            <dd>7:00-2:00</dd>
-
-            <dt>Vasárnap</dt>
-            <dd>7:00-13:00</dd>
-        </dl>
-         */
-
-        /*
-            <span itemprop="addressLocality">...</span>
-         */
-        /*
-            <span itemprop="streetAddress">...</span>
-         */
-        HtmlNodeCollection? timeNodes = htmlDocument.DocumentNode.SelectNodes("//dl/*");
-        HtmlNode? localityNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@itemprop='addressLocality']");
-        HtmlNode? streetNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@itemprop='streetAddress']");
-        HtmlNode? scriptNode = htmlDocument.DocumentNode.SelectNodes("//script")
-            ?.FirstOrDefault(s => s.InnerText.Contains("initSingleTrafikMap"));
-
-
-        //hely - település + utca
-        string city = localityNode?.InnerText.Trim() ?? "";
-        var street = streetNode?.InnerText.Trim() ?? "";
-
-        var nyitvatartasok = GetNyitvatartasok(timeNodes, url);
-        var (lat, lon) = GetCoordinates(scriptNode);
-
-        Console.WriteLine($"[Bolt] Finished : {url}");
-        return new UnofficialShop(url, lon, lat, city, street, nyitvatartasok);
-    }
-
-    private static OpeningSchedule[] GetNyitvatartasok(HtmlNodeCollection? nodes, string url)
-    {
-        if (nodes is null) return [];
-
-        var timeNodesArr = nodes.Where(x => x.Name is "dd" or "dt").ToArray();
-
-        List<OpeningSchedule> nyitvatartasok = [];
-        for (int i = 0; i < timeNodesArr.Length; i += 2)
-        {
-            var day = timeNodesArr[i].InnerText.Trim();
-            var hours = timeNodesArr[i + 1].InnerText;
-
-
-            nyitvatartasok.Add(new OpeningSchedule(day, OpeningHours.Parse(hours, url, nyitvatartasok)));
-        }
-
-        return nyitvatartasok.ToArray();
-    }
-
-    private static (double, double) GetCoordinates(HtmlNode? script)
-    {
-        if (script is null) return (double.NaN, double.NaN);
-
-        // Regex -> ... L.marker([lat, lon] ...
-        var match = JsCoordArrRegex().Match(script.InnerText);
-
-        if (match.Success) return (double.Parse(match.Groups["lat"].Value), double.Parse(match.Groups["lon"].Value));
-
-        return (double.NaN, double.NaN);
-    }
-    private async Task<string> GetHtml(string url, bool save = true)
-    {
-        if (_throwOnNetCall)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[NET CALL] Not allowed");
-            throw new Exception("Not allowed to make a network call.");
-        }
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"[NET CALL] {url}");
-        Console.ResetColor();
-
         var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(url);
         var htmlString = await response.Content.ReadAsStringAsync();
 
-        if (save)
+        if (_saveToCache)
         {
-            await LocalCache.SavePage(url, htmlString);
+            await _htmlCache.SavePage(url, htmlString);
         }
 
         return htmlString;
     }
 
-    [GeneratedRegex(@"L\.marker\(\s*\[(?<lat>[\d\.]+),\s*(?<lon>[\d\.]+)\]")]
-    private static partial Regex JsCoordArrRegex();
+    private enum ScrapeType
+    {
+        Online,
+        Cache,
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        await Logger.DisposeAsync();
+    }
 }

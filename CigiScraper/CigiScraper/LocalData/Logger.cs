@@ -1,47 +1,60 @@
-using CigiScraper.Model.Time;
+using System.Text;
 
 namespace CigiScraper.LocalData;
 
-public static class Logger
+public sealed class Logger : IAsyncDisposable
 {
-    private const string TimeErrorPath = "archive/time/error.csv";
-    private const string TimeWarningPath = "archive/time/warning.csv";
-    private const string TimeNormalPath = "archive/time/normal.csv";
+    public const string DirectoryPath = "./archive/logs/";
+    private readonly string _baseDirPath;
+    private readonly string _logName;
+    private string LogFileName => _logName.EndsWith(".txt") ? _logName : _logName + ".txt";
+    private string LogFilePath => Path.Combine(_baseDirPath, LogFileName);
+    private readonly List<string> _logs;
+    private const int MaxLogs = 100;
 
-    private static readonly List<string> TimeErrors = [];
-    private static readonly List<string> TimeWarnings = [];
-    private static readonly List<string> TimeNormal = [];
-
-    static Logger()
+    public Logger(string logName, string baseDirPath = DirectoryPath)
     {
-        if (!Directory.Exists("archive/time"))
+        _logName = logName;
+        _baseDirPath = baseDirPath;
+        _logs = new List<string>(MaxLogs);
+
+        Directory.CreateDirectory(_baseDirPath);
+        var files = Directory.GetFiles(_baseDirPath);
+        foreach (var file in files)
         {
-            Directory.CreateDirectory("archive/time");
+            File.Delete(file);
         }
     }
 
-    public static void LogErrorTime(string input, TimeParseError error, string url)
+    public Task Log(string message) => RecordMessage(message);
+    public Task Warn(string message) => RecordMessage(message);
+    public Task Error(string message) => RecordMessage(message);
+
+    private Task RecordMessage(string message)
     {
-        TimeErrors.Add($"{input}|{error:G}|{url}");
+        _logs.Add(message);
+
+        if (_logs.Count != MaxLogs) return Task.CompletedTask;
+
+        return Flush();
     }
 
-    public static void LogWarningTime(string input, TimeOnly time, TimeParseError error, string url, bool isOpening)
+    private async Task Flush()
     {
-        TimeWarnings.Add($"{(isOpening ? "OP" : "CL")}|{input}|{time:HH:mm}|{error:G}|{url}");
+        await using var writer = new StreamWriter(LogFilePath, true);
+        foreach (var log in _logs)
+        {
+            await writer.WriteLineAsync(log);
+        }
+
+        _logs.Clear();
     }
 
-    public static void LogNormalTime(string input, TimeOnly time, string url, bool isOpening)
+    public async ValueTask DisposeAsync()
     {
-        TimeNormal.Add($"{(isOpening ? "OP" : "CL")}|{input}|{time:HH:mm}|{url}");
-    }
-    public static async Task Flush()
-    {
-        await File.WriteAllLinesAsync(TimeErrorPath, TimeErrors);
-        await File.WriteAllLinesAsync(TimeWarningPath, TimeWarnings);
-        await File.WriteAllLinesAsync(TimeNormalPath, TimeNormal);
-
-        TimeErrors.Clear();
-        TimeWarnings.Clear();
-        TimeNormal.Clear();
+        if (_logs.Count > 0)
+        {
+            await Flush();
+        }
     }
 }
