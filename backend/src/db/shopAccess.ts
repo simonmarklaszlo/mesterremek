@@ -126,7 +126,7 @@ async function getShopIdsInCity(city: string): Promise<number[]> {
     const query = `
         SELECT id
         FROM shops s
-        WHERE city = ${city}
+        WHERE city = $1
     `;
 
     const values = [city];

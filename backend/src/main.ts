@@ -5,6 +5,7 @@ import cors from 'cors';
 
 
 const app: Application = express();
+const HOST = '0.0.0.0';
 const PORT = 3000;
 
 // Middleware to parse JSON
@@ -15,6 +16,6 @@ app.use(cors());
 app.use("/api/auth", userRoutes);
 app.use("/api/shops", shopRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
