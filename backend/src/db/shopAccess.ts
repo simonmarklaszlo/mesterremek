@@ -122,6 +122,20 @@ async function countShopPages(filter: ShopFilter): Promise<number> {
     return parseInt(result.rows[0]?.totalcount ?? '0', 10);
 }
 
+async function getShopIdsInCity(city: string): Promise<number[]> {
+    const query = `
+        SELECT id
+        FROM shops s
+        WHERE city = ${city}
+    `;
+
+    const values = [city];
+
+    const result = await pool.query<{ id: number }>(query, values);
+
+    return result.rows.map(x => x.id);
+}
+
 async function getShopDetails(id: number): Promise<ShopDetails | undefined> {
     const shop = await getShop(id);
     if (!shop) return undefined;
@@ -286,5 +300,6 @@ async function getOpeningHours(shopId: number): Promise<OpeningHour[]> {
 export default {
     getShopPage,
     countShopPages,
-    getShopDetails
+    getShopDetails,
+    getShopIdsInCity
 }

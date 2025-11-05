@@ -76,7 +76,7 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
     }
 
     const reqId = req.params.id as string | undefined;
-    if (!reqId){
+    if (!reqId) {
         res.status(404).json({
             success: false,
             error: "Not Found",
@@ -89,7 +89,7 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
 
     const details = await shopAccess.getShopDetails(id);
 
-    if(!details){
+    if (!details) {
         res.status(404).json({
             success: false,
             error: "Not Found",
@@ -102,6 +102,35 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
         success: true,
         data: details,
     });
+}
+
+export async function handleCityShops(req: Request, res: Response): Promise<void> {
+    if (!validateAuthToken(req.headers['authorization'])) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Invalid or missing token"
+        });
+        return;
+    }
+
+    const city = req.params.city as string | undefined;
+
+    if (!city) {
+        res.status(400).json({
+            success: false,
+            error: "Invalid parameters",
+            message: "city is required"
+        });
+        return;
+    }
+
+    const result = await shopAccess.getShopIdsInCity(city);
+
+    res.status(200).json({
+        success: true,
+        data: result,
+    })
 }
 
 function validateAuthToken(authHeader: string | undefined): boolean {
