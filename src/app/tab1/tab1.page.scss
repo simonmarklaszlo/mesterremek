@@ -1,0 +1,18 @@
+
+.white_style {
+    filter: invert(100%) sepia(0%) saturate(7492%) hue-rotate(346deg) brightness(101%) contrast(101%);
+}
+.black_style {
+  filter: none;
+}
+
+// Styling for user location marker with ion-icon
+.user-location-marker {
+  background: transparent;
+  border: none;
+  
+  ion-icon {
+    display: block;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3)); // Add shadow for visibility
+  }
+}

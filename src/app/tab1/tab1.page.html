@@ -14,7 +14,12 @@
       </ion-input>
 
     </td>
+    <td>
+      <ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()">Theme</ion-toggle>
+    </td>
+    
   </tr>
+
 </table>
 
     </ion-toolbar>
