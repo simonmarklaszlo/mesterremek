@@ -18,16 +18,26 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
                    WHEN COUNT(DISTINCT c.id) > 0 THEN true
                    ELSE false
                    END                    as hasCigars,
-               (
-                   ROUND(
+            /* (
+                 ROUND(
+                         6371 * acos(
+                                 cos(radians($1)) * cos(radians(ST_Y(s.location))) *
+                                 cos(radians(ST_X(s.location)) - radians($2)) +
+                                 sin(radians($1)) * sin(radians(ST_Y(s.location)))
+                                ),
+                         2
+                 )
+                 )                      AS distance,*/
+               ROUND(
+                       (
                            6371 * acos(
                                    cos(radians($1)) * cos(radians(ST_Y(s.location))) *
                                    cos(radians(ST_X(s.location)) - radians($2)) +
                                    sin(radians($1)) * sin(radians(ST_Y(s.location)))
-                                  ),
-                           2
-                   )
-                   )                      AS distance,
+                                  )
+                           )::numeric,
+                       2
+               )                          AS distance,
                COALESCE(AVG(r.rating), 0) AS rating,
                COUNT(DISTINCT r.id)       AS reviewCount
         FROM shops s
