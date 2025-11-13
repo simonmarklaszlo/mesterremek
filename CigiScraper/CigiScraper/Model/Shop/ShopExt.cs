@@ -13,7 +13,7 @@ public static class ShopExt
     }
 
 
-    public static Shop[] FindWithMatchingAddress(this UnofficialShop[] unofficialShops, OfficialShop[] shops)
+    public static Shop[] FindWithMatchingAddress(this UnofficialShop3[] unofficialShops, OfficialShop[] shops)
     {
         List<Shop> resShop = [];
 
@@ -26,9 +26,9 @@ public static class ShopExt
 
         return resShop.ToArray();
     }
-    public static UnofficialShop[] EliminateDuplicates(this UnofficialShop[] shops)
+    public static UnofficialShop3[] EliminateDuplicates(this UnofficialShop3[] shops)
     {
-        UnofficialShop?[] resNullable = shops.Select(UnofficialShop? (x) => x).ToArray();
+        UnofficialShop3?[] resNullable = shops.Select(UnofficialShop3? (x) => x).ToArray();
         for (var i = 0; i < resNullable.Length; i++)
         {
             for (var j = 0; j < resNullable.Length; j++)
@@ -39,15 +39,15 @@ public static class ShopExt
             }
         }
 
-        return resNullable.OfType<UnofficialShop>().ToArray();
+        return resNullable.OfType<UnofficialShop3>().ToArray();
     }
 
 
-    private static OfficialShop? FindByAddress(this UnofficialShop shop, OfficialShop[] officialShops)
+    private static OfficialShop? FindByAddress(this UnofficialShop3 shop3, OfficialShop[] officialShops)
     {
         foreach (var officialShop in officialShops)
         {
-            if (officialShop.Location.Address == shop.Address) return officialShop;
+            if (officialShop.Location.Address == shop3.Address) return officialShop;
         }
 
         return null;

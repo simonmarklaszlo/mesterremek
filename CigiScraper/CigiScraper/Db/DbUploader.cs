@@ -1,3 +1,4 @@
+using System.Text;
 using CigiScraper.Model.Shop;
 using CigiScraper.Model.Time;
 using Npgsql;
@@ -12,7 +13,8 @@ public static class DbUploader
         Port = 5432,
         Username = "develop",
         Password = "Szivar25",
-        Database = "szivarclub"
+        Database = "szivarclub",
+        IncludeErrorDetail = true
     }.ToString();
 
     private static readonly Dictionary<string, int> Napok = new()
@@ -26,9 +28,77 @@ public static class DbUploader
         { "Vasárnap", 7 }
     };
 
+    public static async Task RefreshDynamicTables()
+    {
+        var columns = await DbInfo.GetInfo();
+
+        if (columns.Length == 0) return;
+
+        await using NpgsqlConnection conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        await DropInfoTables(conn);
+
+        await UploadInfoTables(conn, columns);
+    }
+
+    private static async Task DropInfoTables(NpgsqlConnection conn)
+    {
+        const string columnQuery = "TRUNCATE TABLE db_columns CASCADE;";
+
+        await using var columnCmd = new NpgsqlCommand(columnQuery, conn);
+        await columnCmd.ExecuteNonQueryAsync();
+
+
+        const string tableQuery = "TRUNCATE TABLE db_tables CASCADE;";
+
+        await using var tableCmd = new NpgsqlCommand(tableQuery, conn);
+        await tableCmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task UploadInfoTables(NpgsqlConnection conn, DbColumn[] columns)
+    {
+        var tables = columns.Select(x => x.TableName)
+            .Distinct()
+            .Order()
+            .ToArray();
+
+        StringBuilder tablesSb = new StringBuilder();
+        tablesSb.Append("INSERT INTO db_tables (id, name) VALUES ");
+
+        for (var i = 0; i < tables.Length - 1; i++)
+        {
+            tablesSb.Append($"({i},'{tables[i]}'),");
+        }
+
+        tablesSb.Append($"({tables.Length - 1},'{tables[^1]}');");
+
+        await using var tableCmd = new NpgsqlCommand(tablesSb.ToString(), conn);
+        await tableCmd.ExecuteNonQueryAsync();
+
+
+        StringBuilder columnsSb = new StringBuilder();
+        columnsSb.Append("INSERT INTO db_columns (id,table_id,name) VALUES ");
+
+        columns = columns
+            .OrderBy(x => x.TableName)
+            .ThenBy(x => x.ColumnName)
+            .ToArray();
+
+        for (var i = 0; i < columns.Length - 1; i++)
+        {
+            columnsSb.Append($"({i},{Array.IndexOf(tables, columns[i].TableName)},'{columns[i].ColumnName}'),");
+        }
+
+        columnsSb.Append($"({columns.Length},{Array.IndexOf(tables, columns[^1].TableName)},'{columns[^1].ColumnName}');");
+
+        await using var columnCmd = new NpgsqlCommand(columnsSb.ToString(), conn);
+        await columnCmd.ExecuteNonQueryAsync();
+    }
+
     public static async Task Upload(Shop[] shops)
     {
-        if(shops.Length == 0) return;
+        if (shops.Length == 0) return;
 
         await using NpgsqlConnection conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();

@@ -10,142 +10,83 @@ public partial class NdbScraper() : Scraper("Ndb")
 {
     private const string BaseUrl = "https://nemzetidohanyboltkereso.hu/trafik-lista";
 
-    protected override async Task<UnofficialShop[]> ScrapeFromOnline()
+    protected override async Task<ScrapedShop[]> ScrapeFromOnline()
     {
-        var mainRes = await GetUrlsFromMainPage();
+        var places = await GetPlaceUrls();
+        IEnumerable<string> shopUrlsEnum = [];
 
-        List<string> urls = [];
-        foreach (var url in mainRes)
+        foreach (var place in places)
         {
-            urls.AddRange(await GetBoltUrlsFromLocation(url));
+            var urls = await GetShopUrlsFromPlace(place);
+            shopUrlsEnum = shopUrlsEnum.Concat(urls);
         }
 
+        var shopUrls = shopUrlsEnum.ToArray();
 
-        await LocalCache.SavePageUrls(urls.ToArray(),"");
+        await HtmlCache.SavePageUrls(shopUrls);
 
-        List<UnofficialShop> bolt = [];
-        foreach (var pageUrl in urls)
+        ScrapedShop[] shops = new ScrapedShop[shopUrls.Length];
+
+        for (var i = 0; i < shopUrls.Length; i++)
         {
-            bolt.Add(await ParseBoltFromPage(pageUrl));
+            shops[i] = await ParseShopFromPage(shopUrls[i]);
         }
 
-        return bolt.ToArray();
+        return shops;
     }
 
-    protected override async Task<UnofficialShop[]> ScrapeFromCache()
+    protected override async Task<ScrapedShop[]> ScrapeFromCache()
     {
-        var urls = await LocalCache.GetPageUrls("");
-        if (urls.Length == 0)
+        var shopUrls = await HtmlCache.GetPageUrls();
+        ScrapedShop[] shops = new ScrapedShop[shopUrls.Length];
+        int index = 0;
+
+        await foreach (var task in Task.WhenEach(shopUrls.Select(ParseShopFromPage)))
         {
-            try
-            {
-                var midUrls = await GetUrlsFromMainPage();
-
-                var t1 = midUrls.Select(GetBoltUrlsFromLocation).ToArray();
-                var r1 = await Task.WhenAll(t1);
-                urls = r1.SelectMany(x => x).ToArray();
-
-                await LocalCache.SavePageUrls(urls,"");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return [];
-            }
+            shops[index++] = await task;
         }
 
-        var tasks = urls.Select(ParseBoltFromPage).ToArray();
-        var res = await Task.WhenAll(tasks);
-
-        return res;
+        return shops.ToArray();
     }
 
-    private async Task<IEnumerable<string>> GetUrlsFromMainPage()
+    private async Task<IEnumerable<string>> GetPlaceUrls()
     {
-        Console.WriteLine("[Main] Starting");
-
         var htmlDocument = await LoadHtml(BaseUrl);
 
-        /*
-         <li class="cat-item cat-item-99">
-            <a href="https://...">...</a>
-        </li>
-         */
-        var nodes = htmlDocument.DocumentNode.SelectNodes("//li[contains(@class,'cat-item')]/a");
+        var nodes = htmlDocument.DocumentNode
+            .SelectNodes("//li[contains(@class,'cat-item')]/a");
 
 
         if (nodes is null)
         {
-            Console.WriteLine("[Main] Elements not found");
-            Console.WriteLine("[Main] Finished with Error");
-            return [];
+            const string msg = $"Unable to find urls on {BaseUrl}";
+            await Logger.Error(msg);
+            throw new Exception(msg);
         }
 
-        var urls = nodes.Select(x => x.GetAttributeValue("href", ""));
-        Console.WriteLine("[Main] Finished");
-        return urls;
-    }
-
-    private async Task<IEnumerable<string>> GetBoltUrlsFromLocation(string url)
-    {
-        Console.WriteLine($"[Location] Starting : {url}");
-
-        var htmlDocument = await LoadHtml(url);
-
-        /*
-         <a href="...">
-                <svg>...</svg>
-                Részletek
-            </a>
-         */
-        var nodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(., 'Részletek')]");
-        if (nodes is null)
-        {
-            Console.WriteLine("[Location] Elements not found");
-            Console.WriteLine($"[Location] Finished with Error: {url}");
-            return [];
-        }
-
-        Console.WriteLine($"[Location] Finished : {url}");
         return nodes.Select(x => x.GetAttributeValue("href", ""));
     }
 
-    private async Task<UnofficialShop> ParseBoltFromPage(string url)
+    private async Task<IEnumerable<string>> GetShopUrlsFromPlace(string url)
     {
-        Console.WriteLine($"[Bolt] Starting : {url}");
-
         var htmlDocument = await LoadHtml(url);
-        /*
-         <dl>
-            <dt>Hétfő</dt>
-            <dd>6:00-22:00</dd>
 
-            <dt>Kedd</dt>
-            <dd>6:00-22:00</dd>
+        var nodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(., 'Részletek')]");
 
-            <dt>Szerda</dt>
-            <dd>6:00-22:00</dd>
+        if (nodes is null)
+        {
+            string msg = $"Unable to find shop urls on {url}";
+            await Logger.Error(msg);
+            throw new Exception(msg);
+        }
 
-            <dt>Csütörtök</dt>
-            <dd>6:00-22:00</dd>
+        return nodes.Select(x => x.GetAttributeValue("href", ""));
+    }
 
-            <dt>Péntek</dt>
-            <dd>6:00-22:00</dd>
+    private async Task<ScrapedShop> ParseShopFromPage(string url)
+    {
+        var htmlDocument = await LoadHtml(url);
 
-            <dt>Szombat</dt>
-            <dd>7:00-2:00</dd>
-
-            <dt>Vasárnap</dt>
-            <dd>7:00-13:00</dd>
-        </dl>
-         */
-
-        /*
-            <span itemprop="addressLocality">...</span>
-         */
-        /*
-            <span itemprop="streetAddress">...</span>
-         */
         HtmlNodeCollection? timeNodes = htmlDocument.DocumentNode.SelectNodes("//dl/*");
         HtmlNode? localityNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@itemprop='addressLocality']");
         HtmlNode? streetNode = htmlDocument.DocumentNode.SelectSingleNode("//span[@itemprop='streetAddress']");
@@ -153,18 +94,35 @@ public partial class NdbScraper() : Scraper("Ndb")
             ?.FirstOrDefault(s => s.InnerText.Contains("initSingleTrafikMap"));
 
 
-        //hely - település + utca
-        string city = localityNode?.InnerText.Trim() ?? "";
-        var street = streetNode?.InnerText.Trim() ?? "";
+        string city = localityNode?.InnerText.Trim() ?? string.Empty;
+        var street = streetNode?.InnerText.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(city))
+        {
+            await Logger.Warn($"No city found for {url}");
+        }
+        if (string.IsNullOrEmpty(street))
+        {
+            await Logger.Warn($"No street found for {url}");
+        }
 
-        var nyitvatartasok = GetNyitvatartasok(timeNodes, url);
-        var (lat, lon) = GetCoordinates(scriptNode);
 
-        Console.WriteLine($"[Bolt] Finished : {url}");
-        return new UnofficialShop(url, lon, lat, city, street, nyitvatartasok);
+        var openingSchedule = ExtractOpeningSchedule(timeNodes, url);
+        if (openingSchedule.Length == 0)
+        {
+            await Logger.Warn($"No opening schedule found for {url}");
+        }
+
+
+        var (lat, lon) = ExtractCoordinates(scriptNode);
+        if (double.IsNaN(lat) || double.IsNaN(lon))
+        {
+            await Logger.Warn($"No coordinates found for {url}");
+        }
+
+        return new ScrapedShop(url,null, city, street, openingSchedule, lat, lon);
     }
 
-    private static OpeningSchedule[] GetNyitvatartasok(HtmlNodeCollection? nodes, string url)
+    private OpeningSchedule[] ExtractOpeningSchedule(HtmlNodeCollection? nodes, string url)
     {
         if (nodes is null) return [];
 
@@ -177,18 +135,17 @@ public partial class NdbScraper() : Scraper("Ndb")
             var hours = timeNodesArr[i + 1].InnerText;
 
 
-            nyitvatartasok.Add(new OpeningSchedule(day, OpeningHours.Parse(hours, url, nyitvatartasok)));
+            nyitvatartasok.Add(new OpeningSchedule(day, OpeningHours.Parse(hours, url, nyitvatartasok, Logger)));
         }
 
         return nyitvatartasok.ToArray();
     }
 
-    private static (double, double) GetCoordinates(HtmlNode? script)
+    private static (double, double) ExtractCoordinates(HtmlNode? script)
     {
         if (script is null) return (double.NaN, double.NaN);
 
-        // Regex -> ... L.marker([lat, lon] ...
-        var match = JsCoordArrRegex().Match(script.InnerText);
+        var match = RegexJsCoordArray().Match(script.InnerText);
 
         if (match.Success) return (double.Parse(match.Groups["lat"].Value), double.Parse(match.Groups["lon"].Value));
 
@@ -196,5 +153,5 @@ public partial class NdbScraper() : Scraper("Ndb")
     }
 
     [GeneratedRegex(@"L\.marker\(\s*\[(?<lat>[\d\.]+),\s*(?<lon>[\d\.]+)\]")]
-    private static partial Regex JsCoordArrRegex();
+    private static partial Regex RegexJsCoordArray();
 }

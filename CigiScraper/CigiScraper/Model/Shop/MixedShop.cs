@@ -16,7 +16,7 @@ public class MixedShop
 
     public OpeningSchedule[] Schedules { get; }
 
-    public MixedShop(OfficialShop o, UnofficialShop u)
+    public MixedShop(OfficialShop o, UnofficialShop3 u)
     {
         PostalCode = o.PostalLocation!.PostalCode;
         County = o.PostalLocation.County;

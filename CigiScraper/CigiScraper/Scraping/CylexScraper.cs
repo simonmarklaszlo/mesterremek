@@ -11,27 +11,34 @@ public partial class CylexScraper() : Scraper("Cylex")
 {
     private const string PlacesBaseUrl = "https://www.cylex.hu/trafik/helyek/";
 
-    protected override async Task<UnofficialShop[]> ScrapeFromOnline()
+    protected override Task<ScrapedShop[]> ScrapeFromOnline() => ScrapeFromCache();
+
+    protected override async Task<ScrapedShop[]> ScrapeFromCache()
     {
-        HashSet<string> shopUrlHashes = [];
-        List<UnofficialShop2> shops = [];
-        var placeUrls = await GetPlaceUrls();
-        foreach (var placeUrl in placeUrls)
+        var shopUrls = await HtmlCache.GetPageUrls();
+
+        if (shopUrls.Length == 0)
         {
-            var shopUrls = await GetShopUrlsFromPlace(placeUrl);
-            foreach (var shopUrl in shopUrls)
+            var places = await GetPlaceUrls();
+            IEnumerable<string> shopUrlsEnum = [];
+            foreach (var place in places)
             {
-                if (!shopUrlHashes.Add(shopUrl)) continue;
-                shops.Add(await GetShopFromUrl(shopUrl));
+                var urls = await GetShopUrlsFromPlace(place);
+                shopUrlsEnum = shopUrlsEnum.Concat(urls);
             }
+            shopUrls = shopUrlsEnum.ToArray();
+            await HtmlCache.SavePageUrls(shopUrls);
         }
 
-        return [];
-    }
+        ScrapedShop[] shops = new ScrapedShop[shopUrls.Length];
+        int index = 0;
 
-    protected override Task<UnofficialShop[]> ScrapeFromCache()
-    {
-        return ScrapeFromOnline();
+        await foreach (var task in Task.WhenEach(shopUrls.Select(GetShopFromUrl)))
+        {
+            shops[index++] = await task;
+        }
+
+        return shops;
     }
 
     private async Task<IEnumerable<string>> GetPlaceUrls()
@@ -81,12 +88,13 @@ public partial class CylexScraper() : Scraper("Cylex")
         return s ?? [];
     }
 
-    private async Task<UnofficialShop2> GetShopFromUrl(string shopUrl)
+    private async Task<ScrapedShop> GetShopFromUrl(string shopUrl)
     {
         var htmlDocument = await LoadHtml(shopUrl);
 
         var (name, city) = await ExtractShopNameAndCity(shopUrl, htmlDocument);
         var location = await ExtractShopLocation(shopUrl, htmlDocument);
+
         var (longitude, latitude) = await ExtractCoordinates(shopUrl, htmlDocument);
         var openingSchedule = await ExtractOpeningSchedule(shopUrl, htmlDocument);
 
@@ -95,7 +103,7 @@ public partial class CylexScraper() : Scraper("Cylex")
             location = location with { City = city };
         }
 
-        return new UnofficialShop2(shopUrl, name, location, longitude, latitude, openingSchedule);
+        return new ScrapedShop(shopUrl, name, location.City, location.Address, openingSchedule, longitude, latitude);
     }
 
     private async Task<(string?, string?)> ExtractShopNameAndCity(string shopUrl, HtmlDocument htmlDocument)
@@ -220,7 +228,7 @@ public partial class CylexScraper() : Scraper("Cylex")
             var day = node.SelectSingleNode(".//td//span").InnerText.Trim();
             var timeStr = node.SelectSingleNode(".//td//div[contains(@class, 'interval-field')]").InnerText.Trim();
 
-            schedules.Add(new OpeningSchedule(day, OpeningHours.Parse(timeStr, shopUrl, schedules)));
+            schedules.Add(new OpeningSchedule(day, OpeningHours.Parse(timeStr, shopUrl, schedules, Logger)));
         }
 
         return schedules.ToArray();

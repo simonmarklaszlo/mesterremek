@@ -5,7 +5,7 @@ namespace CigiScraper.LocalData;
 
 public class HtmlCache
 {
-    public const string DirectoryPath = "./archive/htmlsaves/";
+    private const string DirectoryPath = "./archive/htmlsaves/";
     private readonly string _baseDirPath;
     private readonly string _scrapeName;
     private string ScrapeFileName => _scrapeName.EndsWith(".txt") ? _scrapeName : _scrapeName + ".txt";
@@ -14,7 +14,20 @@ public class HtmlCache
     {
         _scrapeName = scrapeName;
         _baseDirPath = baseDirPath;
+
+        Directory.CreateDirectory(_baseDirPath);
     }
+
+    public bool CacheExists()
+    {
+        return Directory.GetFiles(_baseDirPath).Length > 0;
+    }
+
+    public void ClearCache()
+    {
+        foreach (var file in Directory.GetFiles(_baseDirPath)) File.Delete(file);
+    }
+
 
     public async Task<string?> GetPage(string url)
     {
@@ -47,6 +60,7 @@ public class HtmlCache
 
         return File.ReadAllLinesAsync(path);
     }
+
     private string GetPath(string url)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));

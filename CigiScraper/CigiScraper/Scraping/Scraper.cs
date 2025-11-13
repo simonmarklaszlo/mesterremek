@@ -9,30 +9,35 @@ public abstract class Scraper : IAsyncDisposable
     private ScrapeType _scrapeType;
     private bool _allowNetCall;
     private bool _saveToCache;
-    private readonly HtmlCache _htmlCache;
+    protected readonly HtmlCache HtmlCache;
     protected readonly Logger Logger;
+
     protected Scraper(string scrapeName)
     {
-        _htmlCache = new HtmlCache(scrapeName);
+        HtmlCache = new HtmlCache(scrapeName);
         Logger = new Logger(scrapeName);
     }
 
-    public Task<UnofficialShop[]> ScrapeAny(bool preferOnline = false)
+    public Task<ScrapedShop[]> ScrapeAny(bool forceOnline = false)
     {
-        _saveToCache = true;
-        if (preferOnline)
+        if (forceOnline || !HtmlCache.CacheExists())
         {
+            HtmlCache.ClearCache();
+
             _allowNetCall = true;
             _scrapeType = ScrapeType.Online;
+            _saveToCache = true;
             return ScrapeFromOnline();
         }
 
+        _saveToCache = false;
+        _allowNetCall = false;
         _scrapeType = ScrapeType.Cache;
         return ScrapeFromCache();
     }
 
-    protected abstract Task<UnofficialShop[]> ScrapeFromOnline();
-    protected abstract Task<UnofficialShop[]> ScrapeFromCache();
+    protected abstract Task<ScrapedShop[]> ScrapeFromOnline();
+    protected abstract Task<ScrapedShop[]> ScrapeFromCache();
 
     protected async Task<HtmlDocument> LoadHtml(string url)
     {
@@ -41,6 +46,7 @@ public abstract class Scraper : IAsyncDisposable
 
         return htmlDocument;
     }
+
     private async Task<string> GetHtml(string url)
     {
         if (_scrapeType is not ScrapeType.Cache)
@@ -58,7 +64,7 @@ public abstract class Scraper : IAsyncDisposable
 
     private Task<string?> PageFromCache(string url)
     {
-        return _htmlCache.GetPage(url);
+        return HtmlCache.GetPage(url);
     }
 
     private async Task<string> PageFromOnline(string url)
@@ -69,7 +75,7 @@ public abstract class Scraper : IAsyncDisposable
 
         if (_saveToCache)
         {
-            await _htmlCache.SavePage(url, htmlString);
+            await HtmlCache.SavePage(url, htmlString);
         }
 
         return htmlString;

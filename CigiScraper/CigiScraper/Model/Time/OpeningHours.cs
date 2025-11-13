@@ -23,7 +23,7 @@ public partial class OpeningHours
 
 
     /// <returns>null ha zárva, különben valid</returns>
-    public static OpeningHours? Parse(string fullTime, string url, List<OpeningSchedule> context)
+    public static OpeningHours? Parse(string fullTime, string url, List<OpeningSchedule> context, Logger logger)
     {
         if (IsClosedRegex().IsMatch(fullTime))
         {
@@ -50,7 +50,7 @@ public partial class OpeningHours
 
         if (split.Length != 2)
         {
-            Logger2.LogErrorTime(fullTime, TimeParseError.UnabledToParse, url);
+            logger.Error($"Unable to parse {fullTime} from {url}");
             return new OpeningHours(MostCommonOpening, MostCommonClosing);
         }
 
@@ -59,13 +59,13 @@ public partial class OpeningHours
 
         const TimeParseError ignoreMask = TimeParseError.None | TimeParseError.Fallback | TimeParseError.UnabledToParse;
 
-        if (openingErr.HasFlag(TimeParseError.UnabledToParse)) Logger2.LogErrorTime(split[0], openingErr, url);
-        else if((openingErr & ~ignoreMask) != 0) Logger2.LogWarningTime(split[0], opening, openingErr, url, true);
-        else Logger2.LogNormalTime(split[0], opening, url,true);
+        if (openingErr.HasFlag(TimeParseError.UnabledToParse)) logger.Error($"Time parsing: {openingErr} for {split[0]} from {url}");
+        else if((openingErr & ~ignoreMask) != 0) logger.Warn($"Time parsing, opening: {openingErr} for {split[0]} from {url}");
+        else logger.Log($"Time parsing, opening: {opening:HH:mm} from {url}");
 
-        if (closingErr.HasFlag(TimeParseError.UnabledToParse)) Logger2.LogErrorTime(split[1], closingErr, url);
-        else if((closingErr & ~ignoreMask) != 0) Logger2.LogWarningTime(split[1], closing, closingErr, url, false);
-        else Logger2.LogNormalTime(split[1], closing, url,false);
+        if (closingErr.HasFlag(TimeParseError.UnabledToParse)) logger.Error($"Time parsing: {closingErr} for {split[1]} from {url}");
+        else if((closingErr & ~ignoreMask) != 0) logger.Warn($"Time parsing, closing: {closingErr} for {split[1]} from {url}");
+        else logger.Log($"Time parsing, opening: {opening:HH:mm} from {url}");
 
 
         return new OpeningHours(opening, closing);

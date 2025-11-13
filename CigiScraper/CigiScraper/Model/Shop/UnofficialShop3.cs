@@ -2,7 +2,7 @@ using CigiScraper.Model.Time;
 
 namespace CigiScraper.Model.Shop;
 
-public class UnofficialShop
+public class UnofficialShop3
 {
     public string? Url { get; }
     public double Longitude { get; }
@@ -21,7 +21,7 @@ public class UnofficialShop
                               Error.HasFlag(ShopError.OpeningSchedules);
 
 
-    public UnofficialShop(string url, double longitude, double latitude, string city, string address,
+    public UnofficialShop3(string url, double longitude, double latitude, string city, string address,
         OpeningSchedule[] openingSchedules)
     {
         Url = url;
@@ -42,12 +42,12 @@ public class UnofficialShop
 
     public override bool Equals(object? obj)
     {
-        if (obj is not UnofficialShop other) return false;
+        if (obj is not UnofficialShop3 other) return false;
         return EqualsCoordinates(other) && City == other.City && Address == other.Address &&
                OpeningSchedules.SequenceEqual(other.OpeningSchedules);
     }
 
-    public bool EqualsCoordinates(UnofficialShop other)
+    public bool EqualsCoordinates(UnofficialShop3 other)
     {
         const double tolerance = 0.001;
         return Math.Abs(Longitude - other.Longitude) < tolerance &&

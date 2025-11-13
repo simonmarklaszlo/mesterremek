@@ -29,8 +29,4 @@ public class OpeningSchedule
         }
         return str.TrimEnd('|');
     }
-    public override string ToString()
-    {
-        return $"{Day} - {(Closed ? "Zárva" : OpeningHours)}";
-    }
 }
