@@ -2,11 +2,12 @@ import express, { Application } from "express";
 import userRoutes from "./routes/userRoutes";
 import shopRoutes from "./routes/shopRoutes";
 import cors from 'cors';
+import {config} from "./config/config";
 
 
 const app: Application = express();
-const HOST = '0.0.0.0';
-const PORT = 3000;
+const HOST = config.server.address;
+const PORT = config.server.port;
 
 // Middleware to parse JSON
 app.use(express.json());

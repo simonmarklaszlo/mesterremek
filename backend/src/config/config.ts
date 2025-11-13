@@ -15,6 +15,10 @@ function getEnv(key: string, required = true): string {
 
 // Expose a read-only config object
 export const config = Object.freeze({
+    server:{
+        address : getEnv("SERVER_ADDRESS"),
+        port : parseInt(getEnv("SERVER_PORT")),
+    },
     db: {
         host: getEnv("DB_HOST"),
         port: parseInt(getEnv("DB_PORT")),
@@ -25,4 +29,7 @@ export const config = Object.freeze({
     jwt: {
         secret: getEnv("JWT_SECRET"),
     },
+    shop:{
+        defaultName: getEnv("SHOP_NAME", false) ?? "Trafik",
+    }
 });

@@ -3,6 +3,7 @@ import {ShopFilter, ShopFilterResult, ShopDetails, Shop} from "../model/shop";
 import {Review} from "../model/review";
 import {CigarBrand} from "../model/cigarBrand";
 import {OpeningHour} from "../model/openingHour";
+import {config} from "../config/config";
 
 
 async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
@@ -18,11 +19,14 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
                    ELSE false
                    END                    as hasCigars,
                (
-                   6371 * acos(
-                           cos(radians($1)) * cos(radians(ST_Y(s.location))) *
-                           cos(radians(ST_X(s.location)) - radians($2)) +
-                           sin(radians($1)) * sin(radians(ST_Y(s.location)))
-                          )
+                   ROUND(
+                           6371 * acos(
+                                   cos(radians($1)) * cos(radians(ST_Y(s.location))) *
+                                   cos(radians(ST_X(s.location)) - radians($2)) +
+                                   sin(radians($1)) * sin(radians(ST_Y(s.location)))
+                                  ),
+                           2
+                   )
                    )                      AS distance,
                COALESCE(AVG(r.rating), 0) AS rating,
                COUNT(DISTINCT r.id)       AS reviewCount
@@ -71,7 +75,10 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
 
     const result = await pool.query<ShopFilterResult>(query, values);
 
-    return result.rows.map(x => x);
+    return result.rows.map(x => {
+        if (x.name == "NULL") x.name = config.shop.defaultName;
+        return x;
+    });
 }
 
 async function countShopPages(filter: ShopFilter): Promise<number> {
@@ -139,6 +146,7 @@ async function getShopIdsInCity(city: string): Promise<number[]> {
 async function getShopDetails(id: number): Promise<ShopDetails | undefined> {
     const shop = await getShop(id);
     if (!shop) return undefined;
+
     const reviews = await getReviews(id);
     const cigarBrands = await getCigarBrands(id);
     const openingHours = await getOpeningHours(id);
@@ -236,7 +244,13 @@ async function getShop(id: number): Promise<Shop | undefined> {
     const values = [id];
 
     const result = await pool.query<Shop>(query, values);
-    return result.rows[0];
+    const res = result.rows[0];
+
+    if(res !== undefined && res.name === "NULL"){
+        res.name = config.shop.defaultName;
+    }
+
+    return res;
 }
 
 async function getReviews(shopId: number): Promise<Review[]> {
@@ -281,10 +295,10 @@ async function getCigarBrands(shopId: number): Promise<CigarBrand[]> {
 
 async function getOpeningHours(shopId: number): Promise<OpeningHour[]> {
     const query = `
-        SELECT soh.id         AS "id",
-               dow.day        AS "dayOfWeek",
-               soh.open_hour  AS "openHour",
-               soh.close_hour AS "closeHour"
+        SELECT soh.id                             AS "id",
+               dow.day                            AS "dayOfWeek",
+               to_char(soh.open_hour, 'HH24:MI')  AS "openHour",
+               to_char(soh.close_hour, 'HH24:MI') AS "closeHour"
         FROM shop_opening_hours soh
                  JOIN days_of_week dow ON dow.id = soh.day_id
         WHERE soh.shop_id = $1
