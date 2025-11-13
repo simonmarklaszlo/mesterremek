@@ -34,15 +34,7 @@ import {
   syncOutline
 } from 'ionicons/icons';
 import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
-
-interface Shop {
-  id: number;
-  name: string;
-  address: string;
-  city: string;
-  distance: number;
-  hasCigars: boolean;
-}
+import { ShopService, Shop } from '../../services/shop.service';
 
 @Component({
   selector: 'app-list',
@@ -90,7 +82,7 @@ export class ListPage implements OnInit {
   isModalOpen: boolean = false;
   selectedShopId: number | null = null;
 
-  constructor() {
+  constructor(private shopService: ShopService) {
     addIcons({
       listOutline,
       locationOutline,
@@ -156,95 +148,38 @@ export class ListPage implements OnInit {
     this.isLoading = true;
     this.hasSearched = true;
 
-    // Szimulált API hívás (később valódi API lesz)
-    // TODO: Helyettesítsd ezt az AuthService-hez hasonló ShopService-szel
-    setTimeout(() => {
-      // Példa adatok (később API-ból jön)
-      const allShops: Shop[] = [
-        {
-          id: 1,
-          name: 'Nemzeti Dohánybolt',
-          address: 'Andrássy út 42',
-          city: 'Budapest',
-          distance: 0.8,
-          hasCigars: true
-        },
-        {
-          id: 2,
-          name: 'Tabán Dohány',
-          address: 'Tabán utca 15',
-          city: 'Budapest',
-          distance: 1.2,
-          hasCigars: true
-        },
-        {
-          id: 3,
-          name: 'Dohánybolt Westend',
-          address: 'Váci út 1-3',
-          city: 'Budapest',
-          distance: 2.5,
-          hasCigars: false
-        },
-        {
-          id: 4,
-          name: 'Szivar Sziget',
-          address: 'Margit körút 88',
-          city: 'Budapest',
-          distance: 3.1,
-          hasCigars: true
-        },
-        {
-          id: 5,
-          name: 'Premium Tobacco',
-          address: 'Kossuth Lajos utca 10',
-          city: 'Budapest',
-          distance: 4.5,
-          hasCigars: true
-        },
-        {
-          id: 6,
-          name: 'Dohány Pont',
-          address: 'Rákóczi út 25',
-          city: 'Budapest',
-          distance: 5.2,
-          hasCigars: false
-        },
-        {
-          id: 7,
-          name: 'City Tobacco',
-          address: 'Deák Ferenc tér 3',
-          city: 'Budapest',
-          distance: 6.8,
-          hasCigars: true
-        },
-        {
-          id: 8,
-          name: 'Oktogon Dohány',
-          address: 'Oktogon tér 1',
-          city: 'Budapest',
-          distance: 8.3,
-          hasCigars: false
+    // API hívás paraméterek
+    const searchParams = {
+      latitude: this.userLocation.latitude,
+      longitude: this.userLocation.longitude,
+      maxDistance: this.maxDistance,
+      hasCigars: this.filterCigars ? true : undefined,
+      search: this.searchText || undefined,
+      limit: 20,
+      offset: 0
+    };
+
+    // Valódi API hívás
+    this.shopService.searchShops(searchParams).subscribe({
+      next: (response) => {
+        console.log('API Response:', response); // Debug log
+
+        if (response && response.success && Array.isArray(response.data)) {
+          this.filteredShops = response.data;
+          console.log(`Found ${response.total} shops`);
+        } else {
+          console.error('Search failed or invalid response format:', response);
+          this.filteredShops = [];
         }
-      ];
-
-      // Szűrések alkalmazása (kliens oldali - később szerver oldali lesz)
-      this.filteredShops = allShops.filter(shop => {
-        const searchMatch = !this.searchText ||
-          shop.name.toLowerCase().includes(this.searchText.toLowerCase()) ||
-          shop.address.toLowerCase().includes(this.searchText.toLowerCase()) ||
-          shop.city.toLowerCase().includes(this.searchText.toLowerCase());
-
-        const cigarMatch = !this.filterCigars || shop.hasCigars;
-        const distanceMatch = shop.distance <= this.maxDistance;
-
-        return searchMatch && cigarMatch && distanceMatch;
-      });
-
-      this.filteredShops.sort((a, b) => a.distance - b.distance);
-
-      this.isLoading = false;
-      console.log(`Found ${this.filteredShops.length} shops`);
-    }, 1000); // 1 másodperces delay a szimulációhoz
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Search error:', error);
+        this.filteredShops = [];
+        this.isLoading = false;
+        // TODO: Hibaüzenet megjelenítése a felhasználónak
+      }
+    });
   }
 
   // Bolt részleteinek megjelenítése modal-ban

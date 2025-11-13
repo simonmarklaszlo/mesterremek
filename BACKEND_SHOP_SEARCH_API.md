@@ -28,40 +28,40 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": true,
-  "data": {
-    "shops": [
-      {
-        "id": 1,
-        "name": "Nemzeti Dohánybolt",
-        "address": "Andrássy út 42",
-        "city": "Budapest",
-        "latitude": 47.5028,
-        "longitude": 19.0620,
-        "distance": 0.8,
-        "hasCigars": true,
-        "rating": 4.5,
-        "reviewCount": 23
-      },
-      {
-        "id": 2,
-        "name": "Tabán Dohány",
-        "address": "Tabán utca 15",
-        "city": "Budapest",
-        "latitude": 47.4926,
-        "longitude": 19.0354,
-        "distance": 1.2,
-        "hasCigars": true,
-        "rating": 4.2,
-        "reviewCount": 18
-      }
-    ],
-    "total": 2,
-    "limit": 20,
-    "offset": 0,
-    "hasMore": false
-  }
+  "data": [
+    {
+      "id": 1,
+      "name": "Nemzeti Dohánybolt",
+      "address": "Andrássy út 42",
+      "city": "Budapest",
+      "latitude": 47.5028,
+      "longitude": 19.0620,
+      "distance": 0.8,
+      "hasCigars": true,
+      "rating": 4.5,
+      "reviewCount": 23
+    },
+    {
+      "id": 2,
+      "name": "Tabán Dohány",
+      "address": "Tabán utca 15",
+      "city": "Budapest",
+      "latitude": 47.4926,
+      "longitude": 19.0354,
+      "distance": 1.2,
+      "hasCigars": true,
+      "rating": 4.2,
+      "reviewCount": 18
+    }
+  ],
+  "total": 2,
+  "limit": 20,
+  "offset": 0,
+  "hasMore": false
 }
 ```
+
+**Megjegyzés:** A `data` közvetlenül a Shop objektumok tömbje, nem egy `{ shops: [...] }` wrapper objektum.
 
 ### Response (400 Bad Request):
 

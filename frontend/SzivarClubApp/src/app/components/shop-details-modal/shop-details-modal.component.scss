@@ -85,7 +85,7 @@ ion-card {
   ion-item {
     --padding-start: 0;
     --inner-padding-end: 0;
-    --background: var(--ion-card-background, var(--ion-background-color, #fff));
+    --background: transparent;
     margin-bottom: 0.5rem;
   }
 }

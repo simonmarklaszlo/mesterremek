@@ -10,7 +10,7 @@
     <ion-searchbar
       [(ngModel)]="searchText"
       placeholder="Keresés név vagy cím alapján..."
-      animated="true"
+      [animated]="true"
       showClearButton="always"
       [debounce]="0"
     ></ion-searchbar>
@@ -18,7 +18,7 @@
 
   <!-- Lenyitható szűrők -->
   <div class="filter-toggle">
-    <ion-item lines="none" button (click)="toggleFilters()" class="filter-header">
+    <ion-item lines="none" [button]="true" (click)="toggleFilters()" class="filter-header">
       <ion-icon name="filter-outline" slot="start"></ion-icon>
       <ion-label>Szűrők</ion-label>
       <ion-icon
@@ -44,10 +44,10 @@
         <ion-label>Távolság: {{ maxDistance }} km</ion-label>
         <ion-range
           [(ngModel)]="maxDistance"
-          min="1"
-          max="20"
-          step="1"
-          pin="true"
+          [min]="1"
+          [max]="20"
+          [step]="1"
+          [pin]="true"
           color="primary"
         ></ion-range>
       </ion-item>
@@ -89,6 +89,15 @@
               <ion-icon name="location-outline"></ion-icon>
               {{ shop.address }}, {{ shop.city }}
             </ion-card-subtitle>
+            <!-- Rating és review count -->
+            <div class="shop-rating" *ngIf="shop.rating && shop.reviewCount">
+              <ion-text color="warning">
+                ⭐ {{ shop.rating.toFixed(1) }}
+              </ion-text>
+              <ion-text color="medium" class="review-count">
+                ({{ shop.reviewCount }} értékelés)
+              </ion-text>
+            </div>
           </div>
           <div class="shop-badges">
             <ion-chip color="primary" class="distance-chip">
