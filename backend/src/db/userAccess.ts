@@ -56,3 +56,6 @@ export default {
     registerUser,
     getUserByEmail
 }
+
+
+//TODO log register

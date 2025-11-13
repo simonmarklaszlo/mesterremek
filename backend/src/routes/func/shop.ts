@@ -53,8 +53,6 @@ export async function handleShopSearch(req: Request, res: Response): Promise<voi
     const page = await shopAccess.getShopPage(filter);
     const allCount = await shopAccess.countShopPages(filter);
 
-    console.log(allCount);
-
     res.status(200).json({
         success: true,
         data: page,
