@@ -1,332 +1,366 @@
-// Angular core component decorator
-import { Component } from '@angular/core';
-// Ionic UI components used in the template
+import { Component, AfterViewInit, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle,IonSegment,IonSegmentButton,IonLabel,IonToggle,
              IonContent,IonItem,IonInput,IonMenu,IonButtons,IonMenuButton,IonButton } from '@ionic/angular/standalone';
-// HTTP client for making API requests
 import { HttpClient } from '@angular/common/http';
-// Leaflet library for interactive maps
-import  * as L from 'leaflet';
-// Ionicons for using icons
+import { forkJoin } from 'rxjs';
+import * as L from 'leaflet';
 import { addIcons } from 'ionicons';
-import { radioButtonOn, person, locationSharp } from 'ionicons/icons';
+import { radioButtonOn, person, locationSharp, storefront} from 'ionicons/icons';
+import { ThemeService } from '../services/theme.service';
 
-// Fix Leaflet's default marker icon paths for Angular/Webpack builds
-// This prevents broken marker icons by explicitly setting the icon URLs
+// Fix Leaflet marker paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'assets/leaflet/images/marker-icon-2x.png',  // High-resolution marker icon
-  iconUrl: 'assets/leaflet/images/marker-icon.png',           // Standard marker icon
-  shadowUrl: 'assets/leaflet/images/marker-shadow.png'        // Marker shadow image
+  iconRetinaUrl: 'assets/leaflet/images/marker-icon-2x.png',
+  iconUrl: 'assets/leaflet/images/marker-icon.png',
+  shadowUrl: 'assets/leaflet/images/marker-shadow.png'
 });
 
-
-// Component decorator that defines metadata for this component
 @Component({
-  selector: 'app-tab1',                  // HTML tag to use this component: <app-tab1>
-  standalone: true,                      // Makes this a standalone component (no NgModule needed)
-  templateUrl: 'tab1.page.html',        // Path to the HTML template file
-  styleUrls: ['tab1.page.scss'],        // Path to the SCSS stylesheet file
+  selector: 'app-tab1',
+  standalone: true,
+  templateUrl: 'tab1.page.html',
+  styleUrls: ['tab1.page.scss'],
   imports: [IonHeader, IonToolbar, IonTitle,IonSegment,IonSegmentButton,IonLabel, 
-            IonContent,IonItem,IonInput,IonMenu,IonButtons,IonMenuButton,IonToggle,IonButton]})  // Ionic components used in template
+            IonContent,IonItem,IonInput,IonMenu,IonButtons,IonMenuButton,IonToggle,IonButton]})
 
-export class Tab1Page {
-  // Leaflet map instance - holds reference to the interactive map
-  map: L.Map | undefined;
-  
-  // Array to store coordinates of cities/stores from API responses
+export class Tab1Page implements AfterViewInit, OnDestroy {
+  map?: L.Map;
   Varos_Coords: any[] = [];
-  
-  // Boolean flag to track current theme state (true = dark, false = light)
+  Shop_Data: any[] = [];
   isThemeDark = true;
-  
-  // User's current latitude coordinate
   userLat = 0;
-  
-  // User's current longitude coordinate
   userLong = 0;
-
-  // Custom Leaflet icon for store/city markers
-  storeIcon = L.icon({
-    iconUrl: 'assets/leaflet/images/store_icon.png',  // Path to store icon image
-    iconSize: [25, 25],                                // Size of the icon in pixels [width, height]
-    iconAnchor: [12, 25],                              // Point of icon that corresponds to marker location
-    popupAnchor: [1, -34],                             // Point where popup opens relative to iconAnchor
-    shadowUrl: 'assets/leaflet/images/marker-shadow.png',  // Path to shadow image
-    shadowSize: [41, 41]                               // Size of shadow in pixels
-  });
-
-  // Custom Leaflet div icon for user location marker using ion-icon
-  UserIcon = L.divIcon({
-    className: 'user-location-marker',                 // CSS class for styling
-    html: '<ion-icon name="radio-button-on" style="font-size: 16px; color: #3880ff;"></ion-icon>',  // ion-icon with inline styles
-    iconSize: [32, 32],                                // Size of the icon
-    iconAnchor: [16, 16],                              // Center point of the icon
-    popupAnchor: [0, -16]                              // Point where popup opens
-  });
-
-  // Constructor - injects HttpClient for making API requests and registers icons
-  constructor(private http: HttpClient) {
-    // Register ionicons for use in the app
-    addIcons({ radioButtonOn, person, locationSharp });
-  }
   
-  // Define geographical bounds for Hungary to restrict map panning
-  hungaryBounds = L.latLngBounds(
-    [45.637, 16.113],  // South-west corner coordinates [latitude, longitude]
-    [48.685, 22.897]   // North-east corner coordinates [latitude, longitude]
-  );
+  private tileLayer?: L.TileLayer;
+  private shopMarkersLayer?: L.LayerGroup;
+  private clusterMarkersLayer?: L.LayerGroup;
+  private userMarker?: L.Marker;
 
+  private storeIcon = L.divIcon({
+    className: 'store-marker',
+    html: '<ion-icon name="storefront" style="font-size:16px; color: #bbbbbb;"></ion-icon>',
+    iconSize: [25, 25],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
 
+  private UserIcon = L.divIcon({
+    className: 'user-location-marker',
+    html: '<ion-icon name="radio-button-on" style="font-size: 20px; color: #3880ff;"></ion-icon>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16]
+  });
 
+  hungaryBounds: L.LatLngBoundsExpression = [[45.637, 16.113], [48.685, 22.897]];
 
+  constructor(private http: HttpClient, private theme: ThemeService) {
+    addIcons({ radioButtonOn, person, locationSharp, storefront });
+  }
 
-  // Angular lifecycle hook - runs when component initializes
   ngOnInit() {
-    // Set initial theme to dark by adding 'dark' class to body
-    document.body.classList.toggle('dark', this.isThemeDark);
-    
-    // Get and display user's current location on map
-    this.User_Marker_Place();
-    
-    // Initialize empty array for city coordinates (local variable, not used)
-    const Varos_Coords = [];
-    
-    // Initialize Leaflet map with configuration options
-    this.map = L.map('map',{
-      center: [ 47.50713217562947, 19.044920454284487 ],  // Initial center point [lat, lng] - Budapest
-      maxZoom: 18,                                         // Maximum zoom level allowed
-      minZoom: 8,                                          // Minimum zoom level allowed
-      maxBounds: this.hungaryBounds,                       // Restrict panning to Hungary bounds
-      maxBoundsViscosity: 1.0,                             // How strongly to enforce bounds (1.0 = hard boundary)
-      zoom: 13                                             // Initial zoom level
+    // Keep local state in sync with global theme and update tiles if needed
+    this.theme.theme$.subscribe(isDark => {
+      const prev = this.isThemeDark;
+      this.isThemeDark = isDark;
+      if (this.map && this.tileLayer && prev !== isDark) {
+        const url = this.isThemeDark
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+        try {
+          (this.tileLayer as any).setUrl(url);
+          this.map.invalidateSize(true);
+        } catch {}
+      }
     });
-    
-    // Fit the map view to show all of Hungary
+  }
+
+  ngAfterViewInit() {
+    setTimeout(() => this.initMap(), 100);
+  }
+
+  private initMap() {
+    this.map = L.map('map', {
+      center: [47.4979, 19.0402],
+      zoom: 13,
+      maxZoom: 18,
+      minZoom: 8,
+      maxBounds: this.hungaryBounds,
+      maxBoundsViscosity: 1.0
+    });
+
     this.map.fitBounds(this.hungaryBounds);
 
-    // Add dark theme tile layer to the map
-    // Tile layers provide the map imagery (streets, terrain, etc.)
-    L.tileLayer( 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap & CARTO'  // Copyright attribution text
+    const url = this.isThemeDark
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    this.tileLayer = L.tileLayer(url, {
+      attribution: '&copy; OpenStreetMap & CARTO',
+      subdomains: ['a', 'b', 'c', 'd'],
+      crossOrigin: true as any
     }).addTo(this.map);
 
-    // Dispatch window resize event after 10ms to ensure map renders correctly
-    // This fixes rendering issues that can occur when map initializes
-    setTimeout(function () {
-      window.dispatchEvent(new Event('resize'));
-    }, 10);
+    this.shopMarkersLayer = L.layerGroup().addTo(this.map);
+    this.clusterMarkersLayer = L.layerGroup().addTo(this.map);
+
+    this.map.on('zoomend', () => this.updateMarkers());
+
+    this.User_Marker_Place();
+    this.setMapHeight();
+    window.addEventListener('resize', this.setMapHeightBound);
+    window.addEventListener('orientationchange', this.setMapHeightBound);
+
+    setTimeout(() => {
+      this.map?.invalidateSize();
+    }, 100);
   }
 
-
-
-
-
-
-
-  // Method to search for cities and display them on the map
-  // Called when user enters a city name in the search input
   varos_kereses(event: Event) {
-      // Remove all existing markers from the map before adding new ones
-      this.Delete_Markers();
-      
-      // Get the search value from the input field (safely handle null)
-      const value = (event.target as HTMLIonInputElement | null)?.value ?? '';
-      
-      // Capitalize the first letter and lowercase the rest (e.g., "budapest" -> "Budapest")
-      const cap_value = value ? value.toString().charAt(0).toUpperCase() + value.toString().slice(1).toLowerCase() : '';
+    this.Varos_Coords = [];
+    this.Shop_Data = [];
+    const value = (event.target as HTMLIonInputElement | null)?.value ?? '';
+    const cap_value = value ? value.toString().charAt(0).toUpperCase() + value.toString().slice(1).toLowerCase() : '';
 
-      // Make HTTP GET request to API to search for cities matching the input
-      this.http.get(`http://10.30.41.15:3000/api/shops/cities/${cap_value}`).subscribe({
-        // Success callback - called when API responds successfully
-        next: (response) => {
-          console.log('API Response:', response);  // Log the response for debugging
+    this.http.get(`http://192.168.137.1:3000/api/shops/cities/${cap_value}`).subscribe({
+      next: (response) => {
+        const shopRequests: any[] = [];
+        Object.entries(response).forEach(([key, row]: [string, any]) => {
+          if (Array.isArray(row)) {
+            row.forEach((element: any) => {
+              const shopId = (typeof element === 'object')
+                ? (element.id ?? element.shopId ?? element._id ?? element)
+                : element;
+              if (!shopId) return;
+              shopRequests.push(this.http.get(`http://192.168.137.1:3000/api/shops/${shopId}`));
+            });
+          }
+        });
 
-          // Ensure we handle different possible response shapes and avoid implicit 'any'
-
-          Object.entries(response).forEach(([key, row]: [string, any]) => {
-            // Log the key and the entire row object
-            console.log('Key:', key);
-            console.log('Row:', row);
-            
-            // Check if row is an array and loop through it
-            if (Array.isArray(row)) {
-              row.forEach((element: any) => {
-                this.http.get(`http://10.30.41.15:3000/api/shops/${element}`).subscribe({
-                  next: (shopResponse) => {
-                    console.log('Shop API Response:', shopResponse);
-                    // process shopResponse as needed
-                  },
-                  error: (err) => console.error('Shop API error:', err)
+        if (shopRequests.length > 0) {
+          forkJoin(shopRequests).subscribe({
+            next: (allShopResponses) => {
+              allShopResponses.forEach((shopResponse: any) => {
+                const shops = Array.isArray(shopResponse) ? shopResponse : Object.values(shopResponse);
+                shops.forEach((row2: any) => {
+                  const latNum = parseFloat(row2.latitude ?? row2.lat ?? row2.coords?.latitude ?? NaN);
+                  const lngNum = parseFloat(row2.longitude ?? row2.lng ?? row2.coords?.longitude ?? NaN);
+                  if (!isNaN(latNum) && !isNaN(lngNum)) {
+                    this.Varos_Coords.push([latNum, lngNum]);
+                    this.Shop_Data.push(row2);
+                  }
                 });
               });
-            } else {
-              // If row is an object, log its properties
-              console.log('Row is an object with properties:', Object.keys(row));
-            }
-            // For each city found, make another API call to get shops in that city
-          
+              this.updateMarkers();
+              // Center map on first result
+              if (this.Varos_Coords.length > 0 && this.map) {
+                this.map.setView(this.Varos_Coords[0] as [number, number], 13);
+              }
+            },
+            error: (err) => console.error('Error loading shop data:', err)
           });
-
-          // Iterate over each city in the response object
-          Object.entries(response).forEach(([key, row]: [string, any]) => {
-            // Parse latitude coordinate from string to number
-            const Lat = parseFloat(row.coords.latitude);
-            
-            // Parse longitude coordinate from string to number
-            const Lng = parseFloat(row.coords.longitude);
-
-            // Add coordinates to array as [latitude, longitude] pair
-            this.Varos_Coords.push([parseFloat(row.coords.latitude), parseFloat(row.coords.longitude)]);
-          });
-          
-          // Log all collected coordinates
-          console.log(this.Varos_Coords);
-          
-          // Place markers on the map for all cities found
-          this.Varos_Marker_Place();
-        },
-        // Error callback - called if API request fails
-        error: (error) => {
-          console.error('Error:', error);  // Log error for debugging
         }
-      });
-  }
-
-
-
-
-
-
-  // Method to place city/store markers on the map
-  Varos_Marker_Place(){
-    // First, update the user's location marker
-    this.User_Marker_Place();
-    
-    // Loop through all city coordinates and create markers
-    this.Varos_Coords.forEach(coord => {
-      // Create a marker at the coordinate using the store icon, and add it to the map
-      // coord[0] = latitude, coord[1] = longitude
-      const marker = L.marker([coord[0], coord[1]], { icon: this.storeIcon }).addTo(this.map!);
-      
-      // Optional: Bind popup to marker (currently commented out)
-      // Would show city name and additional info when marker is clicked
-      //marker.bindPopup(coord[2] + '<br>' + lista.join('<br>'));
+      },
+      error: (error) => console.error('Error:', error)
     });
   }
 
-  // Method to remove all markers from the map and clear the coordinates array
-  Delete_Markers(){
-    // Iterate through all layers (markers, tiles, etc.) on the map
-    this.map?.eachLayer((layer) => {
-      // Check if the layer is a marker (not a tile layer or other type)
-      if (layer instanceof L.Marker) {
-        // Remove the marker from the map
-        this.map?.removeLayer(layer);
-      }
-    });
-    
-    // Clear the coordinates array to prepare for new search results
-    this.Varos_Coords = [];
+  private updateMarkers() {
+    if (!this.shopMarkersLayer || !this.clusterMarkersLayer || !this.map) return;
+    this.shopMarkersLayer.clearLayers();
+    this.clusterMarkersLayer.clearLayers();
+    const currentZoom = this.map.getZoom() || 0;
+    if (currentZoom <= 13) this.placeClusteredMarkers(); else this.placeIndividualMarkers();
   }
 
+  private placeClusteredMarkers() {
+    if (!this.clusterMarkersLayer) return;
+    const clusters: any[] = [];
+    const processed = new Set<number>();
+    const coords = this.Shop_Data.map(s => [Number(s.latitude ?? s.lat), Number(s.longitude ?? s.lng)]);
+    const currentZoom = this.map?.getZoom() || 0;
+    let radiusKm = 3;
+    if (currentZoom >= 13) radiusKm = 1;
+    else if (currentZoom >= 11) radiusKm = 1.5;
+    else if (currentZoom < 9) radiusKm = 6;
 
-  // Method to get user's current location and place a marker on the map
-  // Parameters: userLat, userLong (optional) - use provided coordinates or get from browser
-  User_Marker_Place(userLat = 0, userLong = 0){
-    // Use the browser's Geolocation API to get the user's current position
-    // This will prompt the user for location permission if not already granted
-    navigator.geolocation.getCurrentPosition(
-      // === Success callback - executed when location is successfully obtained ===
-      (position) => {
-        // Check if custom coordinates were provided (non-zero values)
-        if (userLat != 0 && userLong != 0 ){
-          // Use the provided coordinates instead of browser location
-          // This allows placing a user marker at a specific location
-          this.map?.addLayer(L.marker([userLat, userLong], { icon: this.UserIcon }));
-        } else {
-          // No custom coordinates provided - use browser's geolocation
-          // Extract latitude and longitude from the position object
-          this.userLat = position.coords.latitude;
-          this.userLong = position.coords.longitude;
-          
-          // Create a marker at the user's location using the custom UserIcon
-          // The UserIcon is a blue SVG circle defined in the class properties
-          this.map?.addLayer(L.marker([this.userLat, this.userLong], { icon: this.UserIcon }));
+    const calculateDistance = (lat1:number, lon1:number, lat2:number, lon2:number) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    coords.forEach((coord, index) => {
+      if (processed.has(index) || !coord || Number.isNaN(coord[0])) return;
+      const cluster = { shops: [this.Shop_Data[index]], indices: [index] };
+      coords.forEach((other, otherIndex) => {
+        if (index === otherIndex || processed.has(otherIndex)) return;
+        if (calculateDistance(coord[0], coord[1], other[0], other[1]) <= radiusKm) {
+          cluster.shops.push(this.Shop_Data[otherIndex]);
+          cluster.indices.push(otherIndex);
+          processed.add(otherIndex);
         }
-        
-        // Center the map view on the user's location and set zoom level to 13
-        // This provides a good balance between context and detail
-        this.map?.setView([this.userLat, this.userLong], 13);
-        
-      }, 
-      // === Error callback - executed if location cannot be obtained ===
-      (error) => {
-        // Log the error to the console for debugging purposes
-        // Common errors: user denied permission, location unavailable, timeout
-        console.error('Error getting location:', error);
-      }
-    );
+      });
+      processed.add(index);
+      clusters.push(cluster);
+    });
+
+    clusters.forEach(cluster => {
+      const avgLat = cluster.indices.reduce((sum:number, idx:number) => sum + coords[idx][0], 0) / cluster.indices.length;
+      const avgLng = cluster.indices.reduce((sum:number, idx:number) => sum + coords[idx][1], 0) / cluster.indices.length;
+      const count = cluster.shops.length;
+      let iconFilename = 'storefront.svg';
+      if (count > 1 && count <= 5) iconFilename = 'Store_cluster_2.svg';
+      else if (count > 5 && count < 20) iconFilename = 'Store_cluster_3.svg';
+      else if (count >= 20) iconFilename = 'Store_cluster_4.svg';
+      
+      const clusterIcon = L.icon({
+        iconUrl: `assets/${iconFilename}`,
+        iconSize: [48,48],
+        iconAnchor: [24,24],
+        popupAnchor: [0,-20]
+      });
+      
+      const marker = L.marker([avgLat, avgLng], { icon: clusterIcon }).addTo(this.clusterMarkersLayer!);
+      const popupContent = `
+        <div style="min-width: 250px; max-height: 400px; overflow-y: auto;">
+          <h3 style="margin: 0 0 10px 0; color: #3880ff;">${count} Shops</h3>
+          ${cluster.shops.map((shop:any) => `
+            <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
+              <strong>${shop.name || 'Shop'}</strong><br>
+              <small>${shop.address || 'N/A'},</small>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      marker.bindPopup(popupContent);
+    });
   }
 
-  // Method to toggle between dark and light themes for both the map and Ionic app
-  // Called when user clicks the theme toggle button
-  ToggleTheme() {
-    // Toggle the theme flag (true -> false or false -> true)
-    this.isThemeDark = !this.isThemeDark;
-    
-    // Toggle the 'dark' class on the body element to switch Ionic app theme
-    // This applies dark theme CSS variables defined in variables.scss
-    document.body.classList.toggle('dark', this.isThemeDark);
-    
-    // Check if switching to dark theme
-    if (this.isThemeDark) {
-      // === Dark Theme Setup ===
+  private placeIndividualMarkers() {
+    if (!this.shopMarkersLayer) return;
+    this.Shop_Data.forEach((shop, index) => {
+      const lat = Number(shop.latitude ?? shop.lat);
+      const lng = Number(shop.longitude ?? shop.lng);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       
-      // Remove existing map instance if it exists
-      if (this.map) this.map.remove();
-      
-      // Create new map instance with dark theme
-      this.map = L.map('map',{
-        center: [this.userLat, this.userLong],              // Center on user's location
-        maxZoom: 18,                                        // Maximum zoom level
-        minZoom: 8,                                         // Minimum zoom level
-        maxBounds: this.hungaryBounds,                      // Restrict to Hungary
-        maxBoundsViscosity: 1.0,                            // Hard boundary enforcement
-        zoom: 13                                            // Initial zoom level
+      const marker = L.marker([lat, lng], { icon: this.storeIcon }).addTo(this.shopMarkersLayer!);
+      const openingHoursHtml = this.formatOpeningHoursHTML(shop);
+      const popupContent = `
+        <div style="min-width: 200px;">
+          <h3 style="margin: 0 0 10px 0; color: #3880ff;">${shop.name || 'Shop'}</h3>
+          <p style="margin: 5px 0;"><strong>Address:</strong> ${shop.address || 'N/A'}</p>
+          <p style="margin: 5px 0;"><strong>Phone:</strong> ${shop.phone || 'N/A'}</p>
+          ${openingHoursHtml}
+          <div style="margin-top:8px;">
+            <button id="open-google-${index}" style="background:#3880ff;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">
+              Open in Maps
+            </button>
+          </div>
+        </div>
+      `;
+      marker.bindPopup(popupContent);
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`open-google-${index}`);
+        if (btn) btn.addEventListener('click', () => this.openInGoogleMaps(lat, lng, shop.name));
       });
-      
-      // Add dark tile layer (CartoDB dark theme)
-      L.tileLayer( 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap & CARTO'
-      }).addTo(this.map);
-      
-      // Place user location marker on new map
-      this.User_Marker_Place(this.userLat, this.userLong);
-      
-    } else {
-      // === Light Theme Setup ===
-      
-      // Remove existing map instance if it exists
-      if (this.map) this.map.remove();
-      
-      // Create new map instance with light theme
-      this.map = L.map('map',{
-        center: [ this.userLat, this.userLong ],            // Center on user's location
-        maxZoom: 18,                                        // Maximum zoom level
-        minZoom: 8,                                         // Minimum zoom level
-        maxBounds: this.hungaryBounds,                      // Restrict to Hungary
-        maxBoundsViscosity: 1.0,                            // Hard boundary enforcement
-        zoom: 13                                            // Initial zoom level
+    });
+  }
+
+  private User_Marker_Place() {
+    navigator.geolocation.getCurrentPosition((position) => {
+      this.userLat = position.coords.latitude;
+      this.userLong = position.coords.longitude;
+      if (this.userMarker) this.map?.removeLayer(this.userMarker);
+      this.userMarker = L.marker([this.userLat, this.userLong], { icon: this.UserIcon }).addTo(this.map!);
+      this.map?.setView([this.userLat, this.userLong], 13);
+    }, (err) => console.warn('Geolocation error', err));
+  }
+
+  formatOpeningHoursHTML(shopData: any): string {
+    const oh = shopData.openingHours ?? shopData.opening_hours ?? shopData.hours ?? shopData.opening;
+    if (!oh) return '<p style="margin:5px 0;"><strong>Opening Hours:</strong> N/A</p>';
+    let rows = '';
+    const formatTime = (val: any) => {
+      if (!val && val !== 0) return 'N/A';
+      const s = String(val);
+      const parts = s.split(':');
+      if (parts.length >= 2) return parts[0].padStart(2,'0') + ':' + parts[1].padStart(2,'0');
+      return s;
+    };
+    if (Array.isArray(oh)) {
+      oh.forEach((day: any) => {
+        if (!day) return;
+        if (typeof day === 'string') rows += `<tr><td colspan="2">${day}</td></tr>`;
+        else {
+          const dow = day.dayOfWeek;
+          const open = day.openHour;
+          const close = day.closeHour;
+          rows += `<tr><td><strong>${dow || ''}</strong></td><td>${formatTime(open)} - ${formatTime(close)}</td></tr>`;
+        }
       });
-      
-      // Add light tile layer (CartoDB light theme)
-      L.tileLayer( 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; Stadia Maps, &copy; OpenMapTiles, &copy; OpenStreetMap',
-      }).addTo(this.map);
-      
-      // Place user location marker on new map
-      this.User_Marker_Place(this.userLat, this.userLong);
+    } else if (typeof oh === 'object') {
+      Object.entries(oh).forEach(([k, v]: [string, any]) => {
+        if (!v && v !== 0) return;
+        if (typeof v === 'string') rows += `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`;
+        else if (typeof v === 'object') {
+          const open = v.open ?? v.opens ?? v.openingTime ?? 'N/A';
+          const close = v.close ?? v.closes ?? v.closingTime ?? 'N/A';
+          rows += `<tr><td><strong>${k}</strong></td><td>${open} - ${close}</td></tr>`;
+        }
+      });
+    } else rows = `<tr><td colspan="2">${String(oh)}</td></tr>`;
+    return `<table style="width:100%; margin-top:6px;">${rows}</table>`;
+  }
+
+  openInGoogleMaps(lat: number, lng: number, label?: string) {
+    const query = encodeURIComponent(label ? `${lat} ${lng}` : `${lat},${lng}`);
+    const webUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    const ua = navigator.userAgent || '';
+    const isAndroid = /android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    if (isAndroid) {
+      const intentUrl = `intent://maps.google.com/maps?daddr=${lat},${lng}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+      try {
+        window.location.href = intentUrl;
+        setTimeout(() => { window.location.href = webUrl; }, 1200);
+      } catch { window.open(webUrl, '_blank'); }
+      return;
     }
+    if (isIOS) {
+      const appleScheme = `maps://?q=${lat},${lng}`;
+      try { window.location.href = appleScheme; } catch { window.open(webUrl, '_blank'); }
+      return;
+    }
+    window.open(webUrl, '_blank');
+  }
+
+  ToggleTheme() {
+    // Persist desired theme; subscription above updates the tiles and body class
+    this.theme.setTheme(!this.isThemeDark);
+  }
+
+  private setMapHeight = () => {
+    const el = document.getElementById('map');
+    if (!el) return;
+    const tabBar = document.querySelector('.main-tab-bar');
+    const header = document.querySelector('.map-header');
+    const tabBarHeight = tabBar ? (tabBar as HTMLElement).offsetHeight : 0;
+    const headerHeight = header ? (header as HTMLElement).offsetHeight : 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const heightPx = Math.max(400, viewportHeight - tabBarHeight - headerHeight);
+    el.style.height = `${heightPx}px`;
+    el.style.width = '100%';
+    try { this.map?.invalidateSize(); } catch {}
+  }
+
+  private setMapHeightBound = this.setMapHeight.bind(this);
+
+  ngOnDestroy() {
+    if (this.map) this.map.remove();
+    window.removeEventListener('resize', this.setMapHeightBound);
+    window.removeEventListener('orientationchange', this.setMapHeightBound);
   }
 }
