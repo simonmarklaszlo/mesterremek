@@ -1,9 +1,11 @@
 import { Component, AfterViewInit, OnDestroy } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle,IonSegment,IonSegmentButton,IonLabel,IonToggle,
-             IonContent,IonItem,IonInput,IonMenu,IonButtons,IonMenuButton,IonButton } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonToggle,
+             IonContent, IonInput } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import * as L from 'leaflet';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
 import { radioButtonOn, person, locationSharp, storefront} from 'ionicons/icons';
 import { ThemeService } from '../services/theme.service';
@@ -16,13 +18,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'assets/leaflet/images/marker-shadow.png'
 });
 
+
 @Component({
   selector: 'app-tab1',
   standalone: true,
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle,IonSegment,IonSegmentButton,IonLabel, 
-            IonContent,IonItem,IonInput,IonMenu,IonButtons,IonMenuButton,IonToggle,IonButton]})
+  imports: [IonHeader, IonToolbar, IonTitle, 
+            IonContent, IonInput, IonToggle]})
 
 export class Tab1Page implements AfterViewInit, OnDestroy {
   map?: L.Map;
@@ -269,14 +272,35 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
     });
   }
 
-  private User_Marker_Place() {
-    navigator.geolocation.getCurrentPosition((position) => {
-      this.userLat = position.coords.latitude;
-      this.userLong = position.coords.longitude;
+  private async User_Marker_Place() {
+    try {
+      let lat = 0, lng = 0;
+      if (Capacitor.getPlatform() !== 'web') {
+        try {
+          await Geolocation.requestPermissions();
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+          lat = pos.coords.latitude; lng = pos.coords.longitude;
+        } catch (e) {
+          console.warn('Capacitor Geolocation failed, falling back to navigator', e);
+        }
+      }
+      if ((lat === 0 && lng === 0) || Capacitor.getPlatform() === 'web') {
+        await new Promise<void>((resolve) => {
+          navigator.geolocation.getCurrentPosition((position) => {
+            lat = position.coords.latitude;
+            lng = position.coords.longitude;
+            resolve();
+          }, () => resolve());
+        });
+      }
+      if (!lat && !lng) return;
+      this.userLat = lat; this.userLong = lng;
       if (this.userMarker) this.map?.removeLayer(this.userMarker);
       this.userMarker = L.marker([this.userLat, this.userLong], { icon: this.UserIcon }).addTo(this.map!);
       this.map?.setView([this.userLat, this.userLong], 13);
-    }, (err) => console.warn('Geolocation error', err));
+    } catch (err) {
+      console.warn('Geolocation error', err);
+    }
   }
 
   formatOpeningHoursHTML(shopData: any): string {
