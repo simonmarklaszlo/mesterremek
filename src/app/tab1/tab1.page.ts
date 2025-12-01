@@ -1,6 +1,6 @@
 import { Component, AfterViewInit, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonToggle,
-             IonContent, IonInput, IonButton } from '@ionic/angular/standalone';
+             IonContent, IonInput, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -8,7 +8,7 @@ import * as L from 'leaflet';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
-import { radioButtonOn, person, locationSharp, storefront} from 'ionicons/icons';
+import { radioButtonOn, person, locationSharp, storefront, search } from 'ionicons/icons';
 import { ThemeService } from '../services/theme.service';
 import { ErrorLogService } from '../services/error-log.service';
 
@@ -27,7 +27,7 @@ L.Icon.Default.mergeOptions({
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   imports: [IonHeader, IonToolbar, IonTitle, 
-            IonContent, IonInput, IonToggle, IonButton, FormsModule]})
+            IonContent, IonInput, IonToggle, IonButton, IonIcon, FormsModule]})
 
 export class Tab1Page implements AfterViewInit, OnDestroy {
   map?: L.Map;
@@ -42,6 +42,12 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
   private shopMarkersLayer?: L.LayerGroup;
   private clusterMarkersLayer?: L.LayerGroup;
   private userMarker?: L.Marker;
+  private shopMarkerIndex: Map<string, L.Marker> = new Map();
+  private pendingOpenShop?: { lat: number; lng: number };
+
+  private keyFor(lat: number, lng: number): string {
+    return `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  }
 
   private storeIcon = L.divIcon({
     className: 'store-marker',
@@ -62,7 +68,7 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
   hungaryBounds: L.LatLngBoundsExpression = [[45.637, 16.113], [48.685, 22.897]];
 
   constructor(private http: HttpClient, private theme: ThemeService, private errorLog: ErrorLogService) {
-    addIcons({ radioButtonOn, person, locationSharp, storefront });
+    addIcons({ radioButtonOn, person, locationSharp, storefront, search });
   }
 
   ngOnInit() {
@@ -110,7 +116,13 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
     this.shopMarkersLayer = L.layerGroup().addTo(this.map);
     this.clusterMarkersLayer = L.layerGroup().addTo(this.map);
 
-    this.map.on('zoomend', () => this.updateMarkers());
+    this.map.on('zoomend', () => {
+      this.updateMarkers();
+      if (this.pendingOpenShop && (this.map?.getZoom() || 0) > 13) {
+        this.openShopPopupNow(this.pendingOpenShop.lat, this.pendingOpenShop.lng);
+        this.pendingOpenShop = undefined;
+      }
+    });
 
     this.User_Marker_Place();
     this.setMapHeight();
@@ -241,26 +253,42 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
       const popupContent = `
         <div style="min-width: 250px; max-height: 400px; overflow-y: auto;">
           <h3 style="margin: 0 0 10px 0; color: #3880ff;">${count} Shops</h3>
-          ${cluster.shops.map((shop:any) => `
-            <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
+          ${cluster.shops.map((shop:any) => {
+            const slat = Number(shop.latitude ?? shop.lat);
+            const slng = Number(shop.longitude ?? shop.lng);
+            return `
+            <div class="shop-item" data-lat="${slat}" data-lng="${slng}" style="border-bottom: 1px solid #ccc; padding: 8px 0; cursor:pointer;">
               <strong>${shop.name || 'Shop'}</strong><br>
-              <small>${shop.address || 'N/A'},</small>
-            </div>
-          `).join('')}
+              <small>${shop.address || 'N/A'}</small>
+            </div>`;
+          }).join('')}
         </div>
       `;
       marker.bindPopup(popupContent);
+      marker.on('popupopen', () => {
+        const el = marker.getPopup()?.getElement();
+        const items = el?.querySelectorAll('.shop-item') || [];
+        items.forEach((n:any) => {
+          n.addEventListener('click', () => {
+            const lat = Number(n.getAttribute('data-lat'));
+            const lng = Number(n.getAttribute('data-lng'));
+            this.openShopFromCluster(lat, lng);
+          });
+        });
+      });
     });
   }
 
   private placeIndividualMarkers() {
     if (!this.shopMarkersLayer) return;
+    this.shopMarkerIndex.clear();
     this.Shop_Data.forEach((shop, index) => {
       const lat = Number(shop.latitude ?? shop.lat);
       const lng = Number(shop.longitude ?? shop.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
       
       const marker = L.marker([lat, lng], { icon: this.storeIcon }).addTo(this.shopMarkersLayer!);
+      this.shopMarkerIndex.set(this.keyFor(lat, lng), marker);
       const openingHoursHtml = this.formatOpeningHoursHTML(shop);
       const popupContent = `
         <div style="min-width: 200px;">
@@ -281,6 +309,34 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
         if (btn) btn.addEventListener('click', () => this.openInGoogleMaps(lat, lng, shop.name));
       });
     });
+  }
+
+  private openShopFromCluster(lat: number, lng: number) {
+    if (!this.map) return;
+    const shouldZoom = (this.map.getZoom() || 0) <= 13;
+    if (shouldZoom) {
+      this.pendingOpenShop = { lat, lng };
+      this.map.setView([lat, lng], 15, { animate: true });
+    } else {
+      this.openShopPopupNow(lat, lng);
+    }
+  }
+
+  private openShopPopupNow(lat: number, lng: number) {
+    const key = this.keyFor(lat, lng);
+    const marker = this.shopMarkerIndex.get(key);
+    if (marker) {
+      marker.openPopup();
+      this.map?.panTo([lat, lng]);
+    } else {
+      // Ensure markers are up to date and try again quickly
+      this.updateMarkers();
+      const m2 = this.shopMarkerIndex.get(key);
+      if (m2) {
+        m2.openPopup();
+        this.map?.panTo([lat, lng]);
+      }
+    }
   }
 
   private async User_Marker_Place() {
@@ -385,7 +441,6 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
 
   ToggleTheme() {
     // Persist desired theme; subscription above updates the tiles and body class
-    this.User_Marker_Place();
     this.theme.setTheme(!this.isThemeDark);
   }
 

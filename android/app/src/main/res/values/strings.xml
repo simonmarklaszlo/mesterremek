@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">leaflettest</string>
-    <string name="title_activity_main">leaflettest</string>
+    <string name="app_name">Szivar klub</string>
+    <string name="title_activity_main">Szivar klub</string>
     <string name="package_name">ionic.leaflettest</string>
     <string name="custom_url_scheme">ionic.leaflettest</string>
 </resources>
