@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonToggle,
-             IonContent, IonInput } from '@ionic/angular/standalone';
+             IonContent, IonInput, IonButton } from '@ionic/angular/standalone';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import * as L from 'leaflet';
@@ -26,7 +27,7 @@ L.Icon.Default.mergeOptions({
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   imports: [IonHeader, IonToolbar, IonTitle, 
-            IonContent, IonInput, IonToggle]})
+            IonContent, IonInput, IonToggle, IonButton, FormsModule]})
 
 export class Tab1Page implements AfterViewInit, OnDestroy {
   map?: L.Map;
@@ -35,6 +36,7 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
   isThemeDark = true;
   userLat = 0;
   userLong = 0;
+  searchCity: string = '';
   
   private tileLayer?: L.TileLayer;
   private shopMarkersLayer?: L.LayerGroup;
@@ -120,11 +122,19 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
     }, 100);
   }
 
-  varos_kereses(event: Event) {
+  varos_kereses(event?: Event) {
     this.Varos_Coords = [];
     this.Shop_Data = [];
-    const value = (event.target as HTMLIonInputElement | null)?.value ?? '';
-    const cap_value = value ? value.toString().charAt(0).toUpperCase() + value.toString().slice(1).toLowerCase() : '';
+    let raw = this.searchCity ?? '';
+    if (!raw) {
+      const el = document.getElementById('varos') as HTMLInputElement | null;
+      raw = el?.value ?? '';
+    }
+    if (!raw && event) {
+      const tgt = event.target as any;
+      raw = tgt?.value ?? '';
+    }
+    const cap_value = raw ? raw.toString().charAt(0).toUpperCase() + raw.toString().slice(1).toLowerCase() : '';
 
     this.http.get(`http://192.168.137.1:3000/api/shops/cities/${cap_value}`).subscribe({
       next: (response) => {

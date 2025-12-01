@@ -9,13 +9,20 @@
     <td>
 
       <ion-input 
-        (keyup.enter)="varos_kereses($event)"
+        type="text"
+        name="varos"
+        id="varos"
+        [(ngModel)]="searchCity"
+        (keyup.enter)="varos_kereses()"
         placeholder="Város keresése">
       </ion-input>
 
     </td>
     <td>
-      <ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()">Theme</ion-toggle>
+      <ion-button (click)="varos_kereses()">Keresés</ion-button>
+    </td>
+    <td>
+      <ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()"></ion-toggle>
     </td>
     
   </tr>
