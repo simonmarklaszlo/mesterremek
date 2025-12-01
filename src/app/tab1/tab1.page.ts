@@ -9,6 +9,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
 import { radioButtonOn, person, locationSharp, storefront} from 'ionicons/icons';
 import { ThemeService } from '../services/theme.service';
+import { ErrorLogService } from '../services/error-log.service';
 
 // Fix Leaflet marker paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -58,7 +59,7 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
 
   hungaryBounds: L.LatLngBoundsExpression = [[45.637, 16.113], [48.685, 22.897]];
 
-  constructor(private http: HttpClient, private theme: ThemeService) {
+  constructor(private http: HttpClient, private theme: ThemeService, private errorLog: ErrorLogService) {
     addIcons({ radioButtonOn, person, locationSharp, storefront });
   }
 
@@ -281,6 +282,9 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
           const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
           lat = pos.coords.latitude; lng = pos.coords.longitude;
         } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          const stack = e instanceof Error ? e.stack : undefined;
+          this.errorLog.logError(`Geolocation plugin error: ${msg}`, stack, 'error');
           console.warn('Capacitor Geolocation failed, falling back to navigator', e);
         }
       }
@@ -290,7 +294,11 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
             lat = position.coords.latitude;
             lng = position.coords.longitude;
             resolve();
-          }, () => resolve());
+          }, (err) => {
+            const msg = err?.message || 'navigator.geolocation failed';
+            this.errorLog.logError(`Browser geolocation error: ${msg}`);
+            resolve();
+          });
         });
       }
       if (!lat && !lng) return;
@@ -299,6 +307,10 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
       this.userMarker = L.marker([this.userLat, this.userLong], { icon: this.UserIcon }).addTo(this.map!);
       this.map?.setView([this.userLat, this.userLong], 13);
     } catch (err) {
+      const e = err as any;
+      const msg = e?.message || String(e);
+      const stack = e?.stack;
+      this.errorLog.logError(`Unexpected geolocation error: ${msg}`, stack, 'error');
       console.warn('Geolocation error', err);
     }
   }

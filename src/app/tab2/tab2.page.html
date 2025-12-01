@@ -15,5 +15,23 @@
       <ion-title>Menu</ion-title>
     </ion-toolbar>
   </ion-header>
-  <ion-content class="ion-padding"> Tap the button in the toolbar to open the menu. </ion-content>
+  <ion-content class="ion-padding">
+    <p>Tap the button in the toolbar to open the menu.</p>
+
+    <div style="display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0;">
+      <button (click)="throwTestError()">Throw Test Error</button>
+      <button (click)="rejectTestPromise()">Reject Test Promise</button>
+      <button (click)="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div style="border:1px solid var(--ion-color-medium, #ccc); border-radius:6px; padding:8px; max-height:50vh; overflow:auto; background:#0b0b0b0a;">
+      <h3 style="margin: 0 0 8px 0;">Console Errors & Rejections</h3>
+      <div *ngIf="logs.length === 0" style="color:#888">No errors captured yet.</div>
+      <div *ngFor="let log of logs; let i = index" style="border-top:1px solid #e0e0e0; padding:6px 0;">
+        <div><strong>{{log.time}}</strong> — <em>{{log.level}}</em></div>
+        <div style="white-space: pre-wrap; word-break: break-word;">{{log.message}}</div>
+        <pre *ngIf="log.stack" style="white-space: pre-wrap; word-break: break-word; margin:4px 0 0 0;">{{log.stack}}</pre>
+      </div>
+    </div>
+  </ion-content>
 </div>
