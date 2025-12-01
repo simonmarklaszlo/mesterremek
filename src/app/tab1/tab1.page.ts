@@ -363,6 +363,7 @@ export class Tab1Page implements AfterViewInit, OnDestroy {
 
   ToggleTheme() {
     // Persist desired theme; subscription above updates the tiles and body class
+    this.User_Marker_Place();
     this.theme.setTheme(!this.isThemeDark);
   }
 
