@@ -17,6 +17,11 @@ export const routes: Routes = [
           import('../pages/map/map.page').then(m => m.MapPage),
       },
       {
+        path : 'community',
+        loadComponent: () =>
+          import('../pages/community/community.page').then(m => m.CommunityPage),
+      },
+      {
         path : 'settings',
         loadComponent: () =>
           import('../pages/settings/settings.page').then(m => m.SettingsPage),

@@ -1,0 +1,127 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Közösség</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Szegmens váltó: Közösség / Saját -->
+  <div class="segment-container">
+    <ion-segment [(ngModel)]="selectedSegment" (ionChange)="segmentChanged($event)" mode="md">
+      <ion-segment-button value="community">
+        <ion-label>Közösség</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="own">
+        <ion-label>Saját</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <!-- Javaslatok listája -->
+  <ion-list lines="none" class="suggestions-list">
+    <ion-card *ngFor="let suggestion of filteredSuggestions" class="suggestion-card">
+      <ion-card-header>
+        <div class="card-header-content">
+          <div class="suggestion-info">
+            <div class="suggestion-meta">
+              <ion-chip [color]="suggestion.type === 'shop' ? 'primary' : 'secondary'" class="type-chip">
+                {{ getSuggestionTypeLabel(suggestion.type) }}
+              </ion-chip>
+              <ion-chip
+                *ngIf="suggestion.status === 'approved'"
+                color="success"
+                class="status-chip"
+              >
+                ✓ Jóváhagyva
+              </ion-chip>
+            </div>
+            <ion-card-title class="suggestion-title">{{ suggestion.proposedValue }}</ion-card-title>
+            <ion-card-subtitle *ngIf="suggestion.shopAddress" class="suggestion-address">
+              <ion-icon name="location-outline"></ion-icon>
+              {{ suggestion.shopAddress }}
+            </ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Nyitvatartás expand -->
+        <div *ngIf="suggestion.openingHours && suggestion.openingHours.length > 0" class="opening-hours-section">
+          <div class="opening-hours-header" (click)="toggleExpand(suggestion)">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>Nyitvatartás</span>
+            <ion-icon [name]="suggestion.expanded ? 'chevron-up-outline' : 'chevron-down-outline'" class="expand-icon"></ion-icon>
+          </div>
+          <ion-list *ngIf="suggestion.expanded" lines="none" class="opening-hours-list">
+            <ion-item *ngFor="let hours of suggestion.openingHours">
+              <ion-label>
+                <strong>{{ hours.dayOfWeek }}</strong>
+              </ion-label>
+              <ion-text slot="end" color="medium">
+                <span *ngIf="hours.closeHour">{{ hours.openHour }} - {{ hours.closeHour }}</span>
+                <span *ngIf="!hours.closeHour">{{ hours.openHour }}</span>
+              </ion-text>
+            </ion-item>
+          </ion-list>
+        </div>
+
+        <div class="suggestion-footer">
+          <div class="author-info">
+            <ion-icon name="person-outline"></ion-icon>
+            <ion-text color="medium">{{ suggestion.author }}</ion-text>
+            <ion-icon name="time-outline"></ion-icon>
+            <ion-text color="medium">{{ formatDate(suggestion.createdAt) }}</ion-text>
+          </div>
+
+          <div class="vote-buttons">
+            <ion-button
+              size="small"
+              [fill]="suggestion.userVote === 'like' ? 'solid' : 'outline'"
+              [color]="suggestion.userVote === 'like' ? 'success' : 'medium'"
+              (click)="vote(suggestion, 'like')"
+            >
+              <ion-icon
+                slot="icon-only"
+                [name]="suggestion.userVote === 'like' ? 'thumbs-up' : 'thumbs-up-outline'"
+              ></ion-icon>
+            </ion-button>
+
+            <ion-chip
+              [color]="getVoteColor(getVoteCount(suggestion))"
+              class="vote-count"
+            >
+              <ion-text>{{ getVoteCount(suggestion) > 0 ? '+' : '' }}{{ getVoteCount(suggestion) }}</ion-text>
+            </ion-chip>
+
+            <ion-button
+              size="small"
+              [fill]="suggestion.userVote === 'dislike' ? 'solid' : 'outline'"
+              [color]="suggestion.userVote === 'dislike' ? 'danger' : 'medium'"
+              (click)="vote(suggestion, 'dislike')"
+            >
+              <ion-icon
+                slot="icon-only"
+                [name]="suggestion.userVote === 'dislike' ? 'thumbs-down' : 'thumbs-down-outline'"
+              ></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Nincs javaslat üzenet -->
+    <div *ngIf="filteredSuggestions.length === 0" class="no-suggestions">
+      <ion-icon name="chatbubbles-outline" class="no-suggestions-icon"></ion-icon>
+      <h3>Még nincsenek javaslatok</h3>
+      <p *ngIf="selectedSegment === 'community'">Légy az első, aki javaslatot tesz!</p>
+      <p *ngIf="selectedSegment === 'own'">Még nem tetél fel javaslatot.</p>
+    </div>
+  </ion-list>
+
+  <!-- FAB gomb: Üzlet hozzáadása -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addNewShop()" color="primary">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

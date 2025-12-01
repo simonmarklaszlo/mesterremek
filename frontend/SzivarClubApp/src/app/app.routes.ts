@@ -23,5 +23,9 @@ export const routes: Routes = [
   {
     path: '**',
     loadComponent: () => import('./pages/not-found/not-found.page').then( m => m.NotFoundPage)
+  },  {
+    path: 'community',
+    loadComponent: () => import('./pages/community/community.page').then( m => m.CommunityPage)
   }
+
 ];
