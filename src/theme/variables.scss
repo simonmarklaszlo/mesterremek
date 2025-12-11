@@ -1,0 +1,28 @@
+/* src/theme/variables.scss */
+
+/* Világos téma alapértelmezett */
+:root {
+  --ion-color-primary: #c9a34a;        /* gombok / navbar */
+  --ion-color-primary-rgb: 201,163,74;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255,255,255;
+  --ion-color-primary-shade: #b5943f;
+  --ion-color-primary-tint: #d0ab57;
+
+  --ion-background-color: #fff8f1;     /* háttér */
+  --ion-text-color: #3b2f2a;           /* sötétbarna szöveg */
+}
+
+/* Sötét téma a body.dark alatt */
+body.dark {
+  --ion-color-primary: #c9a34a;        /* gombok / navbar marad sárga */
+  --ion-color-primary-rgb: 201,163,74;
+  --ion-color-primary-contrast: #3b2f2a; /* sötét szöveg kontraszt */
+  --ion-color-primary-contrast-rgb: 59,47,42;
+  --ion-color-primary-shade: #b5943f;
+  --ion-color-primary-tint: #d0ab57;
+
+  --ion-background-color: #3b2f2a;     /* sötétbarna háttér */
+  --ion-text-color: #f5e9d4;           /* világos szöveg */
+}
+

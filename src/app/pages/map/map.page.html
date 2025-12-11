@@ -1,0 +1,32 @@
+<ion-content id="main-content" [fullscreen]="true">
+  <ion-header class="map-header">
+    <ion-toolbar>
+      <div class="header-row">
+        <ion-icon name="bonfire" color="primary" size="large" class="szivar-icon"></ion-icon>
+        <div class="header-controls">
+          <ion-input 
+            type="text"
+            name="varos"
+            id="varos"
+            [(ngModel)]="searchCity"
+            (keyup.enter)="varos_kereses()"
+            placeholder="Város keresése">
+          </ion-input>
+          <ion-button fill="clear" shape="round" size="small" (click)="varos_kereses()">
+            <ion-icon slot="icon-only" name="search"></ion-icon>
+          </ion-button>
+          <ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()"></ion-toggle>
+        </div>
+      </div>
+    </ion-toolbar>
+  </ion-header>
+
+  <div id="map"></div>
+  <div id="log-container" style="white-space: pre-wrap; word-wrap: break-word;"></div>
+
+  <ion-fab vertical="top" horizontal="end" slot="fixed" class="map-fab">
+    <ion-fab-button (click)="centerOnUser()">
+      <ion-icon name="locate"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

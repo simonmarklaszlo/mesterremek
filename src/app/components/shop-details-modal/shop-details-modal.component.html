@@ -1,0 +1,143 @@
+<ion-modal [isOpen]="isOpen" (didDismiss)="closeModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Bolt részletei</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <!-- Loading állapot -->
+      <div *ngIf="isLoading" class="loading-container">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Betöltés...</p>
+      </div>
+
+      <!-- Hiba üzenet -->
+      <div *ngIf="errorMessage && !isLoading" class="error-container">
+        <ion-text color="danger">
+          <p>{{ errorMessage }}</p>
+        </ion-text>
+      </div>
+
+      <!-- Bolt adatok -->
+      <div *ngIf="shopDetails && !isLoading">
+        <!-- Fejléc információk -->
+        <div class="shop-header">
+          <h1>{{ shopDetails.name }}</h1>
+          <div class="location-info">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>{{ shopDetails.address }}, {{ shopDetails.city }}</span>
+          </div>
+
+          <!-- Nyitvatartási státusz -->
+          <ion-chip [color]="shopDetails.isOpenNow ? 'success' : 'danger'" class="status-chip">
+            <ion-icon [name]="shopDetails.isOpenNow ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+            <ion-label>
+              {{ shopDetails.isOpenNow ? 'Most nyitva' : 'Zárva' }}
+              <span *ngIf="shopDetails.isOpenNow && shopDetails.nextClosingTime">
+                - {{ shopDetails.nextClosingTime }}-ig
+              </span>
+            </ion-label>
+          </ion-chip>
+
+          <!-- Értékelés -->
+          <div class="rating-section" *ngIf="shopDetails.totalReviews > 0">
+            <div class="stars">
+              <ion-icon
+                *ngFor="let filled of getStars(Math.round(shopDetails.averageRating))"
+                [name]="filled ? 'star' : 'star-outline'"
+                [color]="filled ? 'warning' : 'medium'"
+              ></ion-icon>
+            </div>
+            <ion-text color="medium">
+              <span>{{ shopDetails.averageRating.toFixed(1) }} ({{ shopDetails.totalReviews }} értékelés)</span>
+            </ion-text>
+          </div>
+
+          <!-- Nincs még értékelés -->
+          <div class="rating-section" *ngIf="shopDetails.totalReviews === 0">
+            <ion-text color="medium">
+              <span>Még nincs értékelés</span>
+            </ion-text>
+          </div>
+        </div>
+
+        <!-- Nyitvatartás -->
+        <ion-card *ngIf="shopDetails.openingHours.length > 0">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="time-outline"></ion-icon>
+              Nyitvatartás
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list lines="none" class="opening-hours-list">
+              <ion-item *ngFor="let hours of shopDetails.openingHours">
+                <ion-label>
+                  <strong>{{ hours.dayOfWeek }}</strong>
+                </ion-label>
+                <ion-text slot="end" color="medium">
+                  {{ hours.openHour }} - {{ hours.closeHour }}
+                </ion-text>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Szivar márkák -->
+        <ion-card *ngIf="shopDetails.cigarBrands.length > 0">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Elérhető szivar márkák
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="brands-chips">
+              <ion-chip *ngFor="let brand of shopDetails.cigarBrands" color="primary">
+                <ion-label>{{ brand.brandName }}</ion-label>
+              </ion-chip>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Értékelések -->
+        <ion-card *ngIf="shopDetails.reviews.length > 0">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="star-outline"></ion-icon>
+              Értékelések
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="reviews-list">
+              <div *ngFor="let review of shopDetails.reviews" class="review-item">
+                <div class="review-header">
+                  <strong>{{ review.userName }}</strong>
+                  <div class="review-stars">
+                    <ion-icon
+                      *ngFor="let filled of getStars(review.rating)"
+                      [name]="filled ? 'star' : 'star-outline'"
+                      [color]="filled ? 'warning' : 'medium'"
+                      class="small-star"
+                    ></ion-icon>
+                  </div>
+                </div>
+                <p class="review-comment">{{ review.comment }}</p>
+                <ion-text color="medium" class="review-date">
+                  <small>{{ formatDate(review.createdAt) }}</small>
+                </ion-text>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
