@@ -21,10 +21,12 @@ import {
   IonChip,
   IonText,
   IonFab,
-  IonFabButton
+  IonFabButton,
+  ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline, thumbsUpOutline, thumbsDownOutline, thumbsUp, thumbsDown, timeOutline, personOutline, chatbubblesOutline, chevronUpOutline, chevronDownOutline } from 'ionicons/icons';
+import { CreateSuggestionModalComponent } from './create-suggestion-modal/create-suggestion-modal.component';
 
 interface OpeningHour {
   dayOfWeek: string;
@@ -83,7 +85,7 @@ export class CommunityPage implements OnInit {
   suggestions: Suggestion[] = [];
   filteredSuggestions: Suggestion[] = [];
 
-  constructor() {
+  constructor(private modalController: ModalController) {
     addIcons({ addOutline, thumbsUpOutline, thumbsDownOutline, thumbsUp, thumbsDown, timeOutline, personOutline, chatbubblesOutline, chevronUpOutline, chevronDownOutline });
   }
 
@@ -156,9 +158,21 @@ export class CommunityPage implements OnInit {
     }
   }
 
-  addNewShop() {
-    // Később: navigálás az új bolt hozzáadása modal/page-hez
-    console.log('Új bolt hozzáadása');
+  async addNewShop() {
+    const modal = await this.modalController.create({
+      component: CreateSuggestionModalComponent
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+
+    if (role === 'submit' && data) {
+      console.log('Új javaslat beküldve:', data);
+      // TODO: Itt később hozzáadhatjuk a suggestions listához
+      // vagy újratölthetjük az adatokat a szerverről
+      this.loadSuggestions();
+    }
   }
 
   vote(suggestion: Suggestion, voteType: 'like' | 'dislike') {
