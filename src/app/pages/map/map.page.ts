@@ -160,7 +160,7 @@ export class MapPage implements AfterViewInit, OnDestroy {
     }
     const cap_value = raw ? raw.toString().charAt(0).toUpperCase() + raw.toString().slice(1).toLowerCase() : '';
 
-    this.http.get(`http://10.31.16.6:3000/api/shops/cities/${cap_value}`).subscribe({
+    this.http.get(`http://localhost:3000/api/shops/cities/${cap_value}`).subscribe({
       next: (response) => {
         const shopRequests: any[] = [];
         Object.entries(response).forEach(([key, row]: [string, any]) => {
@@ -170,7 +170,7 @@ export class MapPage implements AfterViewInit, OnDestroy {
                 ? (element.id ?? element.shopId ?? element._id ?? element)
                 : element;
               if (!shopId) return;
-              shopRequests.push(this.http.get(`http://10.31.16.6:3000/api/shops/${shopId}`));
+              shopRequests.push(this.http.get(`http://localhost:3000/api/shops/${shopId}`));
             });
           }
         });

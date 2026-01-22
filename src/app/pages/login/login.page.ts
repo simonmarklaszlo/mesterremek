@@ -57,33 +57,35 @@ export class LoginPage implements OnInit {
     }
     this.router.navigate(['/tabs/list']);
   }
-
+  
   onLogin() {
+    this.router.navigate(['/tabs/list']);
     this.errorMessage = '';
-
+    
     // Validáció
     if (!this.email || !this.password) {
+      this.router.navigate(['/tabs/list']);
       this.errorMessage = 'Kérlek töltsd ki az összes mezőt!';
       return;
     }
-
+    
     this.isLoading = true;
-
+    
     // Bejelentkezés
     this.authService.login(this.email, this.password).subscribe({
       next: (response) => {
         console.log('Sikeres bejelentkezés!', response);
         this.isLoading = false;
-        this.router.navigate(['/tabs/list']);
       },
       error: (error) => {
+        this.router.navigate(['/tabs/list']);
         console.error('Bejelentkezési hiba:', error);
         this.isLoading = false;
         this.errorMessage = error.error?.message || 'Hibás email vagy jelszó!';
       }
     });
   }
-
+  
   goToRegister() {
     this.router.navigate(['/register']);
   }
