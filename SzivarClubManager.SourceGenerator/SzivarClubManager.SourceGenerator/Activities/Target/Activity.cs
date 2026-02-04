@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace SzivarClubManager.SourceGenerator.GenerationTarget;
+namespace SzivarClubManager.SourceGenerator.Activities.Target;
 
 public class Activity : ITarget
 {
@@ -13,8 +13,7 @@ public class Activity : ITarget
         ViewModelType = viewModelType;
     }
 
-    public virtual string InstanceCreation(string dataSourceVariableName) =>
-        $"new {ViewModelType}({dataSourceVariableName})";
+    public string InstanceCreation() => $"new {ViewModelType}()";
 
     public static Activity? IsTarget(GeneratorSyntaxContext context)
     {

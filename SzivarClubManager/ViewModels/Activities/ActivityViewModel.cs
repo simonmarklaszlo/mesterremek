@@ -1,13 +1,14 @@
-using SzivarClubManager.Datasources;
+using System.Threading.Tasks;
 
 namespace SzivarClubManager.ViewModels.Activities;
 
 public abstract class ActivityViewModel : ViewModelBase
 {
-    protected readonly IDataSource DataSource;
-
-    protected ActivityViewModel(IDataSource dataSource)
+    public bool IsInitialized { get; private set; }
+    public virtual Task InitializeAsync()
     {
-        DataSource = dataSource;
+        if (IsInitialized) return Task.CompletedTask;
+        IsInitialized = true;
+        return Task.CompletedTask;
     }
 }

@@ -26,7 +26,9 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
         <PackageReference Include="DotNetEnv" Version="3.1.1"/>
+        <PackageReference Include="NetTopologySuite" Version="2.6.0" />
         <PackageReference Include="Npgsql" Version="10.0.0"/>
+        <PackageReference Include="Npgsql.NetTopologySuite" Version="10.0.0" />
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9"/>
     </ItemGroup>
 

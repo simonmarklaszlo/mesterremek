@@ -1,22 +1,21 @@
+using System;
 using System.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SzivarClubManager.Datasources;
 
 namespace SzivarClubManager.ViewModels.Activities;
 
-public abstract class PageActivityBaseViewModel(IDataSource dataSource) : ActivityViewModel(dataSource)
+public abstract partial class PageActivityBaseViewModel : ActivityViewModel
 {
-    // ===== Bound properties =====
-    public abstract IEnumerable Data { get; }
+    [ObservableProperty] private IEnumerable _data = Array.Empty<object>();
 
-    public abstract int CurrentPage { get; }
+    [ObservableProperty] private int _currentPage = 1;
 
-    public abstract bool IsFirstPageButtonEnabled { get; }
-    public abstract bool IsPreviousPageButtonEnabled { get; }
-    public abstract bool IsNextPageButtonEnabled { get; }
-    public abstract bool IsLastPageButtonEnabled { get; }
+    [ObservableProperty] private bool _isFirstPageButtonEnabled;
+    [ObservableProperty] private bool _isPreviousPageButtonEnabled;
+    [ObservableProperty] private bool _isNextPageButtonEnabled;
+    [ObservableProperty] private bool _isLastPageButtonEnabled;
 
-    // ===== Bound commands =====
     public abstract IRelayCommand LoadFirstPageCmd { get; }
     public abstract IRelayCommand LoadPreviousPageCmd { get; }
     public abstract IRelayCommand LoadNextPageCmd { get; }

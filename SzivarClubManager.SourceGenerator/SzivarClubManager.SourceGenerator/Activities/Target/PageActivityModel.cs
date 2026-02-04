@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SzivarClubManager.SourceGenerator.GenerationTarget;
+namespace SzivarClubManager.SourceGenerator.Activities.Target;
 
 public class PageActivityModel : ITarget
 {
@@ -30,16 +30,18 @@ public class PageActivityModel : ITarget
         sb.AppendLine("using SzivarClubManager.Datasources;");
         sb.AppendLine("using SzivarClubManager.Models;");
         sb.AppendLine("using SzivarClubManager.SourceGeneration;");
+        sb.AppendLine("using SzivarClubManager.Datasources.Pagination;");
         sb.AppendLine("");
         sb.AppendLine($"namespace {ActivityViewModelNamespace};");
         sb.AppendLine("");
         sb.AppendLine($"[PageActivityCollectionItem(typeof({ModelType}))]");
         sb.AppendLine($"public class {ViewModelType}(");
-        sb.AppendLine("    IDataSource dataSource,");
-        sb.AppendLine("    Func<int, int, Task<bool>> pageExistsFunc,");
-        sb.AppendLine("    Func<int, Task<int>> lastPageFunc,");
-        sb.AppendLine($"    Func<int, int, Task<{ModelType}[]>> loadPageFunc");
-        sb.AppendLine($") : PageActivityViewModel<{ModelType}>(dataSource, pageExistsFunc, lastPageFunc, loadPageFunc);");
+        sb.AppendLine($"    IPageFactory<{ModelType}> factory");
+        // sb.AppendLine("    IDataSource dataSource,");
+        // sb.AppendLine("    Func<int, int, Task<bool>> pageExistsFunc,");
+        // sb.AppendLine("    Func<int, Task<int>> lastPageFunc,");
+        // sb.AppendLine($"    Func<int, int, Task<{ModelType}[]>> loadPageFunc");
+        sb.AppendLine($") : PageActivityViewModel<{ModelType}>(factory);");
 
         return sb.ToString();
     }

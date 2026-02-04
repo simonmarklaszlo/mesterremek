@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using Avalonia.Styling;
+using Npgsql;
 
 namespace SzivarClubManager;
 
@@ -14,6 +15,7 @@ sealed class Program
     public static void Main(string[] args)
     {
         if (!File.Exists(".env")) throw new FileNotFoundException(".env file required!");
+        NpgsqlConnection.GlobalTypeMapper.UseNetTopologySuite();
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

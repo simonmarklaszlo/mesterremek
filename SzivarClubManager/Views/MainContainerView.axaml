@@ -18,7 +18,8 @@
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
                 <ListBox ItemsSource="{Binding ActivityNames}"
-                         SelectedItem="{Binding SelectedActivityName}">
+                         SelectedItem="{Binding SelectedActivityName}"
+                         >
                 </ListBox>
             </ScrollViewer>
         </Border>

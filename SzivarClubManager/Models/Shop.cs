@@ -1,7 +1,10 @@
 using System;
+using NetTopologySuite.Geometries;
+using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Models;
 
+[PageActivity]
 public record Shop(
     int Id,
     string Name,
@@ -9,5 +12,5 @@ public record Shop(
     string City,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    float Rating
+    CustomPgPoint Location
 );
