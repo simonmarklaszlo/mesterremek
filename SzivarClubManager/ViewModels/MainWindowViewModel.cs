@@ -17,11 +17,21 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task InitAsync()
     {
-        DatabaseConnection? connection = await DatabaseConnection.ConnectAsync();
+        try
+        {
+            DatabaseConnection? connection = await DatabaseConnection.ConnectAsync();
+            Console.WriteLine("Connection to database : " + (connection is null ? "failure" : "succeess"));
 
-        Console.WriteLine("Connection to database : " + (connection is null ? "failure" : "succeess"));
+            if (connection is null) CurrentViewModel = ConnectionStateViewModel.Error;
+            else CurrentViewModel = new MainContainerViewModel(connection);
+        }
+        catch (Exception e)
+        {
+            CurrentViewModel = ConnectionStateViewModel.Error;
+            Console.WriteLine(e);
 
-        if (connection is null) CurrentViewModel = ConnectionStateViewModel.Error;
-        else CurrentViewModel = new MainContainerViewModel(connection);
+            await Task.Delay(2000);
+            Environment.Exit(-1);
+        }
     }
 }

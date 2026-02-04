@@ -1,5 +1,4 @@
 using System;
-using SzivarClubManager.Datasources.Database.Factories;
 using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Models;

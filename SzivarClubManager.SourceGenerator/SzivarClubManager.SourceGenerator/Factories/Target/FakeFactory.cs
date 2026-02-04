@@ -1,6 +1,6 @@
 namespace SzivarClubManager.SourceGenerator.Factories.Target;
 
-public record MockFactory(
+public record FakeFactory(
     TypeName FactoryTypeName,
     TypeName ModelTypeName
 ) : Factory(FactoryTypeName, ModelTypeName, false)

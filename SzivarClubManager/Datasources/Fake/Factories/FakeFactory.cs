@@ -3,13 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Pagination;
 
-namespace SzivarClubManager.Datasources.Mock.Factories;
+namespace SzivarClubManager.Datasources.Fake.Factories;
 
-public abstract class MockFactory<T> : IPageFactory<T>, IMockObject
+public abstract class FakeFactory<T> : IPageFactory<T>, IFakeObject
 {
     private readonly T[] _data;
 
-    protected MockFactory(T[] data)
+    protected FakeFactory(T[] data)
     {
         _data = data;
     }

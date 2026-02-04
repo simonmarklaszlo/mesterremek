@@ -21,7 +21,7 @@ public partial class MainContainerViewModel : ViewModelBase
     {
         _activities = ActivityCollection.GetActivities(
             // FactoryProvider.Create(connection)
-            FactoryProvider.Mock()
+            FactoryProvider.Fake()
         );
 
         _currentActivity = new NoActivityViewModel();

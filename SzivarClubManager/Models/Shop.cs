@@ -1,5 +1,4 @@
 using System;
-using NetTopologySuite.Geometries;
 using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Models;

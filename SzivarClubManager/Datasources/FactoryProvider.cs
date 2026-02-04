@@ -25,9 +25,9 @@ public partial class FactoryProvider
 
 
     public static FactoryProvider Create(DatabaseConnection connection) => new(GetGeneratedFactoriesMap(connection));
-    public static FactoryProvider Mock() => new(GetGeneratedMockFactoriesMap());
+    public static FactoryProvider Fake() => new(GetGeneratedFakeFactoriesMap());
 
 
     private static partial Dictionary<Type, IFactory> GetGeneratedFactoriesMap(DatabaseConnection connection);
-    private static partial Dictionary<Type, IFactory> GetGeneratedMockFactoriesMap();
+    private static partial Dictionary<Type, IFactory> GetGeneratedFakeFactoriesMap();
 }
