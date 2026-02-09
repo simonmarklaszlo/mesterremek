@@ -43,4 +43,11 @@
         <ProjectReference Include="..\SzivarClubManager.SourceGenerator\SzivarClubManager.SourceGenerator\SzivarClubManager.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <Analyzer Include="..\SzivarClubManager.SourceGenerator\SzivarClubManager.SourceGenerator\bin\$(Configuration)\netstandard2.0\SzivarClubManager.SourceGenerator.dll"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Activities\Page\PageActivityView.axaml.cs">
+        <DependentUpon>PageActivityView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

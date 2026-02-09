@@ -6,12 +6,12 @@ namespace SzivarClubManager.SourceGenerator.Activities.Target;
 
 public class PageActivityModel : ITarget
 {
-    private const string ActivityViewModelNamespace = "SzivarClubManager.ViewModels.Activities";
+    private const string ActivityViewModelNamespace = "SzivarClubManager.ViewModels.Activities.PageActivity";
     private const string PageActivityAttribute = "SzivarClubManager.SourceGeneration.PageActivityAttribute";
 
 
     public string ModelType { get; }
-    public string ViewModelType => $"{ModelType}PageActivityViewModel";
+    public string ViewModelType => $"{ModelType}PageActivityDataViewModel";
 
 
     public PageActivityModel(string modelType)
@@ -41,7 +41,7 @@ public class PageActivityModel : ITarget
         // sb.AppendLine("    Func<int, int, Task<bool>> pageExistsFunc,");
         // sb.AppendLine("    Func<int, Task<int>> lastPageFunc,");
         // sb.AppendLine($"    Func<int, int, Task<{ModelType}[]>> loadPageFunc");
-        sb.AppendLine($") : PageActivityViewModel<{ModelType}>(factory);");
+        sb.AppendLine($") : PageActivityDataViewModel<{ModelType}>(factory);");
 
         return sb.ToString();
     }

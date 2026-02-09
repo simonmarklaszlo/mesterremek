@@ -1,6 +1,10 @@
-using SzivarClubManager.SourceGeneration;
-
 namespace SzivarClubManager.Models;
 
-[PageActivity]
-public record Cigar(int Id, string Name, Brand Brand);
+public record Cigar(
+    int Id,
+    string Name,
+    Brand Brand)
+{
+    public string ToCopiableString() => $"{Id} {Name} {Brand}";
+    public Cigar Copy() => this with { Brand = Brand.Copy() };
+}

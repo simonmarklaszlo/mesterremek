@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using Npgsql;
-using SzivarClubManager.Datasources.Pagination;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 

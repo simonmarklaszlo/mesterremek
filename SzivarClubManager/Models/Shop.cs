@@ -1,9 +1,7 @@
 using System;
-using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Models;
 
-[PageActivity]
 public record Shop(
     int Id,
     string Name,
@@ -12,4 +10,8 @@ public record Shop(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     CustomPgPoint Location
-);
+)
+{
+    public string ToCopiableString() => $"{Id} {Name} {Address} {City} {CreatedAt} {UpdatedAt} {Location}";
+    public Shop Copy() => this with { Location = Location.Copy() };
+}

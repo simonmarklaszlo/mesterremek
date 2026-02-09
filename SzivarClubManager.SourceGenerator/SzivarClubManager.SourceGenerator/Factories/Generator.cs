@@ -21,9 +21,6 @@ public class Generator : IIncrementalGenerator
             .Where(t => t is not null)
             .Select((t, _) => t!);
 
-        ;
-
-
         context.RegisterSourceOutput(targetCandidates.Collect(), (ctx, factories) =>
         {
             ctx.AddSource(

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace SzivarClubManager.Datasources.Pagination;
+namespace SzivarClubManager.Datasources;
 
 public interface IPageFactory<T> : IFactory
 {

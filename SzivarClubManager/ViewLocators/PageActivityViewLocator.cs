@@ -2,9 +2,10 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using SzivarClubManager.ViewModels;
+using SzivarClubManager.ViewModels.Activities.Page;
+using PageActivityView = SzivarClubManager.Views.Activities.Page.PageActivityView;
 
-namespace SzivarClubManager;
+namespace SzivarClubManager.ViewLocators;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.
@@ -12,26 +13,19 @@ namespace SzivarClubManager;
 [RequiresUnreferencedCode(
     "Default implementation of ViewLocator involves reflection which may be trimmed away.",
     Url = "https://docs.avaloniaui.net/docs/concepts/view-locator")]
-public class ViewLocator : IDataTemplate
+public class PageActivityViewLocator : IDataTemplate
 {
     public Control? Build(object? param)
     {
-        if (param is null)
-            return null;
+        if (param is not PageActivityViewModel) return null;
 
-        var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
-        var type = Type.GetType(name);
+        Type type = typeof(PageActivityView);
 
-        if (type != null)
-        {
-            return (Control)Activator.CreateInstance(type)!;
-        }
-
-        return new TextBlock { Text = "Not Found: " + name };
+        return (Control)Activator.CreateInstance(type)!;
     }
 
     public bool Match(object? data)
     {
-        return data is ViewModelBase;
+        return data is PageActivityViewModel;
     }
 }

@@ -19,9 +19,10 @@ public partial class MainContainerViewModel : ViewModelBase
 
     public MainContainerViewModel(DatabaseConnection connection)
     {
+        var factoryProvider = FactoryProvider.Fake();
         _activities = ActivityCollection.GetActivities(
             // FactoryProvider.Create(connection)
-            FactoryProvider.Fake()
+            factoryProvider
         );
 
         _currentActivity = new NoActivityViewModel();

@@ -1,59 +1,13 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="SzivarClubManager.App"
-             xmlns:local="using:SzivarClubManager"
-             xmlns:activities="clr-namespace:SzivarClubManager.ViewModels.Activities"
-             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels"
+             xmlns:viewLocators="clr-namespace:SzivarClubManager.ViewLocators"
              RequestedThemeVariant="Default">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
-        <DataTemplate DataType="activities:PageActivityBaseViewModel">
-            <Grid RowDefinitions="*,Auto">
-
-                <DataGrid
-                    ItemsSource="{Binding Data}"
-                    AutoGenerateColumns="True"
-                    IsReadOnly="True"
-                    CanUserResizeColumns="True"
-                    GridLinesVisibility="All" />
-
-                <Grid
-                    Grid.Row="1"
-                    ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,*">
-
-                    <Button
-                        Grid.Column="1"
-                        IsEnabled="{Binding IsFirstPageButtonEnabled}"
-                        Command="{Binding LoadFirstPageCmd}"
-                        Content="&lt;&lt;" />
-
-                    <Button
-                        Grid.Column="2"
-                        IsEnabled="{Binding IsPreviousPageButtonEnabled}"
-                        Command="{Binding LoadPreviousPageCmd}"
-                        Content="&lt;" />
-
-                    <Label
-                        Grid.Column="3"
-                        Content="{Binding CurrentPage}" />
-
-                    <Button
-                        Grid.Column="4"
-                        IsEnabled="{Binding IsNextPageButtonEnabled}"
-                        Command="{Binding LoadNextPageCmd}"
-                        Content="&gt;" />
-
-                    <Button
-                        Grid.Column="5"
-                        IsEnabled="{Binding IsLastPageButtonEnabled}"
-                        Command="{Binding LoadLastPageCmd}"
-                        Content="&gt;&gt;" />
-                </Grid>
-            </Grid>
-        </DataTemplate>
-
-        <local:ViewLocator />
+        <viewLocators:PageActivityViewLocator />
+        <viewLocators:ViewLocator />
     </Application.DataTemplates>
 
     <Application.Styles>
@@ -61,40 +15,76 @@
             <FluentTheme.Palettes>
                 <ColorPaletteResources x:Key="Light"
                                        Accent="#ff34854d"
-                                       AltHigh="White" AltLow="White" AltMedium="White" AltMediumHigh="White"
+
+                                       AltHigh="White"
+                                       AltLow="White"
+                                       AltMedium="White"
+                                       AltMediumHigh="White"
                                        AltMediumLow="White"
-                                       BaseHigh="Black" BaseLow="#ffc2db65" BaseMedium="#ff7d9728"
-                                       BaseMediumHigh="#ff4f6a00" BaseMediumLow="#ff668114"
+
+
+                                       BaseHigh="Black"
+                                       BaseLow="#ffc2db65"
+                                       BaseMedium="#ff7d9728"
+                                       BaseMediumHigh="#ff4f6a00"
+                                       BaseMediumLow="#ff668114"
+
+
                                        ChromeAltLow="#ff4f6a00"
-                                       ChromeBlackHigh="Black" ChromeBlackLow="#ffc2db65" ChromeBlackMedium="#ff4f6a00"
+                                       ChromeBlackHigh="Black"
+                                       ChromeBlackLow="#ffc2db65"
+                                       ChromeBlackMedium="#ff4f6a00"
                                        ChromeBlackMediumLow="#ff7d9728"
-                                       ChromeDisabledHigh="#ffc2db65" ChromeDisabledLow="#ff7d9728"
-                                       ChromeGray="#ff668114" ChromeWhite="White"
-                                       ChromeHigh="#ffc2db65" ChromeLow="#ffe6f3bb" ChromeMedium="#ffdfeeaa"
+                                       ChromeDisabledHigh="#ffc2db65"
+                                       ChromeDisabledLow="#ff7d9728"
+                                       ChromeGray="#ff668114"
+                                       ChromeWhite="White"
+                                       ChromeHigh="#ffc2db65"
+                                       ChromeLow="#ffe6f3bb"
+                                       ChromeMedium="#ffdfeeaa"
                                        ChromeMediumLow="#ffe6f3bb"
-                                       ListLow="#ffdfeeaa" ListMedium="#ffc2db65"
+
+
+                                       ListLow="#ffdfeeaa"
+                                       ListMedium="#ffc2db65"
                                        RegionColor="#fff7ffff" />
                 <ColorPaletteResources x:Key="Dark"
                                        Accent="#ff34854d"
-                                       AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black"
+
+                                       AltHigh="Black"
+                                       AltLow="Black"
+                                       AltMedium="Black"
+                                       AltMediumHigh="Black"
                                        AltMediumLow="Black"
-                                       BaseHigh="White" BaseLow="#ff784834" BaseMedium="#ffc5a294"
-                                       BaseMediumHigh="#ffd8b8ac" BaseMediumLow="#ff9e7564"
+
+
+                                       BaseHigh="White"
+                                       BaseLow="#ff784834"
+                                       BaseMedium="#ffc5a294"
+                                       BaseMediumHigh="#ffd8b8ac"
+                                       BaseMediumLow="#ff9e7564"
+
+
                                        ChromeAltLow="#ffd8b8ac"
-                                       ChromeBlackHigh="Black" ChromeBlackLow="#ffd8b8ac" ChromeBlackMedium="Black"
+                                       ChromeBlackHigh="Black"
+                                       ChromeBlackLow="#ffd8b8ac"
+                                       ChromeBlackMedium="Black"
                                        ChromeBlackMediumLow="Black"
-                                       ChromeDisabledHigh="#ff784834" ChromeDisabledLow="#ffc5a294"
-                                       ChromeGray="#ffb28b7c" ChromeWhite="White"
-                                       ChromeHigh="#ffb28b7c" ChromeLow="#ff46150a" ChromeMedium="#ff532215"
+                                       ChromeDisabledHigh="#ff784834"
+                                       ChromeDisabledLow="#ffc5a294"
+                                       ChromeGray="#ffb28b7c"
+                                       ChromeWhite="White"
+                                       ChromeHigh="#ffb28b7c"
+                                       ChromeLow="#ff46150a"
+                                       ChromeMedium="#ff532215"
                                        ChromeMediumLow="#ff6c3b2a"
-                                       ListLow="#ff532215" ListMedium="#ff784834"
+
+
+                                       ListLow="#ff532215"
+                                       ListMedium="#ff784834"
                                        RegionColor="#ff353819" />
             </FluentTheme.Palettes>
         </FluentTheme>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"></StyleInclude>
     </Application.Styles>
-
-    <Application.Resources>
-
-    </Application.Resources>
 </Application>

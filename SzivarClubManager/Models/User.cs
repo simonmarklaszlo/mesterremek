@@ -1,7 +1,15 @@
 using System;
-using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Models;
 
-[PageActivity]
-public record User(int Id, string Name, string Email, DateTime CreatedAt, Role Role);
+public record User(
+    int Id,
+    string Name,
+    string Email,
+    DateTime CreatedAt,
+    Role Role
+)
+{
+    public string ToCopiableString() => $"{Id} {Name} {Email} {CreatedAt} {Role}";
+    public User Copy() => this with { Role = Role.Copy() };
+}

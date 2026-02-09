@@ -23,14 +23,6 @@ public class Generator : IIncrementalGenerator
             .Where(t => t is not null)
             .Select((t, _) => t!);
 
-        // Create Page ViewModels from Models
-        context.RegisterSourceOutput(targetCandidates, (ctx, activity) =>
-        {
-            if (activity is not PageActivityModel pam) return;
-            ctx.AddSource($"{pam.ViewModelType}.g.cs", pam.GenerateViewModelSource());
-        });
-
-
         // Group and create activities for ActivityCollection
         context.RegisterSourceOutput(targetCandidates.Collect(), (ctx, activities) =>
         {
@@ -38,7 +30,7 @@ public class Generator : IIncrementalGenerator
                 // Replace Page Models to Page ViewModel
                 .Select(x => x is PageActivityModel pam ? pam.ToPageActivity() : x)
                 // Only keep Activities, only for type safety
-                .OfType<Target.Activity>()
+                .OfType<Activity>()
                 .ToImmutableArray();
 
             ctx.AddSource("ActivityCollection.g.cs", GenerateActivityCollection(validActivities));
@@ -53,7 +45,7 @@ public class Generator : IIncrementalGenerator
         var pageActivity = PageActivity.IsTarget(context);
         if (pageActivity is not null) return pageActivity;
 
-        var activity = Target.Activity.IsTarget(context);
+        var activity = Activity.IsTarget(context);
         if (activity is not null) return activity;
 
         return null;
@@ -75,6 +67,7 @@ public class Generator : IIncrementalGenerator
         sb.AppendLine("using SzivarClubManager.Models;");
         sb.AppendLine("using SzivarClubManager.Datasources;");
         sb.AppendLine("using SzivarClubManager.ViewModels.Activities;");
+        sb.AppendLine("using SzivarClubManager.ViewModels.Activities.Page.Wrapper;");
         sb.AppendLine();
         sb.AppendLine($"namespace {GeneratedOutputNamespace};");
         sb.AppendLine();
