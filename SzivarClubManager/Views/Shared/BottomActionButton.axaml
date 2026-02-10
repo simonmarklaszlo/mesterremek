@@ -1,0 +1,49 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:SzivarClubManager.Views.Shared">
+    <Design.PreviewWith>
+        <controls:BottomActionButton />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|BottomActionButton">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Button
+                    Command="{TemplateBinding Command}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom"
+                    CornerRadius="10 10 0 0">
+                    <Button.Styles>
+                        <Style Selector="Button">
+                            <Setter Property="Padding" Value="0,20,0,20" />
+                            <Setter Property="Margin" Value="0,20,0,0 " />
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <ThicknessTransition
+                                        Property="Padding"
+                                        Duration="0:0:0.2"
+                                        Easing="CubicEaseOut" />
+                                    <ThicknessTransition
+                                        Property="Margin"
+                                        Duration="0:0:0.2"
+                                        Easing="CubicEaseOut" />
+                                </Transitions>
+                            </Setter>
+                        </Style>
+
+                        <Style Selector="Button:pointerover">
+                            <Setter Property="Margin" Value="0,0,0,0" />
+                            <Setter Property="Padding" Value="0,20,0,40" />
+                        </Style>
+                    </Button.Styles>
+                    <TextBlock
+                        Text="{TemplateBinding Text}"
+                        FontSize="16"
+                        TextAlignment="Center"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Stretch" />
+                </Button>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

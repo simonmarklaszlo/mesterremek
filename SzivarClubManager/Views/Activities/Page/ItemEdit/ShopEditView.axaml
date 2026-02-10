@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.ItemEdit"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.ItemEdit.ShopEditView"
              x:DataType="vm:ShopEditViewModel">
@@ -10,336 +11,72 @@
     <Grid
         ColumnDefinitions="*,*"
         RowDefinitions="*,Auto">
-        <Grid
+        <ScrollViewer
             Grid.Row="0"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            ColumnDefinitions="*,*"
             Margin="0 40 0 40">
+            <StackPanel Orientation="Vertical">
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-                <RowDefinition Height="*" MaxHeight="100" />
-            </Grid.RowDefinitions>
+                <shared:EditField Label="Id">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.Id}"
+                        Watermark="{Binding SelectedItem.Id}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Id"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="0"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.Id}"
-                    Watermark="{Binding SelectedItem.Id}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="Name">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.Name}"
+                        Watermark="{Binding SelectedItem.Name}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="1"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Name"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="1"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.Name}"
-                    Watermark="{Binding SelectedItem.Name}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="Address">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.Address}"
+                        Watermark="{Binding SelectedItem.Address}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="2"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Address"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="2"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.Address}"
-                    Watermark="{Binding SelectedItem.Address}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="City">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.City}"
+                        Watermark="{Binding SelectedItem.City}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="3"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="City"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="3"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.City}"
-                    Watermark="{Binding SelectedItem.City}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="Created At">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.CreatedAt}"
+                        Watermark="{Binding SelectedItem.CreatedAt}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="4"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Created At"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="4"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.CreatedAt}"
-                    Watermark="{Binding SelectedItem.CreatedAt}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="Updated At">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.UpdatedAt}"
+                        Watermark="{Binding SelectedItem.UpdatedAt}" />
+                </shared:EditField>
 
-            <Border
-                Grid.Row="5"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Updated At"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="5"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.UpdatedAt}"
-                    Watermark="{Binding SelectedItem.UpdatedAt}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
+                <shared:EditField Label="Location">
+                    <TextBox
+                        IsEnabled="{Binding IsEditMode}"
+                        Text="{Binding Copy.Location}"
+                        Watermark="{Binding SelectedItem.Location}" />
+                </shared:EditField>
+            </StackPanel>
+        </ScrollViewer>
 
-            <Border
-                Grid.Row="6"
-                Grid.Column="0"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBlock
-                    Text="Location"
-                    TextAlignment="Left"
-                    FontSize="18"
-                    Margin="50 0 0 0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left" />
-            </Border>
-            <Border
-                Grid.Row="6"
-                Grid.Column="1"
-                Margin="20 10"
-                Padding="10"
-                CornerRadius="8"
-                BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
-                Background="{DynamicResource SystemBaseLowColor}">
-                <TextBox
-                    IsEnabled="{Binding IsEditMode}"
-                    Text="{Binding Copy.Location}"
-                    Watermark="{Binding SelectedItem.Location}"
-                    TextAlignment="Left"
-                    FontSize="16"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Stretch" />
-            </Border>
-        </Grid>
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="0"
+            Text="Cancel"
+            Command="{Binding NavigateBackCommand}" />
 
-        <Button
-            Grid.Row="1"
-            Grid.Column="0"
-            Command="{Binding NavigateBackCommand}"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Bottom"
-            CornerRadius="10 10 0 0">
-            <Button.Styles>
-                <Style Selector="Button">
-                    <Setter Property="Padding" Value="0,20,0,20" />
-                    <Setter Property="Margin" Value="0,20,0,0 " />
-                    <Setter Property="Transitions">
-                        <Transitions>
-                            <ThicknessTransition
-                                Property="Padding"
-                                Duration="0:0:0.2"
-                                Easing="CubicEaseOut" />
-                            <ThicknessTransition
-                                Property="Margin"
-                                Duration="0:0:0.2"
-                                Easing="CubicEaseOut" />
-                        </Transitions>
-                    </Setter>
-                </Style>
-
-                <Style Selector="Button:pointerover">
-                    <Setter Property="Margin" Value="0,0,0,0" />
-                    <Setter Property="Padding" Value="0,20,0,40" />
-                </Style>
-            </Button.Styles>
-            <TextBlock
-                Text="Cancel"
-                FontSize="16"
-                TextAlignment="Center"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Stretch" />
-        </Button>
-
-        <Button
-            Grid.Row="1"
-            Grid.Column="1"
-            Command="{Binding SaveChangesCommand}"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Bottom"
-            CornerRadius="10 10 0 0">
-            <Button.Styles>
-                <Style Selector="Button">
-                    <Setter Property="Padding" Value="0,20,0,20" />
-                    <Setter Property="Margin" Value="0,20,0,0 " />
-                    <Setter Property="Transitions">
-                        <Transitions>
-                            <ThicknessTransition
-                                Property="Padding"
-                                Duration="0:0:0.2"
-                                Easing="CubicEaseOut" />
-                            <ThicknessTransition
-                                Property="Margin"
-                                Duration="0:0:0.2"
-                                Easing="CubicEaseOut" />
-                        </Transitions>
-                    </Setter>
-                </Style>
-
-                <Style Selector="Button:pointerover">
-                    <Setter Property="Margin" Value="0,0,0,0" />
-                    <Setter Property="Padding" Value="0,20,0,40" />
-                </Style>
-            </Button.Styles>
-            <TextBlock
-                Text="Save"
-                FontSize="16"
-                TextAlignment="Center"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Stretch" />
-        </Button>
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="1"
+            Text="Save"
+            Command="{Binding NavigateBackCommand}" />
     </Grid>
 </UserControl>

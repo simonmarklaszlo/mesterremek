@@ -85,6 +85,9 @@
                                        RegionColor="#ff353819" />
             </FluentTheme.Palettes>
         </FluentTheme>
+
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"></StyleInclude>
+
+        <StyleInclude Source="avares://SzivarClubManager/Views/Shared/SharedStyles.axaml" />
     </Application.Styles>
 </Application>
