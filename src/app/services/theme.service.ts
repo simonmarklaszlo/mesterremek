@@ -23,7 +23,13 @@ export class ThemeService {
   }
 
   private applyTheme(isDark: boolean): void {
-    document.body.classList.toggle('dark', isDark);
+    // Remove both theme classes first
+    document.body.classList.remove('dark-theme', 'light-theme', 'dark', 'light');
+    if (isDark) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.add('light-theme');
+    }
     this.isDarkSubject.next(isDark);
   }
 

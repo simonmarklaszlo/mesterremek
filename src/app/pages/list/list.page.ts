@@ -148,13 +148,15 @@ export class ListPage implements OnInit {
     this.isLoading = true;
     this.hasSearched = true;
 
+    const safeSearch = this.sanitizeSearchText(this.searchText);
+
     // API hívás paraméterek
     const searchParams = {
       latitude: this.userLocation.latitude,
       longitude: this.userLocation.longitude,
       maxDistance: this.maxDistance,
       hasCigars: this.filterCigars ? true : undefined,
-      search: this.searchText || undefined,
+      search: safeSearch || undefined,
       limit: 20,
       offset: 0
     };
@@ -193,5 +195,17 @@ export class ListPage implements OnInit {
   closeModal() {
     this.isModalOpen = false;
     this.selectedShopId = null;
+  }
+
+   private sanitizeSearchText(value: string): string {
+    if (!value) return '';
+    const trimmed = value.trim().normalize('NFKC');
+    if (!trimmed) return '';
+
+    // Allow letters, numbers, spaces and common punctuation used in names/addresses.
+    const safe = trimmed.replace(/[^\p{L}\p{N}\s'’\-.,/]/gu, '');
+    const collapsed = safe.replace(/\s+/g, ' ').trim();
+    const maxLen = 100;
+    return collapsed.slice(0, maxLen);
   }
 }

@@ -1,6 +1,8 @@
-import { Component, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, ApplicationRef } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { IonHeader, IonToolbar, IonTitle, IonToggle,
-             IonContent, IonInput, IonButton, IonIcon,IonFab } from '@ionic/angular/standalone';
+             IonContent, IonInput, IonButton, IonIcon, IonFab } from '@ionic/angular/standalone';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -8,7 +10,7 @@ import * as L from 'leaflet';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
-import { radioButtonOn, person, locationSharp, storefront, search, locate,bonfire } from 'ionicons/icons';
+import { radioButtonOn, person, locationSharp, storefront, search, locate,bonfire, arrowBack } from 'ionicons/icons';
 import { ThemeService } from '../../services/theme.service';
 import { ErrorLogService } from '../../services/error-log.service';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
@@ -28,8 +30,12 @@ L.Icon.Default.mergeOptions({
   templateUrl: 'map.page.html',
   styleUrls: ['map.page.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IonHeader, IonToolbar, IonTitle, 
-            IonContent, IonInput, IonToggle, IonButton, IonIcon, IonFab, FormsModule]})
+  imports: [
+    CommonModule,
+    IonHeader, IonToolbar, IonTitle, 
+    IonContent, IonInput, IonToggle, IonButton, IonIcon, IonFab, FormsModule
+  ]
+})
 
 export class MapPage implements AfterViewInit, OnDestroy {
   map?: L.Map;
@@ -39,7 +45,10 @@ export class MapPage implements AfterViewInit, OnDestroy {
   userLat = 0;
   userLong = 0;
   searchCity: string = '';
-  
+
+  // Sidebar state (remade)
+  sidebar: { type: 'list', data: any[] } | { type: 'details', data: any } | null = null;
+
   private tileLayer?: L.TileLayer;
   private shopMarkersLayer?: L.LayerGroup;
   private clusterMarkersLayer?: L.LayerGroup;
@@ -69,17 +78,26 @@ export class MapPage implements AfterViewInit, OnDestroy {
 
   hungaryBounds: L.LatLngBoundsExpression = [[45.637, 16.113], [48.685, 22.897]];
 
-  constructor(private http: HttpClient, private theme: ThemeService, private errorLog: ErrorLogService) {
-    addIcons({ radioButtonOn, person, locationSharp, storefront, search, locate,bonfire });
+  constructor(
+    private http: HttpClient,
+    private theme: ThemeService,
+    private errorLog: ErrorLogService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
+    private appRef: ApplicationRef,
+    private sanitizer: DomSanitizer
+  ) {
+    addIcons({ radioButtonOn, person, locationSharp, storefront, search, locate,bonfire,arrowBack});
   }
 
   ngOnInit() {
-    // Keep local state in sync with global theme and update tiles if needed
+    // Only subscribe to theme changes and update local state/tile layer, not body classes
+    this.isThemeDark = true;
     this.theme.theme$.subscribe((isDark: boolean) => {
       const prev = this.isThemeDark;
       this.isThemeDark = isDark;
       if (this.map && this.tileLayer && prev !== isDark) {
-        const url = this.isThemeDark
+        const url = isDark
           ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
           : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
         try {
@@ -149,6 +167,7 @@ export class MapPage implements AfterViewInit, OnDestroy {
   varos_kereses(event?: Event) {
     this.Varos_Coords = [];
     this.Shop_Data = [];
+    this.sidebar = null;
     let raw = this.searchCity ?? '';
     if (!raw) {
       const el = document.getElementById('varos') as HTMLInputElement | null;
@@ -193,6 +212,10 @@ export class MapPage implements AfterViewInit, OnDestroy {
               // Center map on first result
               if (this.Varos_Coords.length > 0 && this.map) {
                 this.map.setView(this.Varos_Coords[0] as [number, number], 13);
+              }
+              // Show all shops in sidebar as list by default
+              if (this.Shop_Data.length > 0) {
+                this.showShopList(this.Shop_Data);
               }
             },
             error: (err) => console.error('Error loading shop data:', err)
@@ -253,66 +276,26 @@ export class MapPage implements AfterViewInit, OnDestroy {
       if (count > 1 && count <= 5) iconFilename = 'Store_cluster_2.svg';
       else if (count > 5 && count < 20) iconFilename = 'Store_cluster_3.svg';
       else if (count >= 20) iconFilename = 'Store_cluster_4.svg';
-      
+
       const clusterIcon = L.icon({
         iconUrl: `assets/${iconFilename}`,
         iconSize: [48,48],
         iconAnchor: [24,24],
         popupAnchor: [0,-20]
       });
-      
+
       const marker = L.marker([avgLat, avgLng], { icon: clusterIcon }).addTo(this.clusterMarkersLayer!);
-      if (count === 1) {
-        const shop = cluster.shops[0];
-        const slat = Number(shop.latitude ?? shop.lat);
-        const slng = Number(shop.longitude ?? shop.lng);
-        const openingHoursHtml = this.formatOpeningHoursHTML(shop);
-        const singleContent = `
-          <div style="min-width: 200px;">
-            <h3 style="margin: 0 0 10px 0; color: #3880ff;">${shop.name || 'Shop'}</h3>
-            <p style="margin: 5px 0;"><strong>Address:</strong> ${shop.address || 'N/A'}</p>
-            <p style="margin: 5px 0;"><strong>Phone:</strong> ${shop.phone || 'N/A'}</p>
-            ${openingHoursHtml}
-            <div style="margin-top:8px;">
-              <button id="open-google-cluster-1" style="background:#3880ff;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">
-                Open in Maps
-              </button>
-            </div>
-          </div>
-        `;
-        marker.bindPopup(singleContent);
-        marker.on('popupopen', () => {
-          const btn = document.getElementById('open-google-cluster-1');
-          if (btn) btn.addEventListener('click', () => this.openInGoogleMaps(slat, slng, shop.name));
+      // Always show the data from the icons on the sidebar
+      marker.on('click', () => {
+        this.ngZone.run(() => {
+          if (count === 1) {
+            this.showShopDetails(cluster.shops[0]);
+          } else {
+            // Always show the current cluster's shop list
+            this.showShopList([...cluster.shops]);
+          }
         });
-      } else {
-        const listContent = `
-          <div style="min-width: 250px; max-height: 400px; overflow-y: auto;">
-            <h3 style="margin: 0 0 10px 0; color: #3880ff;">${count} Shops</h3>
-            ${cluster.shops.map((shop:any) => {
-              const slat = Number(shop.latitude ?? shop.lat);
-              const slng = Number(shop.longitude ?? shop.lng);
-              return `
-              <div class="shop-item" data-lat="${slat}" data-lng="${slng}" style="border-bottom: 1px solid #ccc; padding: 8px 0; cursor:pointer;">
-                <strong>${shop.name || 'Shop'}</strong><br>
-                <small>${shop.address || 'N/A'}</small>
-              </div>`;
-            }).join('')}
-          </div>
-        `;
-        marker.bindPopup(listContent);
-        marker.on('popupopen', () => {
-          const el = marker.getPopup()?.getElement();
-          const items = el?.querySelectorAll('.shop-item') || [];
-          items.forEach((n:any) => {
-            n.addEventListener('click', () => {
-              const lat = Number(n.getAttribute('data-lat'));
-              const lng = Number(n.getAttribute('data-lng'));
-              this.openShopFromCluster(lat, lng);
-            });
-          });
-        });
-      }
+      });
     });
   }
 
@@ -323,29 +306,49 @@ export class MapPage implements AfterViewInit, OnDestroy {
       const lat = Number(shop.latitude ?? shop.lat);
       const lng = Number(shop.longitude ?? shop.lng);
       if (Number.isNaN(lat) || Number.isNaN(lng)) return;
-      
+
       const marker = L.marker([lat, lng], { icon: this.storeIcon }).addTo(this.shopMarkersLayer!);
       this.shopMarkerIndex.set(this.keyFor(lat, lng), marker);
-      const openingHoursHtml = this.formatOpeningHoursHTML(shop);
-      const popupContent = `
-        <div style="min-width: 200px;">
-          <h3 style="margin: 0 0 10px 0; color: #3880ff;">${shop.name || 'Shop'}</h3>
-          <p style="margin: 5px 0;"><strong>Address:</strong> ${shop.address || 'N/A'}</p>
-          <p style="margin: 5px 0;"><strong>Phone:</strong> ${shop.phone || 'N/A'}</p>
-          ${openingHoursHtml}
-          <div style="margin-top:8px;">
-            <button id="open-google-${index}" style="background:#3880ff;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">
-              Open in Maps
-            </button>
-          </div>
-        </div>
-      `;
-      marker.bindPopup(popupContent);
-      marker.on('popupopen', () => {
-        const btn = document.getElementById(`open-google-${index}`);
-        if (btn) btn.addEventListener('click', () => this.openInGoogleMaps(lat, lng, shop.name));
+      // Show shop details in sidebar on click
+      marker.on('click', () => {
+        this.ngZone.run(() => this.showShopDetails(shop));
       });
     });
+  }
+
+  // Sidebar logic
+  showShopList(shops: any[]) {
+    console.log('Sidebar: showing shop list', shops);
+    this.sidebar = { type: 'list', data: shops };
+    this.cdr.detectChanges();
+    this.appRef.tick();
+  }
+
+  showShopDetails(shop: any) {
+    const details = {
+      ...shop,
+      openingHoursHtml: this.sanitizer.bypassSecurityTrustHtml(this.formatOpeningHoursHTML(shop)),
+      latitude: Number(shop.latitude ?? shop.lat),
+      longitude: Number(shop.longitude ?? shop.lng)
+    };
+    console.log('Sidebar: showing shop details', details);
+    this.sidebar = { type: 'details', data: details };
+    this.cdr.detectChanges();
+    this.appRef.tick();
+    // Focus map on shop
+    if (this.map && !isNaN(details.latitude) && !isNaN(details.longitude)) {
+      this.map.setView([details.latitude, details.longitude], Math.max(this.map.getZoom() || 13, 15), { animate: true });
+    }
+  }
+
+  BackToSidebarList() {
+    if (this.sidebar?.type === 'details' && this.Shop_Data.length > 0) {
+      this.showShopList(this.Shop_Data);
+    }
+  }
+
+  focusShop(shop: any) {
+    this.showShopDetails(shop);
   }
 
   private openShopFromCluster(lat: number, lng: number) {
@@ -454,14 +457,23 @@ export class MapPage implements AfterViewInit, OnDestroy {
     return `<table style="width:100%; margin-top:6px;">${rows}</table>`;
   }
 
-  openInGoogleMaps(lat: number, lng: number, label?: string) {
-    const query = encodeURIComponent(label ? `${lat} ${lng}` : `${lat},${lng}`);
+  openInGoogleMaps(lat: number, lng: number, label?: string, city?: string, address?: string) {
+    let query = '';
+    if (city && address) {
+      query = encodeURIComponent(`${city} ${address}`);
+    } else if (address) {
+      query = encodeURIComponent(address);
+    } else if (label) {
+      query = encodeURIComponent(label);
+    } else {
+      query = encodeURIComponent(`${lat},${lng}`);
+    }
     const webUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
     const ua = navigator.userAgent || '';
     const isAndroid = /android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua);
     if (isAndroid) {
-      const intentUrl = `intent://maps.google.com/maps?daddr=${lat},${lng}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+      const intentUrl = `intent://maps.google.com/maps?daddr=${query}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
       try {
         window.location.href = intentUrl;
         setTimeout(() => { window.location.href = webUrl; }, 1200);
@@ -469,7 +481,7 @@ export class MapPage implements AfterViewInit, OnDestroy {
       return;
     }
     if (isIOS) {
-      const appleScheme = `maps://?q=${lat},${lng}`;
+      const appleScheme = `maps://?q=${query}`;
       try { window.location.href = appleScheme; } catch { window.open(webUrl, '_blank'); }
       return;
     }
