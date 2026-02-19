@@ -12,17 +12,21 @@
   flex-direction: column;
   z-index: 1200;
   box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-  //background: var(--sidebar-bg,#222428 );
-  background: var(--sidebar-bg,#121212 );
+  background: #121212;
+  color: #fff;
+  transition: background 0.3s, color 0.3s;
 }
 
 body.light-theme .map-layout .sidebar {
-  background: #fafbfc !important;
-  transition: background 0.3s;
-}
-body.dark-theme .map-layout .sidebar {
   background: #ffffff !important;
-  transition: background 0.3s;
+  color: #000 !important;
+  border-right-color: #e0e0e0;
+}
+
+body.dark-theme .map-layout .sidebar {
+  background: #121212 !important;
+  color: #fff !important;
+  border-right-color: #333;
 }
 .sidebar-header {
   display: flex;
@@ -53,13 +57,23 @@ body.dark-theme .map-layout .sidebar {
   padding-bottom: calc(18px + var(--footer-height, 56px));
 }
 .sidebar-shop-item {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #333;
   padding: 10px 0;
   cursor: pointer;
   transition: background 0.15s;
+  color: inherit;
 }
 .sidebar-shop-item:hover {
   background: #3b3e42;
+}
+
+body.light-theme .sidebar-shop-item {
+  border-bottom-color: #e0e0e0;
+  color: #000;
+}
+
+body.light-theme .sidebar-shop-item:hover {
+  background: #f0f0f0;
 }
 .sidebar-shop-details {
   padding: 18px;
@@ -67,25 +81,42 @@ body.dark-theme .map-layout .sidebar {
   border-radius: 12px;
   margin: 12px 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  color: #fff;
+}
+
+body.light-theme .sidebar-shop-details {
+  background: #f5f5f5;
+  color: #000;
 }
 
 .sidebar-shop-details h3 {
   font-size: 2em;
   font-weight: bold;
   margin-bottom: 4px;
-  color: #fff;
+  color: inherit;
 }
 .sidebar-shop-details p {
   margin: 0 0 6px 0;
   color: #bdbdbd;
   font-size: 1.1em;
 }
+
+body.light-theme .sidebar-shop-details p {
+  color: #666;
+}
+
 .sidebar-shop-details [innerHTML] {
   margin-top: 12px;
   background: #181818;
   border-radius: 8px;
   padding: 10px 14px;
   color: #e0e0e0;
+}
+
+body.light-theme .sidebar-shop-details [innerHTML] {
+  background: #fff;
+  color: #333;
+  border: 1px solid #e0e0e0;
 }
 .sidebar-shop-details ion-button {
   margin-top: 16px;

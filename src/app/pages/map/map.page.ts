@@ -1,7 +1,6 @@
 import { Component, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, ApplicationRef } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { IonHeader, IonToolbar, IonTitle, IonToggle,
-             IonContent, IonInput, IonButton, IonIcon, IonFab } from '@ionic/angular/standalone';
+import { IonInput, IonButton, IonIcon, IonFab } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -32,8 +31,7 @@ L.Icon.Default.mergeOptions({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
-    IonHeader, IonToolbar, IonTitle, 
-    IonContent, IonInput, IonToggle, IonButton, IonIcon, IonFab, FormsModule
+    IonInput, IonButton, IonIcon, IonFab, FormsModule
   ]
 })
 
