@@ -27,7 +27,8 @@ public partial class MainWindowViewModel : ViewModelBase
             if (connection is null) CurrentViewModel = ConnectionStateViewModel.Error;
             else
             {
-                FactoryProvider.CreateDatabase(connection);
+                // FactoryProvider.CreateDatabase(connection);
+                FactoryProvider.CreateFake();
 
                 Changes.Initialize(FactoryProvider.Instance);
 

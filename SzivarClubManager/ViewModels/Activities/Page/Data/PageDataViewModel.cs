@@ -1,5 +1,8 @@
+using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Configs;
@@ -15,7 +18,6 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
 {
     public abstract T[] CurrentPageData { get; protected set; }
     [ObservableProperty] private int _currentPage = 1;
-    public abstract T[] SelectedItems { get; set; }
 
     [ObservableProperty] private bool _isFirstPageButtonEnabled;
     [ObservableProperty] private bool _isPreviousPageButtonEnabled;
@@ -33,6 +35,17 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     private readonly IPageFactory<T> _factory;
     private readonly PageController<T> _controller;
 
+    public IList? SelectedItemsRaw
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value)) SelectedItems = value?.Cast<T>().ToArray() ?? [];
+        }
+    }
+    public abstract T[] SelectedItems { get; set; }
+    public object? SelectedItem { get; set; }
+    public DataGridColumn? CurrentColumn { get; set; }
 
     protected PageDataViewModel(IPageFactory<T> factory, PageController<T> controller)
     {
@@ -88,7 +101,21 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     }
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private async Task CopyCell() => await Clipboard.CopyText(SelectedItems[0].ToString());
+    private async Task CopyCell()
+    {
+        if (SelectedItem == null || CurrentColumn == null) return;
+
+        if (CurrentColumn is DataGridBoundColumn { Binding: Binding binding })
+        {
+            var prop = SelectedItem.GetType().GetProperty(binding.Path);
+            var value = prop?.GetValue(SelectedItem);
+
+            if (value is not null)
+            {
+                await Clipboard.CopyText(value.ToString()!);
+            }
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
     private async Task CopyRecord() => await Clipboard.CopyText(SelectedItems[0].ToCopiableString());

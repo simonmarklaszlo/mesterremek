@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.Data"
              xmlns:converters="clr-namespace:SzivarClubManager.Converters"
+             xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.Data.UserPageDataView"
              x:DataType="vm:UserPageDataViewModel">
@@ -16,7 +17,7 @@
             Grid.Row="0"
             ItemsSource="{Binding CurrentPageData}"
             SelectionMode="Extended"
-            SelectionChanged="PageDataGrid_OnSelectionChanged"
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
 
             IsReadOnly="True"
             AutoGenerateColumns="True"
@@ -38,6 +39,10 @@
                     <Setter Property="Background" Value="{Binding ., Converter={StaticResource RowBgConverter}}" />
                 </Style>
             </DataGrid.Styles>
+            <Interaction.Behaviors>
+                <behaviors:DataGridCurrentColumnBehavior CurrentColumn="{Binding CurrentColumn, Mode=TwoWay}"/>
+                <behaviors:DataGridSelectedItemsBehavior SelectedItems="{Binding SelectedItemsRaw, Mode=TwoWay}"/>
+            </Interaction.Behaviors>
         </DataGrid>
 
         <Grid
