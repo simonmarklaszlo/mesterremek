@@ -23,9 +23,9 @@ public sealed class ShopActivityViewModel : PageActivityViewModel
         _controller.ItemSelected += ControllerOnItemSelected;
         _controller.BackNavigated += ControllerOnBackNavigated;
 
-        var pdvm = new ShopPageDataViewModel(factory, _controller);
-        _pageDataViewModel = pdvm;
-        ViewModel = pdvm;
+        _pageDataViewModel = new ShopPageDataViewModel(factory, _controller);
+
+        ViewModel = _pageDataViewModel;
     }
 
 
@@ -35,14 +35,22 @@ public sealed class ShopActivityViewModel : PageActivityViewModel
         if (ViewModel is ShopPageDataViewModel pdvm) await pdvm.InitializeAsync();
     }
 
+    public override void OnOpening()
+    {
+        if (ViewModel is not ShopPageDataViewModel)
+        {
+            ViewModel = _pageDataViewModel;
+        }
+    }
+
     private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
 
-    private void ControllerOnItemSelected(Shop item, NavigationIntent intent)
+    private void ControllerOnItemSelected(Shop item, bool isEdit)
     {
-        if (_itemEditViewModel is null) _itemEditViewModel = new ShopEditViewModel(item, _controller);
-        else _itemEditViewModel.SelectedItem = item;
+        if (_itemEditViewModel is null) _itemEditViewModel = new ShopEditViewModel(_controller, item);
+        else _itemEditViewModel.SourceItem = item;
 
-        _itemEditViewModel.SetIntent(intent);
+        _itemEditViewModel.IsEdit = isEdit;
 
         ViewModel = _itemEditViewModel;
     }

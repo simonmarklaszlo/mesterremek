@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources;
-using SzivarClubManager.Datasources.Database;
 using SzivarClubManager.SourceGeneration.Generated;
 using SzivarClubManager.ViewModels.Activities;
+using SzivarClubManager.ViewModels.Activities.Change;
 
 namespace SzivarClubManager.ViewModels;
 
@@ -17,13 +17,11 @@ public partial class MainContainerViewModel : ViewModelBase
     [ObservableProperty] private string? _selectedActivityName;
     public string[] ActivityNames { get; }
 
-    public MainContainerViewModel(DatabaseConnection connection)
+    public MainContainerViewModel(FactoryProvider provider)
     {
-        var factoryProvider = FactoryProvider.Fake();
-        _activities = ActivityCollection.GetActivities(
-            // FactoryProvider.Create(connection)
-            factoryProvider
-        );
+        _activities = ActivityCollection.GetActivities(provider)
+            .Append(new KeyValuePair<string, ActivityViewModel>("Changes", new ChangesActivityViewModel()))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
 
         _currentActivity = new NoActivityViewModel();
         ActivityNames = _activities.Keys.ToArray();
@@ -41,7 +39,9 @@ public partial class MainContainerViewModel : ViewModelBase
     [RelayCommand]
     private async Task ChangeActivity(string activityName)
     {
-        await _activities[activityName].InitializeAsync();
-        CurrentActivity = _activities[activityName];
+        var nextActivity = _activities[activityName];
+        await nextActivity.InitializeAsync();
+        nextActivity.OnOpening();
+        CurrentActivity = nextActivity;
     }
 }

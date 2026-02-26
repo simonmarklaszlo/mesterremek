@@ -18,39 +18,39 @@
             Margin="0 40 0 40">
             <StackPanel Orientation="Vertical">
 
-                <shared:EditField Label="Id">
+                <shared:EditField Label="Id" IsEditable="False">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Id}"
-                        Watermark="{Binding SelectedItem.Id}" />
+                        IsEnabled="false"
+                        Text="{Binding EditItem.Id}"
+                        Watermark="{Binding SourceItem.Id}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Name">
+                <shared:EditField Label="Name" ResetCommand="{Binding ResetNameCommand}">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Name}"
-                        Watermark="{Binding SelectedItem.Name}" />
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.Name}"
+                        Watermark="{Binding SourceItem.Name}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Email">
+                <shared:EditField Label="Email" ResetCommand="{Binding ResetEmailCommand}">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Email}"
-                        Watermark="{Binding SelectedItem.Email}" />
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.Email}"
+                        Watermark="{Binding SourceItem.Email}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Created At">
+                <shared:EditField Label="Created At" IsEditable="False">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.CreatedAt}"
-                        Watermark="{Binding SelectedItem.CreatedAt}" />
+                        IsEnabled="false"
+                        Text="{Binding EditItem.CreatedAt}"
+                        Watermark="{Binding SourceItem.CreatedAt}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Role">
-                    <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Role}"
-                        Watermark="{Binding SelectedItem.Role}" />
+                <shared:EditField Label="Role" ResetCommand="{Binding ResetRoleCommand}">
+                    <ComboBox
+                        IsEnabled="{Binding IsEdit}"
+                        ItemsSource="{Binding Roles}"
+                        SelectedItem="{Binding EditItem.Role}" />
                 </shared:EditField>
             </StackPanel>
         </ScrollViewer>
@@ -58,7 +58,7 @@
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="0"
             Text="Cancel"
-            Command="{Binding NavigateBackCommand}" />
+            Command="{Binding DropChangesCommand}" />
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="1"

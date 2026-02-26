@@ -18,53 +18,61 @@
             Margin="0 40 0 40">
             <StackPanel Orientation="Vertical">
 
-                <shared:EditField Label="Id">
+                <shared:EditField Label="Id" IsEditable="False">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Id}"
-                        Watermark="{Binding SelectedItem.Id}" />
+                        IsEnabled="false"
+                        Text="{Binding EditItem.Id}"
+                        Watermark="{Binding SourceItem.Id}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Name">
+                <shared:EditField Label="Name" ResetCommand="{Binding ResetNameCommand}">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Name}"
-                        Watermark="{Binding SelectedItem.Name}" />
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.Name}"
+                        Watermark="{Binding SourceItem.Name}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Address">
+                <shared:EditField Label="Address" ResetCommand="{Binding ResetAddressCommand}">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Address}"
-                        Watermark="{Binding SelectedItem.Address}" />
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.Address}"
+                        Watermark="{Binding SourceItem.Address}" />
                 </shared:EditField>
 
-                <shared:EditField Label="City">
+                <shared:EditField Label="City" ResetCommand="{Binding ResetCityCommand}">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.City}"
-                        Watermark="{Binding SelectedItem.City}" />
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.City}"
+                        Watermark="{Binding SourceItem.City}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Created At">
+                <shared:EditField Label="Created At" IsEditable="False">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.CreatedAt}"
-                        Watermark="{Binding SelectedItem.CreatedAt}" />
+                        IsEnabled="false"
+                        Text="{Binding EditItem.CreatedAt}"
+                        Watermark="{Binding SourceItem.CreatedAt}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Updated At">
+                <shared:EditField Label="Updated At" IsEditable="False">
                     <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.UpdatedAt}"
-                        Watermark="{Binding SelectedItem.UpdatedAt}" />
+                        IsEnabled="false"
+                        Text="{Binding EditItem.UpdatedAt}"
+                        Watermark="{Binding SourceItem.UpdatedAt}" />
                 </shared:EditField>
 
-                <shared:EditField Label="Location">
-                    <TextBox
-                        IsEnabled="{Binding IsEditMode}"
-                        Text="{Binding Copy.Location}"
-                        Watermark="{Binding SelectedItem.Location}" />
+                <shared:EditField Label="Location" ResetCommand="{Binding ResetLocationCommand}">
+                    <Grid ColumnDefinitions="*,*">
+                        <TextBox
+                            Grid.Column="0"
+                            IsEnabled="{Binding IsEdit}"
+                            Text="{Binding LongitudeString}"
+                            Watermark="{Binding SourceItem.Location.LongitudeString}" />
+                        <TextBox
+                            Grid.Column="1"
+                            IsEnabled="{Binding IsEdit}"
+                            Text="{Binding LatitudeString}"
+                            Watermark="{Binding SourceItem.Location.LatitudeString}" />
+                    </Grid>
                 </shared:EditField>
             </StackPanel>
         </ScrollViewer>
@@ -72,11 +80,11 @@
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="0"
             Text="Cancel"
-            Command="{Binding NavigateBackCommand}" />
+            Command="{Binding DropChangesCommand}" />
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="1"
             Text="Save"
-            Command="{Binding NavigateBackCommand}" />
+            Command="{Binding SaveChangesCommand}" />
     </Grid>
 </UserControl>

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Npgsql;
 using SzivarClubManager.Models;
@@ -6,26 +8,30 @@ using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Cigar), true)]
-public class CigarFactory : IPageFactory<Cigar>
+[FactoryOf(typeof(Cigar), true, typeof(BrandFactory))]
+public sealed class CigarFactory : IPageFactory<Cigar>
 {
     private const string TableName = "cigars";
     private readonly DatabaseConnection _connection;
+    private readonly BrandFactory _brandFactory;
 
-    public CigarFactory(DatabaseConnection connection)
+    public CigarFactory(DatabaseConnection connection, BrandFactory brandFactory)
     {
         _connection = connection;
+        _brandFactory = brandFactory;
     }
 
-    public Task<bool> PageExists(int page, int pageSize) => _connection.PageExitstOnTable(TableName, page, pageSize);
-    public Task<int> GetLastPage(int pageSize) => _connection.GetLastPageOnTable(TableName, pageSize);
+    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
+    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
 
     public async Task<Cigar[]> GetPage(int page, int pageSize)
     {
+        Dictionary<int, Brand> brands = (await _brandFactory.GetAll()).ToDictionary(x => x.Id);
+
         const string query = """
-                             SELECT c.id, c.name, b.id, b.name
+                             SELECT c.id, c.name, b.id
                              FROM cigars c 
-                             JOIN roles b ON c.brand_id = b.id 
+                             JOIN cigar_brands b ON c.brand_id = b.id 
                              LIMIT @limit OFFSET @offset
                              """;
 
@@ -34,25 +40,64 @@ public class CigarFactory : IPageFactory<Cigar>
         command.Parameters.AddWithValue("limit", pageSize);
 
         await using var reader = await command.ExecuteReaderAsync();
-        Dictionary<int, Brand> brands = [];
         List<Cigar> cigars = [];
 
         while (await reader.ReadAsync())
         {
-            int cigarId = reader.GetInt32(0);
-            string cigarName = reader.GetString(1);
-            int brandId = reader.GetInt32(2);
-            string brandName = reader.GetString(3);
-
-            if (!brands.TryGetValue(brandId, out Brand? value))
-            {
-                value = new Brand(brandId, brandName);
-                brands.Add(brandId, value);
-            }
-
-            cigars.Add(new Cigar(cigarId, cigarName, value));
+            cigars.Add(new Cigar(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                brands[reader.GetInt32(2)]
+            ));
         }
 
         return cigars.ToArray();
     }
+
+    public async Task<int> AddRange(IEnumerable<Cigar> items)
+    {
+        StringBuilder querySb = new();
+        querySb.Append("INSERT INTO cigars (name, brand_id) VALUES ");
+
+        var commandParams = new List<NpgsqlParameter>();
+
+        foreach ((int index, var cigar) in items.Index())
+        {
+            querySb.Append($"(@name{index},@brandId{index}),");
+
+            commandParams.Add(new NpgsqlParameter($"name{index}", cigar.Name));
+            commandParams.Add(new NpgsqlParameter($"brandId{index}", cigar.Brand.Id));
+        }
+
+        querySb.Remove(querySb.Length - 1, 1);
+
+        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        command.Parameters.AddRange(commandParams.ToArray());
+
+        return command.ExecuteNonQuery();
+    }
+
+    public async Task<int> EditRange(IEnumerable<Cigar> items)
+    {
+        const string query = """
+                             UPDATE cigars
+                             SET name = @name,
+                                 brand_id = @brandId
+                             WHERE id = @id;
+                             """;
+        int count = 0;
+
+        foreach (var cigar in items)
+        {
+            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            command.Parameters.AddWithValue("name", cigar.Name);
+            command.Parameters.AddWithValue("brandId", cigar.Brand.Id);
+            command.Parameters.AddWithValue("id", cigar.Id);
+            count += await command.ExecuteNonQueryAsync();
+        }
+
+        return count;
+    }
+
+    public Task<int> DeleteRange(IEnumerable<Cigar> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
 }

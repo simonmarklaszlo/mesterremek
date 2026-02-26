@@ -1,24 +1,18 @@
+using System.Collections.Generic;
 using Bogus;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Fake.Factories;
 
-[FakeFactoryOf(typeof(Cigar))]
-public class FakeCigarFactory : FakeFactory<Cigar>
+[FakeFactoryOf(typeof(Cigar), typeof(FakeBrandFactory))]
+public sealed class FakeCigarFactory : FakePageFactory<Cigar>
 {
-    public FakeCigarFactory() : base(GetData()) { }
+    public FakeCigarFactory(FakeBrandFactory brandFactory) : base(GetData(brandFactory)) { }
 
-    private static Cigar[] GetData()
+    private static List<Cigar> GetData(FakeBrandFactory brandFactory)
     {
-        var brandFaker = new Faker<Brand>()
-            .CustomInstantiator(f =>
-                new Brand(
-                    f.IndexFaker + 1,
-                    f.Company.CompanyName()
-                ));
-
-        var brands = brandFaker.Generate(5);
+        Brand[] brands = brandFactory.GetAll().Result;
 
         var cigarFaker = new Faker<Cigar>()
             .CustomInstantiator(f =>
@@ -28,6 +22,6 @@ public class FakeCigarFactory : FakeFactory<Cigar>
                     f.PickRandom(brands)
                 ));
 
-        return cigarFaker.Generate(128).ToArray();
+        return cigarFaker.Generate(128);
     }
 }

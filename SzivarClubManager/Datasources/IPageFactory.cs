@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace SzivarClubManager.Datasources;
 
-public interface IPageFactory<T> : IFactory
+public interface IPageFactory<T> : IModelFactory<T>
 {
     Task<bool> PageExists(int page, int pageSize);
     Task<int> GetLastPage(int pageSize);

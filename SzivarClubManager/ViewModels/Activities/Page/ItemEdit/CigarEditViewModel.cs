@@ -1,55 +1,124 @@
-using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SzivarClubManager.Datasources;
+using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
+using SzivarClubManager.Models.Editable;
 using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 public sealed partial class CigarEditViewModel : ViewModelBase
 {
-    [ObservableProperty] private Cigar _selectedItem;
-    [ObservableProperty] private Cigar _copy;
-    [ObservableProperty] private bool _isEditMode;
-
-    private readonly PageController<Cigar> _controller;
-
-    public CigarEditViewModel(Cigar item, PageController<Cigar> controller)
+    public Cigar SourceItem
     {
-        SelectedItem = item;
-        Copy = item.Copy();
-        _controller = controller;
-    }
-
-    partial void OnSelectedItemChanged(Cigar value) => Copy = value.Copy();
-
-    public void SetIntent(NavigationIntent intent)
-    {
-        switch (intent)
+        get;
+        set
         {
-            case NavigationIntent.View:
-                IsEditMode = false;
-                break;
-            case NavigationIntent.Edit:
-                IsEditMode = true;
-                break;
-            case NavigationIntent.Delete:
-                IsEditMode = false;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(intent), intent, null);
+            field = value;
+            _ = ChangeBrand();
+            EditItem?.PropertyChanged -= EditItemOnPropertyChanged;
+            GlobalEditItem = EditableCigar.TryGetFrom(value);
+            EditItem!.PropertyChanged += EditItemOnPropertyChanged;
         }
     }
 
-    [RelayCommand]
-    private void NavigateBack()
+    private EditableCigar? GlobalEditItem
     {
-        Copy = SelectedItem.Copy();
+        get;
+        set
+        {
+            field = value;
+            if (value is null) EditItem = EditableCigar.FromModel(SourceItem);
+            else EditItem = value.Copy();
+        }
+    }
+
+    [ObservableProperty] private EditableCigar _editItem = null!;
+
+    [ObservableProperty] private Brand[] _brands = [];
+    private bool _isChangingBrand;
+
+    private readonly PageController<Cigar> _controller;
+    [ObservableProperty] private bool _isEdit;
+
+    private bool CanSaveChanges => IsEdit && !EditItem.PropertiesEqual(GlobalEditItem ?? SourceItem);
+    private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;
+    private bool CanResetBrand => IsEdit && EditItem.Brand != SourceItem.Brand;
+
+
+    public CigarEditViewModel(PageController<Cigar> controller, Cigar sourceItem)
+    {
+        SourceItem = sourceItem;
+        _controller = controller;
+    }
+
+    private async Task ChangeBrand()
+    {
+        if (_isChangingBrand) return;
+        _isChangingBrand = true;
+
+        Brand? brand = Brands.FirstOrDefault(x => x.Id == SourceItem.Brand.Id);
+        if (brand is null)
+        {
+            Brands = await FactoryProvider.Instance
+                .GetHelperFactory<Brand>()
+                .TryGetAllFromCache(SourceItem.Id);
+            brand = Brands.First(x => x.Id == SourceItem.Brand.Id);
+        }
+
+        EditItem.Brand = brand;
+        _isChangingBrand = false;
+    }
+
+    private void EditItemOnPropertyChanged(object? sender, PropertyChangedEventArgs? e) => ReCheckCommandCanExecute();
+
+    private void ReCheckCommandCanExecute()
+    {
+        ResetNameCommand.NotifyCanExecuteChanged();
+        ResetBrandCommand.NotifyCanExecuteChanged();
+        SaveChangesCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanResetName))]
+    private void ResetName() => EditItem.Name = SourceItem.Name;
+
+    [RelayCommand(CanExecute = nameof(CanResetBrand))]
+    private void ResetBrand() => EditItem.Brand = Brands.First(x => x.Id == SourceItem.Brand.Id);
+
+    [RelayCommand]
+    private void DropChanges()
+    {
+        if (GlobalEditItem is not null)
+        {
+            EditItem.SetPropertiesFrom(GlobalEditItem);
+        }
+        else
+        {
+            if (CanResetName) ResetName();
+            if (CanResetBrand) ResetBrand();
+        }
+
         _controller.NavigateBack();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSaveChanges))]
     private void SaveChanges()
     {
+        if (GlobalEditItem is not null)
+        {
+            GlobalEditItem.SetPropertiesFrom(EditItem);
+
+            if (GlobalEditItem.PropertiesEqual(SourceItem)) Changes.RemoveEdit<Cigar>(GlobalEditItem);
+        }
+        else
+        {
+            Changes.WriteEdit<Cigar>(EditItem.Copy());
+        }
+
+        _controller.NavigateBack();
     }
 }

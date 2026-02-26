@@ -28,9 +28,36 @@
                             CornerRadius="8"
                             BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
                             Background="{DynamicResource SystemBaseLowColor}">
-                        <ContentPresenter
-                            Content="{TemplateBinding Content}"
-                            VerticalAlignment="Center" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <ContentPresenter
+                                Grid.Column="0"
+                                Content="{TemplateBinding Content}"
+                                VerticalAlignment="Center" />
+                            <Button
+                                IsVisible="{TemplateBinding IsEditable}"
+                                Grid.Column="1"
+                                Command="{TemplateBinding ResetCommand}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                HorizontalContentAlignment="Center"
+                                MaxHeight="48"
+                                MaxWidth="48">
+                                <Image>
+                                    <Image.Styles>
+                                        <Style Selector="Image">
+                                            <Setter Property="Source" Value="../../Assets/refresh-black.png" />
+                                            <Setter Property="Opacity" Value="1" />
+                                        </Style>
+
+                                        <Style Selector="Button:disabled Image">
+                                            <Setter Property="Source" Value="../../Assets/refresh-gray.png" />
+                                            <Setter Property="Opacity" Value="0.5" />
+                                        </Style>
+                                    </Image.Styles>
+                                </Image>
+                            </Button>
+                        </Grid>
                     </Border>
 
                 </Grid>

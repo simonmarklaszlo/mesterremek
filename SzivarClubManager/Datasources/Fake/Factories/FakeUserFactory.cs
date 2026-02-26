@@ -1,21 +1,18 @@
+using System.Collections.Generic;
 using Bogus;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Fake.Factories;
 
-[FakeFactoryOf(typeof(User))]
-public class FakeUserFactory : FakeFactory<User>
+[FakeFactoryOf(typeof(User), typeof(FakeRoleFactory))]
+public class FakeUserFactory : FakePageFactory<User>
 {
-    public FakeUserFactory() : base(GetData()) { }
+    public FakeUserFactory(FakeRoleFactory roleFactory) : base(GetData(roleFactory)) { }
 
-    private static User[] GetData()
+    private static List<User> GetData(FakeRoleFactory roleFactory)
     {
-        var roles = new[]
-        {
-            new Role(1, "Admin"),
-            new Role(2, "User")
-        };
+        Role[] roles = roleFactory.GetAll().Result;
 
         var userFaker = new Faker<User>()
             .CustomInstantiator(f =>
@@ -27,6 +24,6 @@ public class FakeUserFactory : FakeFactory<User>
                     f.PickRandom(roles)
                 ));
 
-        return userFaker.Generate(128).ToArray();
+        return userFaker.Generate(128);
     }
 }

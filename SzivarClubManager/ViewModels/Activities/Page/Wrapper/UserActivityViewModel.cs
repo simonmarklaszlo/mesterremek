@@ -23,9 +23,9 @@ public sealed class UserActivityViewModel : PageActivityViewModel
         _controller.ItemSelected += ControllerOnItemSelected;
         _controller.BackNavigated += ControllerOnBackNavigated;
 
-        var pdvm = new UserPageDataViewModel(factory, _controller);
-        _pageDataViewModel = pdvm;
-        ViewModel = pdvm;
+        _pageDataViewModel = new UserPageDataViewModel(factory, _controller);
+
+        ViewModel = _pageDataViewModel;
     }
 
 
@@ -35,14 +35,22 @@ public sealed class UserActivityViewModel : PageActivityViewModel
         if (ViewModel is UserPageDataViewModel pdvm) await pdvm.InitializeAsync();
     }
 
+    public override void OnOpening()
+    {
+        if (ViewModel is not UserPageDataViewModel)
+        {
+            ViewModel = _pageDataViewModel;
+        }
+    }
+
     private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
 
-    private void ControllerOnItemSelected(User item, NavigationIntent intent)
+    private void ControllerOnItemSelected(User item, bool isEdit)
     {
-        if (_itemEditViewModel is null) _itemEditViewModel = new UserEditViewModel(item, _controller);
-        else _itemEditViewModel.SelectedItem = item;
+        if (_itemEditViewModel is null) _itemEditViewModel = new UserEditViewModel(_controller, item);
+        else _itemEditViewModel.SourceItem = item;
 
-        _itemEditViewModel.SetIntent(intent);
+        _itemEditViewModel.IsEdit = isEdit;
 
         ViewModel = _itemEditViewModel;
     }

@@ -1,53 +1,141 @@
-using System;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
+using SzivarClubManager.Models.Editable;
 using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 public sealed partial class ShopEditViewModel : ViewModelBase
 {
-    [ObservableProperty] private Shop _selectedItem;
-    [ObservableProperty] private Shop _copy;
-    [ObservableProperty] private bool _isEditMode;
-
-    private readonly PageController<Shop> _controller;
-
-    public ShopEditViewModel(Shop item, PageController<Shop> controller)
+    public Shop SourceItem
     {
-        SelectedItem = item;
-        Copy = item.Copy();
-        _controller = controller;
-    }
-
-    partial void OnSelectedItemChanged(Shop value) => Copy = value.Copy();
-
-    public void SetIntent(NavigationIntent intent)
-    {
-        switch (intent)
+        get;
+        set
         {
-            case NavigationIntent.View:
-                IsEditMode = false;
-                break;
-            case NavigationIntent.Edit:
-                IsEditMode = true;
-                break;
-            case NavigationIntent.Delete:
-                IsEditMode = false;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(intent), intent, null);
+            field = value;
+            EditItem?.PropertyChanged -= EditItemOnPropertyChanged;
+            GlobalEditItem = EditableShop.TryGetFrom(value);
+            LongitudeString = EditItem!.Location.LongitudeString;
+            LatitudeString = EditItem.Location.LatitudeString;
+            EditItem.PropertyChanged += EditItemOnPropertyChanged;
         }
     }
 
-    [RelayCommand]
-    private void NavigateBack()
+    private EditableShop? GlobalEditItem
     {
-        Copy = SelectedItem.Copy();
-        _controller.NavigateBack();
+        get;
+        set
+        {
+            field = value;
+            if (value is null) EditItem = EditableShop.FromModel(SourceItem);
+            else EditItem = value.Copy();
+        }
+    }
+
+    [ObservableProperty] private EditableShop _editItem = null!;
+
+    [ObservableProperty] private string _longitudeString = string.Empty;
+    [ObservableProperty] private string _latitudeString = string.Empty;
+
+    private readonly PageController<Shop> _controller;
+    [ObservableProperty] private bool _isEdit;
+
+    private bool CanSaveChanges => IsEdit && (!EditItem.PropertiesEqualExceptLocation(GlobalEditItem ?? SourceItem) || NewLocationValid());
+    private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;
+    private bool CanResetAddress => IsEdit && EditItem.Address != SourceItem.Address;
+    private bool CanResetCity => IsEdit && EditItem.City != SourceItem.City;
+    private bool CanResetLocation => IsEdit && SourceItem.Location.LongitudeString != LongitudeString || SourceItem.Location.LatitudeString != LatitudeString;
+
+
+    public ShopEditViewModel(PageController<Shop> controller, Shop sourceItem)
+    {
+        SourceItem = sourceItem;
+        _controller = controller;
+    }
+
+    private bool NewLocationValid()
+    {
+        if (string.IsNullOrWhiteSpace(LongitudeString) || string.IsNullOrWhiteSpace(LatitudeString)) return false;
+
+        if (!double.TryParse(LongitudeString, out double _)) return false;
+        if (!double.TryParse(LatitudeString, out double _)) return false;
+
+        if (GlobalEditItem is not null)
+        {
+            return GlobalEditItem.Location.LongitudeString != LongitudeString ||
+                   GlobalEditItem.Location.LatitudeString != LatitudeString;
+        }
+
+        return SourceItem.Location.LongitudeString != LongitudeString ||
+               SourceItem.Location.LatitudeString != LatitudeString;
+    }
+
+    private void EditItemOnPropertyChanged(object? sender, PropertyChangedEventArgs? e) => ReCheckCommandCanExecute();
+    partial void OnLatitudeStringChanged(string value) => ReCheckCommandCanExecute();
+    partial void OnLongitudeStringChanged(string value) => ReCheckCommandCanExecute();
+
+    private void ReCheckCommandCanExecute()
+    {
+        ResetNameCommand.NotifyCanExecuteChanged();
+        ResetAddressCommand.NotifyCanExecuteChanged();
+        ResetCityCommand.NotifyCanExecuteChanged();
+        ResetLocationCommand.NotifyCanExecuteChanged();
+        SaveChangesCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanResetName))]
+    private void ResetName() => EditItem.Name = SourceItem.Name;
+
+    [RelayCommand(CanExecute = nameof(CanResetAddress))]
+    private void ResetAddress() => EditItem.Address = SourceItem.Address;
+
+    [RelayCommand(CanExecute = nameof(CanResetCity))]
+    private void ResetCity() => EditItem.City = SourceItem.City;
+
+    [RelayCommand(CanExecute = nameof(CanResetLocation))]
+    private void ResetLocation()
+    {
+        LongitudeString = SourceItem.Location.LongitudeString;
+        LatitudeString = SourceItem.Location.LatitudeString;
     }
 
     [RelayCommand]
-    private void SaveChanges() { }
+    private void DropChanges()
+    {
+        if (GlobalEditItem is not null)
+        {
+            EditItem.SetPropertiesFrom(GlobalEditItem);
+        }
+        else
+        {
+            if (CanResetName) ResetName();
+            if (CanResetAddress) ResetAddress();
+            if (CanResetCity) ResetCity();
+            if (CanResetLocation) ResetLocation();
+        }
+
+        _controller.NavigateBack();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveChanges))]
+    private void SaveChanges()
+    {
+        EditItem.Location = new CustomPgPoint(double.Parse(LongitudeString), double.Parse(LatitudeString));
+
+        if (GlobalEditItem is not null)
+        {
+            GlobalEditItem.SetPropertiesFrom(EditItem);
+
+            if (GlobalEditItem.PropertiesEqualWithStringLocationCompare(SourceItem)) Changes.RemoveEdit<Shop>(GlobalEditItem);
+        }
+        else
+        {
+            Changes.WriteEdit<Shop>(EditItem.Copy());
+        }
+
+        _controller.NavigateBack();
+    }
 }

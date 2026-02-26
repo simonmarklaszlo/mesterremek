@@ -1,10 +1,20 @@
 namespace SzivarClubManager.Models;
 
-public record Cigar(
-    int Id,
-    string Name,
-    Brand Brand)
+public class Cigar : IModel
 {
+    public virtual int Id { get; }
+    public string Name { get; protected set; }
+    public Brand Brand { get; protected set; }
+
+    public Cigar(int id, string name, Brand brand)
+    {
+        Id = id;
+        Name = name;
+        Brand = brand;
+    }
+
     public string ToCopiableString() => $"{Id} {Name} {Brand}";
-    public Cigar Copy() => this with { Brand = Brand.Copy() };
+    public override string ToString() => Name;
+    public override bool Equals(object? obj) => obj is Cigar cigar && cigar.Id == Id;
+    public override int GetHashCode() => Id.GetHashCode();
 }

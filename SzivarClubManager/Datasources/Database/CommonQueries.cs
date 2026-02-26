@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Npgsql;
 
@@ -6,7 +8,7 @@ namespace SzivarClubManager.Datasources.Database;
 
 public static class CommonQueries
 {
-    public static async Task<bool> PageExitstOnTable(this DatabaseConnection connection, string table, int page, int pageSize)
+    public static async Task<bool> PageExitstOnTable(DatabaseConnection connection, string table, int page, int pageSize)
     {
         string query = $"SELECT EXISTS ( SELECT 1 FROM {table} LIMIT @limit OFFSET @offset )";
 
@@ -18,7 +20,7 @@ public static class CommonQueries
         return (bool)(await command.ExecuteScalarAsync() ?? Task.FromResult(false));
     }
 
-    public static async Task<int> GetLastPageOnTable(this DatabaseConnection connection, string table, int pageSize)
+    public static async Task<int> GetLastPageOnTable(DatabaseConnection connection, string table, int pageSize)
     {
         string query = $"SELECT COUNT(*) FROM {table}";
 
@@ -32,5 +34,33 @@ public static class CommonQueries
         }
 
         return (int)Math.Ceiling((float)count / pageSize);
+    }
+
+    public static async Task<bool> Delete(DatabaseConnection connection, string table, int id)
+    {
+        string query = $"""
+                        DELETE FROM {table}
+                        WHERE id = @id;
+                        """;
+
+        await using var command = new NpgsqlCommand(query, connection.Connection);
+        command.Parameters.AddWithValue("id", id);
+
+        return await command.ExecuteNonQueryAsync() == 1;
+    }
+
+    public static async Task<int> Delete(DatabaseConnection connection, string table, IEnumerable<int> ids)
+    {
+        string query = $"""
+                        DELETE FROM {table}
+                        WHERE id = ANY(@ids);
+                        """;
+
+        int[] idArr = ids as int[] ?? ids.ToArray();
+
+        await using var command = new NpgsqlCommand(query, connection.Connection);
+        command.Parameters.AddWithValue("ids", idArr);
+
+        return await command.ExecuteNonQueryAsync();
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Bogus;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
@@ -6,11 +7,11 @@ using SzivarClubManager.SourceGeneration;
 namespace SzivarClubManager.Datasources.Fake.Factories;
 
 [FakeFactoryOf(typeof(Shop))]
-public class FakeShopFactory : FakeFactory<Shop>
+public class FakeShopFactory : FakePageFactory<Shop>
 {
     public FakeShopFactory() : base(GetData()) { }
 
-    private static Shop[] GetData()
+    private static List<Shop> GetData()
     {
         var shopFaker = new Faker<Shop>()
             .CustomInstantiator(f =>
@@ -31,6 +32,6 @@ public class FakeShopFactory : FakeFactory<Shop>
                 );
             });
 
-        return shopFaker.Generate(128).ToArray();
+        return shopFaker.Generate(128);
     }
 }

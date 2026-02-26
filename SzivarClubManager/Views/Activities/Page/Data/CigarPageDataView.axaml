@@ -3,119 +3,39 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.Data"
+             xmlns:converters="clr-namespace:SzivarClubManager.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.Data.CigarPageDataView"
              x:DataType="vm:CigarPageDataViewModel">
+    <UserControl.Resources>
+        <converters:ModelRowBackgroundConverter x:Key="RowBgConverter" />
+    </UserControl.Resources>
 
     <Grid RowDefinitions="*,Auto">
         <DataGrid
             Grid.Row="0"
-            x:Name="DataGrid"
             ItemsSource="{Binding CurrentPageData}"
-            SelectedItem="{Binding SelectedItem}"
+            SelectionMode="Extended"
+            SelectionChanged="PageDataGrid_OnSelectionChanged"
+
             IsReadOnly="True"
             AutoGenerateColumns="True"
             CanUserResizeColumns="True"
             GridLinesVisibility="All">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy Value" Command="{Binding CopyCellCommand}" />
+                    <MenuItem Header="Copy Row" Command="{Binding CopyRecordCommand}" />
+                    <MenuItem Header="View" Command="{Binding ViewRecordCommand}" />
+                    <MenuItem Header="Edit" Command="{Binding EditRecordCommand}" />
+                    <MenuItem Header="{Binding MenuTextSingleDelete}" Command="{Binding DeleteRecordCommand}" />
+
+                    <MenuItem Header="{Binding MenuTextMultipleDelete}" Command="{Binding DeleteSelectedCommand}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Styles>
                 <Style Selector="DataGridRow">
-                    <Setter Property="ContextMenu">
-                        <ContextMenu
-                            DataContext="{Binding $parent[DataGrid].DataContext}"
-                            x:DataType="vm:CigarPageDataViewModel">
-                            <MenuItem
-                                Header="Copy Row"
-                                Command="{Binding CopyRowValueCommand}"
-                                CommandParameter="{Binding SelectedItem}" />
-                            <MenuItem
-                                Header="View"
-                                Command="{Binding ViewItemCommand}" />
-                            <MenuItem
-                                Header="Edit"
-                                Command="{Binding EditItemCommand}" />
-                            <MenuItem
-                                Header="Delete"
-                                Command="{Binding DeleteItemCommand}" />
-                        </ContextMenu>
-                    </Setter>
-                </Style>
-                <Style Selector="DataGridCell:nth-child(1)">
-                    <Setter Property="ContextMenu">
-                        <ContextMenu
-                            DataContext="{Binding $parent[DataGrid].DataContext}"
-                            x:DataType="vm:CigarPageDataViewModel">
-
-                            <MenuItem
-                                Header="Copy Id"
-                                Command="{Binding CopyValueCommand}"
-                                CommandParameter="{Binding SelectedItem.Id}" />
-                            <MenuItem
-                                Header="Copy Row"
-                                Command="{Binding CopyRowValueCommand}"
-                                CommandParameter="{Binding SelectedItem}" />
-                            <MenuItem
-                                Header="View"
-                                Command="{Binding ViewItemCommand}" />
-                            <MenuItem
-                                Header="Edit"
-                                Command="{Binding EditItemCommand}" />
-                            <MenuItem
-                                Header="Delete"
-                                Command="{Binding DeleteItemCommand}" />
-                        </ContextMenu>
-                    </Setter>
-                </Style>
-                <Style Selector="DataGridCell:nth-child(2)">
-                    <Setter Property="ContextMenu">
-                        <ContextMenu
-                            DataContext="{Binding $parent[DataGrid].DataContext}"
-                            x:DataType="vm:CigarPageDataViewModel">
-
-                            <MenuItem
-                                Header="Copy Name"
-                                Command="{Binding CopyValueCommand}"
-                                CommandParameter="{Binding SelectedItem.Name}" />
-                            <MenuItem
-                                Header="Copy Row"
-                                Command="{Binding CopyRowValueCommand}"
-                                CommandParameter="{Binding SelectedItem}" />
-                            <MenuItem
-                                Header="View"
-                                Command="{Binding ViewItemCommand}" />
-                            <MenuItem
-                                Header="Edit"
-                                Command="{Binding EditItemCommand}" />
-                            <MenuItem
-                                Header="Delete"
-                                Command="{Binding DeleteItemCommand}" />
-                        </ContextMenu>
-                    </Setter>
-                </Style>
-                <Style Selector="DataGridCell:nth-child(3)">
-                    <Setter Property="ContextMenu">
-                        <ContextMenu
-                            DataContext="{Binding $parent[DataGrid].DataContext}"
-                            x:DataType="vm:CigarPageDataViewModel">
-
-                            <MenuItem
-                                Header="Copy Brand"
-                                Command="{Binding CopyValueCommand}"
-                                CommandParameter="{Binding SelectedItem.Brand}" />
-                            <MenuItem
-                                Header="Copy Row"
-                                Command="{Binding CopyRowValueCommand}"
-                                CommandParameter="{Binding SelectedItem}" />
-                            <MenuItem
-                                Header="View"
-                                Command="{Binding ViewItemCommand}" />
-                            <MenuItem
-                                Header="Edit"
-                                Command="{Binding EditItemCommand}" />
-                            <MenuItem
-                                Header="Delete"
-                                Command="{Binding DeleteItemCommand}" />
-                        </ContextMenu>
-                    </Setter>
+                    <Setter Property="Background" Value="{Binding ., Converter={StaticResource RowBgConverter}}" />
                 </Style>
             </DataGrid.Styles>
         </DataGrid>

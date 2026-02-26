@@ -2,8 +2,8 @@ using System;
 
 namespace SzivarClubManager.SourceGeneration;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class)]
 public class FakeFactoryOfAttribute : FactoryOfAttribute
 {
-    public FakeFactoryOfAttribute(Type modelType) : base(modelType, false) { }
+    public FakeFactoryOfAttribute(Type modelType, params Type[] dependencies) : base(modelType, false, dependencies) { }
 }

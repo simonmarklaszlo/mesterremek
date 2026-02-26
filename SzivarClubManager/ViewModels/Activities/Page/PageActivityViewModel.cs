@@ -4,5 +4,5 @@ namespace SzivarClubManager.ViewModels.Activities.Page;
 
 public abstract partial class PageActivityViewModel : ActivityViewModel
 {
-    [ObservableProperty] private object? _viewModel;
+    [ObservableProperty] private ViewModelBase? _viewModel;
 }

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using Npgsql;
@@ -8,7 +10,7 @@ using SzivarClubManager.SourceGeneration;
 namespace SzivarClubManager.Datasources.Database.Factories;
 
 [FactoryOf(typeof(Shop), true)]
-public class ShopFactory : IPageFactory<Shop>
+public sealed class ShopFactory : IPageFactory<Shop>
 {
     private const string TableName = "shops";
     private readonly DatabaseConnection _connection;
@@ -18,9 +20,9 @@ public class ShopFactory : IPageFactory<Shop>
         _connection = connection;
     }
 
-    public Task<bool> PageExists(int page, int pageSize) => _connection.PageExitstOnTable(TableName, page, pageSize);
+    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
 
-    public Task<int> GetLastPage(int pageSize) => _connection.GetLastPageOnTable(TableName, pageSize);
+    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
 
     public async Task<Shop[]> GetPage(int page, int pageSize)
     {
@@ -56,4 +58,58 @@ public class ShopFactory : IPageFactory<Shop>
 
         return shops.ToArray();
     }
+
+    public async Task<int> AddRange(IEnumerable<Shop> items)
+    {
+        StringBuilder querySb = new();
+        querySb.Append("INSERT INTO shops (name, address, city, location, created_at, updated_at) VALUES ");
+
+        var commandParams = new List<NpgsqlParameter>();
+
+        foreach ((int index, var cigar) in items.Index())
+        {
+            querySb.Append($"(@name{index},@address{index},@city{index},@location{index},NOW(),NOW()),");
+
+            commandParams.Add(new NpgsqlParameter($"name{index}", cigar.Name));
+            commandParams.Add(new NpgsqlParameter($"address{index}", cigar.Address));
+            commandParams.Add(new NpgsqlParameter($"city{index}", cigar.City));
+            commandParams.Add(new NpgsqlParameter($"location{index}", cigar.Location.ToPgPoint()));
+        }
+
+        querySb.Remove(querySb.Length - 1, 1);
+
+        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        command.Parameters.AddRange(commandParams.ToArray());
+
+        return command.ExecuteNonQuery();
+    }
+
+    public async Task<int> EditRange(IEnumerable<Shop> items)
+    {
+        const string query = """
+                             UPDATE shops
+                             SET name = @name,
+                                 address = @address,
+                                 city = @city,
+                                 location = @location,
+                                 updated_at = NOW()
+                             WHERE id = @id;
+                             """;
+        int count = 0;
+
+        foreach (var item in items)
+        {
+            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            command.Parameters.AddWithValue("name", item.Name);
+            command.Parameters.AddWithValue("address", item.Address);
+            command.Parameters.AddWithValue("city", item.City);
+            command.Parameters.AddWithValue("location", item.Location.ToPgPoint());
+            command.Parameters.AddWithValue("id", item.Id);
+            count += await command.ExecuteNonQueryAsync();
+        }
+
+        return count;
+    }
+
+    public Task<int> DeleteRange(IEnumerable<Shop> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
 }

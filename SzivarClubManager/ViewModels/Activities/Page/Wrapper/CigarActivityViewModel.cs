@@ -23,9 +23,9 @@ public sealed class CigarActivityViewModel : PageActivityViewModel
         _controller.ItemSelected += ControllerOnItemSelected;
         _controller.BackNavigated += ControllerOnBackNavigated;
 
-        var pdvm = new CigarPageDataViewModel(factory, _controller);
-        _pageDataViewModel = pdvm;
-        ViewModel = pdvm;
+        _pageDataViewModel = new CigarPageDataViewModel(factory, _controller);
+
+        ViewModel = _pageDataViewModel;
     }
 
 
@@ -35,14 +35,22 @@ public sealed class CigarActivityViewModel : PageActivityViewModel
         if (ViewModel is CigarPageDataViewModel pdvm) await pdvm.InitializeAsync();
     }
 
+    public override void OnOpening()
+    {
+        if (ViewModel is not CigarPageDataViewModel)
+        {
+            ViewModel = _pageDataViewModel;
+        }
+    }
+
     private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
 
-    private void ControllerOnItemSelected(Cigar item, NavigationIntent intent)
+    private void ControllerOnItemSelected(Cigar item, bool isEdit)
     {
-        if (_itemEditViewModel is null) _itemEditViewModel = new CigarEditViewModel(item, _controller);
-        else _itemEditViewModel.SelectedItem = item;
+        if (_itemEditViewModel is null) _itemEditViewModel = new CigarEditViewModel(_controller, item);
+        else _itemEditViewModel.SourceItem = item;
 
-        _itemEditViewModel.SetIntent(intent);
+        _itemEditViewModel.IsEdit = isEdit;
 
         ViewModel = _itemEditViewModel;
     }
