@@ -121,10 +121,12 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     private async Task CopyRecord() => await Clipboard.CopyText(SelectedItems[0].ToCopiableString());
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void ViewRecord() => _controller.SelectItem(SelectedItems[0], false);
+    private void ViewRecord() => _controller.SelectItem(SelectedItems[0]);
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void EditRecord() => _controller.SelectItem(SelectedItems[0], true);
+    private void EditRecord() => _controller.EditItem(SelectedItems[0]);
+    [RelayCommand]
+    private void AddRecord() => _controller.AddItem();
 
     [RelayCommand(CanExecute = nameof(SingleDeleteCanExecute))]
     private void DeleteRecord()

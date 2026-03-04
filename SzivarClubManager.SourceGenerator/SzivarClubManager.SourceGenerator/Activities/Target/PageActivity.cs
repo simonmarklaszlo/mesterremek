@@ -1,38 +1,38 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using SzivarClubManager.SourceGenerator.Targets;
 
 namespace SzivarClubManager.SourceGenerator.Activities.Target;
 
 public class PageActivity : Activity
 {
-    private const string PageActivityCollectionItemAttribute = "SzivarClubManager.SourceGeneration.PageActivityCollectionItemAttribute";
+    public INamedTypeSymbol ModelSymbol { get; }
+    public string ModelName => ModelSymbol.Name;
 
-    public string ModelType { get; }
-
-    public PageActivity(string displayName, string viewModelType, string modelType) : base(displayName, viewModelType)
+    public PageActivity(INamedTypeSymbol pageActivitySymbol, INamedTypeSymbol modelSymbol) : base(pageActivitySymbol)
     {
-        ModelType = modelType;
+        ModelSymbol = modelSymbol;
     }
 
+    public string InstanceCreation(string factoryProviderVariableName) => $"new {Name}({factoryProviderVariableName}.GetPageFactory<{ModelName}>())";
 
-    public string InstanceCreation(string factoryProviderVariableName) => $"new {ViewModelType}({factoryProviderVariableName}.GetPageFactory<{ModelType}>())";
+    public new static IncrementalValuesProvider<PageActivity> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 
-    public new static PageActivity? IsTarget(GeneratorSyntaxContext context)
+    private static PageActivity? IsTarget(GeneratorSyntaxContext context)
     {
+        const string pageActivityCollectionItemAttribute = "SzivarClubManager.SourceGeneration.PageActivityCollectionItemAttribute";
+
         if (context.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)context.Node) is not INamedTypeSymbol typeSymbol) return null;
-        var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(PageActivityCollectionItemAttribute);
-        if (attributeSymbol is null) return null;
+        var activityAttributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(pageActivityCollectionItemAttribute);
+        if (activityAttributeSymbol is null) return null;
 
         foreach (var attribute in typeSymbol.GetAttributes())
         {
-            if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-            {
-                continue;
-            }
+            if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, activityAttributeSymbol)) continue;
 
             if (attribute.ConstructorArguments.Length == 1 && attribute.ConstructorArguments[0] is { Value: INamedTypeSymbol modelTypeSymbol })
             {
-                return new PageActivity($"{modelTypeSymbol.Name}s", typeSymbol.Name, modelTypeSymbol.Name);
+                return new PageActivity(typeSymbol, modelTypeSymbol);
             }
         }
 

@@ -122,7 +122,7 @@ public sealed partial class UserEditViewModel : ViewModelBase
         }
         else
         {
-            Changes.WriteEdit<User>(EditItem.Copy());
+            Changes.Edit<User>(EditItem.Copy());
         }
 
         _controller.NavigateBack();

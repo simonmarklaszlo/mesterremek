@@ -3,6 +3,7 @@ using SzivarClubManager.Datasources;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 using SzivarClubManager.ViewModels.Activities.Page.Data;
+using SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
@@ -13,6 +14,7 @@ public sealed class ShopActivityViewModel : PageActivityViewModel
 {
     private readonly ShopPageDataViewModel _pageDataViewModel;
     private ShopEditViewModel? _itemEditViewModel;
+    private ShopAddViewModel? _itemAddViewModel;
 
     private readonly PageController<Shop> _controller;
 
@@ -21,6 +23,8 @@ public sealed class ShopActivityViewModel : PageActivityViewModel
     {
         _controller = new PageController<Shop>();
         _controller.ItemSelected += ControllerOnItemSelected;
+        _controller.ItemEdited += ControllerOnItemEdited;
+        _controller.ItemAdded += ControllerOnItemAdded;
         _controller.BackNavigated += ControllerOnBackNavigated;
 
         _pageDataViewModel = new ShopPageDataViewModel(factory, _controller);
@@ -45,7 +49,11 @@ public sealed class ShopActivityViewModel : PageActivityViewModel
 
     private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
 
-    private void ControllerOnItemSelected(Shop item, bool isEdit)
+    private void ControllerOnItemSelected(Shop item) => OpenItem(item, false);
+    private void ControllerOnItemEdited(Shop item) => OpenItem(item, true);
+    private void ControllerOnItemAdded() => ViewModel = _itemAddViewModel ??= new ShopAddViewModel(_controller);
+
+    private void OpenItem(Shop item, bool isEdit)
     {
         if (_itemEditViewModel is null) _itemEditViewModel = new ShopEditViewModel(_controller, item);
         else _itemEditViewModel.SourceItem = item;

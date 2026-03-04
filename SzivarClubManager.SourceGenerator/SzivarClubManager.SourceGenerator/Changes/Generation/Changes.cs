@@ -68,7 +68,7 @@ public static class Changes
 
     private static void GenerateGetDataChange(StringBuilder sb, string indent = "")
     {
-        sb.AppendLine(indent + "public static DataChanges<T> GetDataChange<T>() where T : class, IModel");
+        sb.AppendLine(indent + "private static DataChanges<T> GetDataChange<T>() where T : class, IModel");
         sb.AppendLine(indent + "{");
         sb.AppendLine(indent + "    return (DataChanges<T>)_dataChanges[typeof(T)];");
         sb.AppendLine(indent + "}");

@@ -1,13 +1,114 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:change="clr-namespace:SzivarClubManager.ViewModels.Activities.Change"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.Change.ChangesActivityView"
-             x:DataType="change:ChangesActivityViewModel">
-    <StackPanel>
-        <Button Command="{Binding DropAllCommand}" Content="Drop all"/>
-        <Button Command="{Binding ApplyAllCommand}" Content="Apply all"/>
-    </StackPanel>
+<!-- <UserControl xmlns="https://github.com/avaloniaui" -->
+<!--              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" -->
+<!--              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" -->
+<!--              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" -->
+<!--              xmlns:change="clr-namespace:SzivarClubManager.ViewModels.Activities.Change" -->
+<!--              xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared" -->
+<!--              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" -->
+<!--              x:Class="SzivarClubManager.Views.Activities.Change.ChangesActivityView" -->
+<!--              x:DataType="change:ChangesActivityViewModel"> -->
+<!-- -->
+<!--     <Grid RowDefinitions="*,Auto"> -->
+<!--         <DataGrid -->
+<!--             Grid.Row="0" -->
+<!--             ItemsSource="{Binding DataChangeRows}" -->
+<!--             AutoGenerateColumns="False"> -->
+<!--             <DataGrid.Columns> -->
+<!--                 <DataGridTextColumn Header="Data Type" Binding="{Binding TypeName}" /> -->
+<!--                 <DataGridTextColumn Header="Add" Binding="{Binding AddCount}" /> -->
+<!--                 <DataGridTextColumn Header="Edit" Binding="{Binding EditCount}" /> -->
+<!--                 <DataGridTextColumn Header="Delete" Binding="{Binding DeleteCount}" /> -->
+<!--             </DataGrid.Columns> -->
+<!--         </DataGrid> -->
+<!-- -->
+<!--         <Grid -->
+<!--             Grid.Row="1" -->
+<!--             ColumnDefinitions="*,*"> -->
+<!--             <shared:BottomActionButton -->
+<!--                 Grid.Column="0" -->
+<!--                 Text="Drop Changes" -->
+<!--                 Command="{Binding DropAllCommand}" /> -->
+<!--             <shared:BottomActionButton -->
+<!--                 Grid.Column="1" -->
+<!--                 Text="Apply Changes" -->
+<!--                 Command="{Binding ApplyAllCommand}" /> -->
+<!--         </Grid> -->
+<!--     </Grid> -->
+<!-- -->
+<!-- </UserControl> -->
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:change="clr-namespace:SzivarClubManager.ViewModels.Activities.Change"
+    xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="450"
+    x:Class="SzivarClubManager.Views.Activities.Change.ChangesActivityView"
+    x:DataType="change:ChangesActivityViewModel"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <DataGrid
+            Grid.Row="0"
+            ItemsSource="{Binding DataChangeRows}"
+            AutoGenerateColumns="False"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch" >
+            <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                    <Setter Property="FontSize" Value="18" />
+                </Style>
+
+                <Style Selector="DataGridCell">
+                    <Setter Property="FontSize" Value="18" />
+                </Style>
+
+                <Style Selector="DataGridRow">
+                    <Setter Property="Margin" Value="0 10"/>
+                </Style>
+
+            </DataGrid.Styles>
+            <DataGrid.Columns>
+
+                <DataGridTextColumn Header="Data Type"
+                                    Binding="{Binding TypeName}"
+                                    Width="*" />
+
+                <DataGridTextColumn Header="Add"
+                                    Binding="{Binding AddCount}"
+                                    Width="*" />
+
+                <DataGridTextColumn Header="Edit"
+                                    Binding="{Binding EditCount}"
+                                    Width="*" />
+
+                <DataGridTextColumn Header="Delete"
+                                    Binding="{Binding DeleteCount}"
+                                    Width="*" />
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              Margin="0,15,0,0">
+
+            <shared:BottomActionButton
+                Grid.Column="0"
+                Text="Drop Changes"
+                Command="{Binding DropAllCommand}" />
+
+            <shared:BottomActionButton
+                Grid.Column="1"
+                Text="Apply Changes"
+                Command="{Binding ApplyAllCommand}" />
+        </Grid>
+
+    </Grid>
+
 </UserControl>

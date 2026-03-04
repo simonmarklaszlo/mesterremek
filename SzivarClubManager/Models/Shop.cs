@@ -27,4 +27,5 @@ public class Shop : IModel
     public override string ToString() => Name;
     public override bool Equals(object? obj) => obj is Shop shop && shop.Id == Id;
     public override int GetHashCode() => Id.GetHashCode();
+    public static Shop CreateNew(string name, string address, string city, CustomPgPoint location) => new(-1, name, address, city, DateTime.Now, DateTime.Now, location);
 }

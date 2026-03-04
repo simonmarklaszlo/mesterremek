@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources;
 using SzivarClubManager.SourceGeneration.Generated;
 using SzivarClubManager.ViewModels.Activities;
-using SzivarClubManager.ViewModels.Activities.Change;
 
 namespace SzivarClubManager.ViewModels;
 
@@ -19,9 +18,7 @@ public partial class MainContainerViewModel : ViewModelBase
 
     public MainContainerViewModel(FactoryProvider provider)
     {
-        _activities = ActivityCollection.GetActivities(provider)
-            .Append(new KeyValuePair<string, ActivityViewModel>("Changes", new ChangesActivityViewModel()))
-            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        _activities = ActivityCollection.GetActivities(provider);
 
         _currentActivity = new NoActivityViewModel();
         ActivityNames = _activities.Keys.ToArray();

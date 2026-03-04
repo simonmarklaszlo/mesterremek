@@ -1,8 +1,6 @@
-using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using SzivarClubManager.SourceGenerator.Activities.Generation;
 using SzivarClubManager.SourceGenerator.Activities.Target;
 
 namespace SzivarClubManager.SourceGenerator.Activities;
@@ -15,7 +13,20 @@ public class Generator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var targetCandidates = context.SyntaxProvider
+        var activities = Activity.GetCandidates(context);
+        var pageActivities = PageActivity.GetCandidates(context);
+
+        var combined = activities.Collect()
+            .Combine(pageActivities.Collect());
+
+        context.RegisterSourceOutput(combined, static (ctx, source) =>
+        {
+            var (activities, pageActivities) = source;
+
+            ctx.AddSource(ActivityCollection.FileName, ActivityCollection.GenerateSource(activities.Concat(pageActivities)));
+        });
+
+        /*var targetCandidates = context.SyntaxProvider
             .CreateSyntaxProvider(
                 (node, _) => node is TypeDeclarationSyntax { AttributeLists.Count: > 0 },
                 (ctx, _) => GetTarget(ctx)
@@ -34,10 +45,10 @@ public class Generator : IIncrementalGenerator
                 .ToImmutableArray();
 
             ctx.AddSource("ActivityCollection.g.cs", GenerateActivityCollection(validActivities));
-        });
+        });*/
     }
 
-    private static ITarget? GetTarget(GeneratorSyntaxContext context)
+    /*private static ITarget? GetTarget(GeneratorSyntaxContext context)
     {
         var pageActivityModel = PageActivityModel.IsTarget(context);
         if (pageActivityModel is not null) return pageActivityModel;
@@ -49,9 +60,9 @@ public class Generator : IIncrementalGenerator
         if (activity is not null) return activity;
 
         return null;
-    }
+    }*/
 
-    private static string GenerateActivityCollection(ImmutableArray<Activity> activities)
+    /*private static string GenerateActivityCollection(ImmutableArray<Activity> activities)
     {
         const string factoryProviderVariableName = "factoryProvider";
 
@@ -93,5 +104,5 @@ public class Generator : IIncrementalGenerator
         sb.AppendLine("}");
 
         return sb.ToString();
-    }
+    }*/
 }

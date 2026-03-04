@@ -17,4 +17,5 @@ public class Cigar : IModel
     public override string ToString() => Name;
     public override bool Equals(object? obj) => obj is Cigar cigar && cigar.Id == Id;
     public override int GetHashCode() => Id.GetHashCode();
+    public static Cigar CreateNew(string name, Brand brand) => new(-1, name, brand);
 }

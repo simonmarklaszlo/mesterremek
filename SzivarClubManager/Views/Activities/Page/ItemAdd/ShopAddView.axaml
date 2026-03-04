@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.ItemAdd"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Activities.Page.ItemAdd.ShopAddView"
+             x:DataType="vm:ShopAddViewModel">
+
+    <Grid
+        ColumnDefinitions="*,*"
+        RowDefinitions="*,Auto">
+        <ScrollViewer
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0 40 0 40">
+            <StackPanel
+                Orientation="Vertical">
+
+                <shared:AddField Label="Name">
+                    <TextBox
+                        Text="{Binding Name}" />
+                </shared:AddField>
+
+                <shared:AddField Label="Address">
+                    <TextBox
+                        Text="{Binding Address}" />
+                </shared:AddField>
+
+                <shared:AddField Label="City">
+                    <TextBox
+                        Text="{Binding City}" />
+                </shared:AddField>
+
+                <shared:AddField Label="Location">
+                    <Grid ColumnDefinitions="*,*">
+                        <TextBox
+                            Grid.Column="0"
+                            Text="{Binding LongitudeString}"
+                            Watermark="Longitude" />
+                        <TextBox
+                            Grid.Column="1"
+                            Text="{Binding LatitudeString}"
+                            Watermark="Latitude" />
+                    </Grid>
+                </shared:AddField>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="0"
+            Text="Cancel"
+            Command="{Binding CancelCommand}" />
+
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="1"
+            Text="Add"
+            Command="{Binding AddCommand}" />
+    </Grid>
+</UserControl>

@@ -133,7 +133,7 @@ public sealed partial class ShopEditViewModel : ViewModelBase
         }
         else
         {
-            Changes.WriteEdit<Shop>(EditItem.Copy());
+            Changes.Edit<Shop>(EditItem.Copy());
         }
 
         _controller.NavigateBack();

@@ -21,6 +21,7 @@ public sealed class UserActivityViewModel : PageActivityViewModel
     {
         _controller = new PageController<User>();
         _controller.ItemSelected += ControllerOnItemSelected;
+        _controller.ItemEdited += ControllerOnItemEdited;
         _controller.BackNavigated += ControllerOnBackNavigated;
 
         _pageDataViewModel = new UserPageDataViewModel(factory, _controller);
@@ -45,7 +46,10 @@ public sealed class UserActivityViewModel : PageActivityViewModel
 
     private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
 
-    private void ControllerOnItemSelected(User item, bool isEdit)
+    private void ControllerOnItemSelected(User item) => OpenItem(item, false);
+    private void ControllerOnItemEdited(User item) => OpenItem(item, true);
+
+    private void OpenItem(User item, bool isEdit)
     {
         if (_itemEditViewModel is null) _itemEditViewModel = new UserEditViewModel(_controller, item);
         else _itemEditViewModel.SourceItem = item;

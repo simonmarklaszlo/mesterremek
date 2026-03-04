@@ -1,0 +1,41 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:SzivarClubManager.Views.Shared">
+
+    <Style Selector="controls|AddField">
+        <Setter Property="MaxHeight" Value="100" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*,*"
+                      Margin="20 10">
+
+                    <Border Grid.Column="0"
+                            Padding="10"
+                            Margin="20 0"
+                            CornerRadius="8"
+                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                            Background="{DynamicResource SystemBaseLowColor}">
+                        <TextBlock
+                            Text="{TemplateBinding Label}"
+                            FontSize="18"
+                            Margin="50 0 0 0"
+                            VerticalAlignment="Center" />
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            Padding="10"
+                            Margin="20 0"
+                            CornerRadius="8"
+                            BorderBrush="{DynamicResource SystemBaseMediumLowColor}"
+                            Background="{DynamicResource SystemBaseLowColor}">
+                        <ContentPresenter
+                            Content="{TemplateBinding Content}"
+                            VerticalAlignment="Center" />
+                    </Border>
+
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

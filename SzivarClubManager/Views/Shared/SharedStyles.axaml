@@ -2,5 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StyleInclude Source="avares://SzivarClubManager/Views/Shared/EditField.axaml" />
+    <StyleInclude Source="avares://SzivarClubManager/Views/Shared/AddField.axaml" />
     <StyleInclude Source="avares://SzivarClubManager/Views/Shared/BottomActionButton.axaml" />
 </Styles>

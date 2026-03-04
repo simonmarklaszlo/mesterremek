@@ -116,7 +116,7 @@ public sealed partial class CigarEditViewModel : ViewModelBase
         }
         else
         {
-            Changes.WriteEdit<Cigar>(EditItem.Copy());
+            Changes.Edit<Cigar>(EditItem.Copy());
         }
 
         _controller.NavigateBack();
