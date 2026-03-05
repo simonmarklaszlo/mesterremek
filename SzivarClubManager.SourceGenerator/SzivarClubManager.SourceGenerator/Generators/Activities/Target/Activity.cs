@@ -1,21 +1,24 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.Targets;
+using SzivarClubManager.SourceGenerator.CommonTargets;
 
-namespace SzivarClubManager.SourceGenerator.Activities.Target;
+namespace SzivarClubManager.SourceGenerator.Generators.Activities.Target;
 
 public class Activity
 {
-    public INamedTypeSymbol ActivitySymbol { get; }
-    public string Name => ActivitySymbol.Name;
-    public string DisplayName => Name.Replace("ActivityViewModel", "");
+    protected INamedTypeSymbol ActivitySymbol { get; }
+    public string DisplayName { get; }
+    public byte OrderGroup { get; }
 
-    protected Activity(INamedTypeSymbol activitySymbol)
+    protected Activity(INamedTypeSymbol activitySymbol, string displayName, byte? orderGroup)
     {
         ActivitySymbol = activitySymbol;
+        DisplayName = displayName;
+        OrderGroup = orderGroup ?? byte.MaxValue;
     }
 
-    public string InstanceCreation() => $"new {Name}()";
+    public string InstanceCreation() => $"new {ActivitySymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}()";
+
     public static IncrementalValuesProvider<Activity> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 
     private static Activity? IsTarget(GeneratorSyntaxContext context)
@@ -30,9 +33,14 @@ public class Activity
         {
             if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, activityAttributeSymbol)) continue;
 
-            if (attribute.ConstructorArguments.Length == 0)
+            if (attribute.ConstructorArguments.Length >= 1 && attribute.ConstructorArguments[0].Value is string displayName)
             {
-                return new Activity(typeSymbol);
+                if (attribute.ConstructorArguments.Length == 2 && attribute.ConstructorArguments[1].Value is byte orderGroup)
+                {
+                    return new Activity(typeSymbol, displayName, orderGroup);
+                }
+
+                return new Activity(typeSymbol, displayName, null);
             }
         }
 

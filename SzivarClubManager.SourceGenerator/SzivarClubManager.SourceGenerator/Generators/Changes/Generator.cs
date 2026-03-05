@@ -1,13 +1,12 @@
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using SzivarClubManager.SourceGenerator.Changes.Generation;
-using SzivarClubManager.SourceGenerator.Changes.Target;
-using SzivarClubManager.SourceGenerator.Targets;
-using SzivarClubManager.SourceGenerator.Targets.Factory;
-using SzivarClubManager.SourceGenerator.Types;
+using SzivarClubManager.SourceGenerator.CommonTargets;
+using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
+using SzivarClubManager.SourceGenerator.Generators.Changes.Generation;
+using SzivarClubManager.SourceGenerator.Generators.Changes.Target;
 
-namespace SzivarClubManager.SourceGenerator.Changes;
+namespace SzivarClubManager.SourceGenerator.Generators.Changes;
 
 [Generator]
 public class Generator : IIncrementalGenerator

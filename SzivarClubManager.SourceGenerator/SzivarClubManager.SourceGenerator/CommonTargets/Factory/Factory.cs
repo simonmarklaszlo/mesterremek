@@ -3,12 +3,11 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SzivarClubManager.SourceGenerator.Targets.Factory;
+namespace SzivarClubManager.SourceGenerator.CommonTargets.Factory;
 
 public record Factory(
     INamedTypeSymbol FactorySymbol,
     INamedTypeSymbol ModelSymbol,
-    bool DatabaseRequired,
     FactoryType FactoryType,
     INamedTypeSymbol[] Dependencies
 )
@@ -16,18 +15,10 @@ public record Factory(
     public string Name => FactorySymbol.Name;
     public string ModelName => ModelSymbol.Name;
 
-    public string InstanceCreation(string databaseConnectionVariableName)
-    {
-        if (DatabaseRequired) return $"new {Name}({databaseConnectionVariableName})";
-        return $"new {Name}()";
-    }
+    public string VariableDeclaration(string dbConnVarName) => $"{FactorySymbol.GlobalName()} {FactorySymbol.PascalCaseName()} = new {FactorySymbol.GlobalName()}({dbConnVarName});";
 
-    public string InstanceCreation(string databaseConnectionVariableName, IEnumerable<string> parameters)
-    {
-        if (DatabaseRequired) return $"new {Name}({databaseConnectionVariableName}, {string.Join(", ", parameters)})";
-        return $"new {Name}({string.Join(", ", parameters)})";
-    }
-
+    public string VariableDeclaration(string dbConnVarName, IEnumerable<string> parameters) =>
+        $"{FactorySymbol.GlobalName()} {FactorySymbol.PascalCaseName()} = new {FactorySymbol.GlobalName()}({dbConnVarName}, {string.Join(", ", parameters)});";
 
     public static IncrementalValuesProvider<Factory> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 
@@ -49,16 +40,15 @@ public record Factory(
 
 
             if (
-                attribute.ConstructorArguments.Length >= 2 &&
-                attribute.ConstructorArguments[0] is { Value: INamedTypeSymbol modelTypeSymbol } &&
-                attribute.ConstructorArguments[1].Value is bool databaseRequired
+                attribute.ConstructorArguments.Length >= 1 &&
+                attribute.ConstructorArguments[0] is { Value: INamedTypeSymbol modelTypeSymbol }
             )
             {
                 INamedTypeSymbol[] dependencies = [];
 
-                if (attribute.ConstructorArguments.Length >= 3)
+                if (attribute.ConstructorArguments.Length >= 2)
                 {
-                    var depsArg = attribute.ConstructorArguments[2];
+                    var depsArg = attribute.ConstructorArguments[1];
 
                     if (depsArg is { Kind: TypedConstantKind.Array, IsNull: false })
                     {
@@ -83,7 +73,7 @@ public record Factory(
 
                 if (factoryType != FactoryType.None)
                 {
-                    return new Factory(typeSymbol, modelTypeSymbol, databaseRequired, factoryType, dependencies);
+                    return new Factory(typeSymbol, modelTypeSymbol, factoryType, dependencies);
                 }
             }
         }

@@ -9,7 +9,7 @@ using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Shop), true)]
+[FactoryOf(typeof(Shop))]
 public sealed class ShopFactory : IPageFactory<Shop>
 {
     private const string TableName = "shops";

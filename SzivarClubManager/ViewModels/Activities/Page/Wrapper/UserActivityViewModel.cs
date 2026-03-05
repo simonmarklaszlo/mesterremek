@@ -7,6 +7,6 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem(typeof(User))]
+[PageActivityCollectionItem(typeof(User), "Users", 1)]
 public sealed class UserActivityViewModel(IPageFactory<User> factory) :
     PageActivityViewModel<User, UserPageDataViewModel, UserAddViewModel, UserEditViewModel>(factory);

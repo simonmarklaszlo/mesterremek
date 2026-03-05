@@ -8,7 +8,7 @@ using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(User), true, typeof(RoleFactory))]
+[FactoryOf(typeof(User), typeof(RoleFactory))]
 public sealed class UserFactory : IPageFactory<User>
 {
     private const string TableName = "users";

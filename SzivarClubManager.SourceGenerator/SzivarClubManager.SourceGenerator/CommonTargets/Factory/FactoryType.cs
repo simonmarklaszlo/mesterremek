@@ -1,6 +1,6 @@
 using System;
 
-namespace SzivarClubManager.SourceGenerator.Targets.Factory;
+namespace SzivarClubManager.SourceGenerator.CommonTargets.Factory;
 
 [Flags]
 public enum FactoryType

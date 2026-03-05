@@ -1,16 +1,14 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.Targets;
+using SzivarClubManager.SourceGenerator.CommonTargets;
 
-namespace SzivarClubManager.SourceGenerator.Changes.Target;
+namespace SzivarClubManager.SourceGenerator.Generators.Changes.Target;
 
 public record PageActivityViewModel(
     INamedTypeSymbol ActivitySymbol,
     INamedTypeSymbol ModelSymbol
     )
 {
-    public string Name => ActivitySymbol.Name;
-    public string ModelName => ModelSymbol.Name;
     public static IncrementalValuesProvider<PageActivityViewModel> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 
     private static PageActivityViewModel? IsTarget(GeneratorSyntaxContext context)

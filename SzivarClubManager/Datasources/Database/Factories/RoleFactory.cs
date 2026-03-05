@@ -9,7 +9,7 @@ using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Role), true)]
+[FactoryOf(typeof(Role))]
 public sealed class RoleFactory : IHelperFactory<Role>
 {
     private const string TableName = "roles";

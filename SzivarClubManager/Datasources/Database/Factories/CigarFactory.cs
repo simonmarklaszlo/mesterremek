@@ -8,7 +8,7 @@ using SzivarClubManager.SourceGeneration;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Cigar), true, typeof(BrandFactory))]
+[FactoryOf(typeof(Cigar), typeof(BrandFactory))]
 public sealed class CigarFactory : IPageFactory<Cigar>
 {
     private const string TableName = "cigars";

@@ -2,7 +2,7 @@ using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SzivarClubManager.SourceGenerator.Targets;
+namespace SzivarClubManager.SourceGenerator.CommonTargets;
 
 public static class Common
 {

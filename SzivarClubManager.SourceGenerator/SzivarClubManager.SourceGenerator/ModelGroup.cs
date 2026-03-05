@@ -1,7 +1,7 @@
-using SzivarClubManager.SourceGenerator.Targets;
-using SzivarClubManager.SourceGenerator.Targets.Factory;
+using SzivarClubManager.SourceGenerator.CommonTargets;
+using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
 
-namespace SzivarClubManager.SourceGenerator.Types;
+namespace SzivarClubManager.SourceGenerator;
 
 public readonly struct ModelGroup
 {

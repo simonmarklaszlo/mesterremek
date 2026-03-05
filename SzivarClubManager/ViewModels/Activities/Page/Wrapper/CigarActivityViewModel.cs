@@ -7,6 +7,6 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem(typeof(Cigar))]
+[PageActivityCollectionItem(typeof(Cigar), "Cigars", 1)]
 public sealed class CigarActivityViewModel(IPageFactory<Cigar> factory) :
     PageActivityViewModel<Cigar, CigarPageDataViewModel, CigarAddViewModel, CigarEditViewModel>(factory);

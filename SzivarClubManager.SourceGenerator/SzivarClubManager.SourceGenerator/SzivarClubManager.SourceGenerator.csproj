@@ -25,5 +25,10 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Generators\" />
+      <Folder Include="Types\" />
+    </ItemGroup>
+
 
 </Project>

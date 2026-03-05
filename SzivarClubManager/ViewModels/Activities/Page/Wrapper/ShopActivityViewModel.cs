@@ -7,6 +7,6 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem(typeof(Shop))]
+[PageActivityCollectionItem(typeof(Shop), "Shops", 1)]
 public sealed class ShopActivityViewModel(IPageFactory<Shop> factory) :
     PageActivityViewModel<Shop, ShopPageDataViewModel, ShopAddViewModel, ShopEditViewModel>(factory);

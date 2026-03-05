@@ -1,8 +1,8 @@
 using Microsoft.CodeAnalysis;
-using SzivarClubManager.SourceGenerator.Factories.Generation;
-using SzivarClubManager.SourceGenerator.Targets.Factory;
+using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
+using SzivarClubManager.SourceGenerator.Generators.Factories.Generation;
 
-namespace SzivarClubManager.SourceGenerator.Factories;
+namespace SzivarClubManager.SourceGenerator.Generators.Factories;
 
 [Generator]
 public class Generator : IIncrementalGenerator

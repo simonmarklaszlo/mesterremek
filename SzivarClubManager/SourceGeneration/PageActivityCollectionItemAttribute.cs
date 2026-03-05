@@ -6,7 +6,7 @@ namespace SzivarClubManager.SourceGeneration;
 public class PageActivityCollectionItemAttribute : ActivityCollectionItemAttribute
 {
     public Type ModelType { get; }
-    public PageActivityCollectionItemAttribute(Type modelType)
+    public PageActivityCollectionItemAttribute(Type modelType, string displayName, byte orderGroup = byte.MaxValue) : base(displayName, orderGroup)
     {
         ModelType = modelType;
     }
