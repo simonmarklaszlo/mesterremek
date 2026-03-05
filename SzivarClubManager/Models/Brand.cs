@@ -1,9 +1,9 @@
 namespace SzivarClubManager.Models;
 
-public sealed class Brand : IModel
+public class Brand : IModel
 {
     public int Id { get; }
-    public string Name { get; }
+    public string Name { get; protected set; }
 
     public Brand(int id, string name)
     {
@@ -17,4 +17,5 @@ public sealed class Brand : IModel
     public static bool operator ==(Brand? a, Brand? b) => a is not null && a.Equals(b);
     public static bool operator !=(Brand? a, Brand? b) => !(a == b);
     public override int GetHashCode() => Id.GetHashCode();
+    public static Brand CreateNew(string name) => new(-1, name);
 }

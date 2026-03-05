@@ -1,6 +1,4 @@
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Models;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Data;
 
@@ -21,6 +19,4 @@ public sealed class UserPageDataViewModel : PageDataViewModel<User>
             OnSelectedItemsChanged();
         }
     } = [];
-
-    public UserPageDataViewModel(IPageFactory<User> factory, PageController<User> controller) : base(factory, controller) { }
 }

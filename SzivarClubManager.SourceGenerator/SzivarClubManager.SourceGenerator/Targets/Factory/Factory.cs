@@ -69,14 +69,21 @@ public record Factory(
                     }
                 }
 
+                FactoryType factoryType = FactoryType.None;
+
                 if (typeSymbol.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, pageFactoryInterfaceSymbol)))
                 {
-                    return new Factory(typeSymbol, modelTypeSymbol, databaseRequired, FactoryType.Page, dependencies);
+                    factoryType |= FactoryType.Page;
                 }
 
                 if (typeSymbol.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, helperFactoryInterfaceSymbol)))
                 {
-                    return new Factory(typeSymbol, modelTypeSymbol, databaseRequired, FactoryType.Helper, dependencies);
+                    factoryType |= FactoryType.Helper;
+                }
+
+                if (factoryType != FactoryType.None)
+                {
+                    return new Factory(typeSymbol, modelTypeSymbol, databaseRequired, factoryType, dependencies);
                 }
             }
         }

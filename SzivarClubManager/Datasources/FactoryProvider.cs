@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using SzivarClubManager.Datasources.Database;
-using SzivarClubManager.Datasources.Fake.Factories;
-using SzivarClubManager.Models;
 
 namespace SzivarClubManager.Datasources;
 
@@ -33,9 +31,5 @@ public sealed partial class FactoryProvider
 
     public static FactoryProvider Instance { get; private set; } = null!;
     public static void CreateDatabase(DatabaseConnection connection) => Instance = new FactoryProvider(GetGeneratedFactoriesMap(connection));
-    public static void CreateFake() => Instance = new FactoryProvider(GetGeneratedFakeFactoriesMap());
-
-
     private static partial Dictionary<Type, IFactory> GetGeneratedFactoriesMap(DatabaseConnection connection);
-    private static partial Dictionary<Type, IFactory> GetGeneratedFakeFactoriesMap();
 }

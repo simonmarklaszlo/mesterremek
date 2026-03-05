@@ -2,15 +2,15 @@ using SzivarClubManager.Models;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Data;
 
-public sealed class ShopPageDataViewModel : PageDataViewModel<Shop>
+public sealed class BrandPageDataViewModel : PageDataViewModel<Brand>
 {
-    public override Shop[] CurrentPageData
+    public override Brand[] CurrentPageData
     {
         get;
         protected set => SetProperty(ref field, value);
     } = [];
 
-    public override Shop[] SelectedItems
+    public override Brand[] SelectedItems
     {
         get;
         set

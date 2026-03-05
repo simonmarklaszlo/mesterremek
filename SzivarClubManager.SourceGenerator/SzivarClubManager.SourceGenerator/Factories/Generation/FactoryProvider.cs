@@ -9,7 +9,7 @@ public static class FactoryProvider
 {
     public static string FileName => "FactoryProvider.g.cs";
 
-    public static string GenerateSource(ImmutableArray<Factory> factories, ImmutableArray<FakeFactory> fakeFactories)
+    public static string GenerateSource(ImmutableArray<Factory> factories)
     {
         StringBuilder sb = new();
 
@@ -19,15 +19,12 @@ public static class FactoryProvider
         sb.AppendLine("using SzivarClubManager.Models;");
         sb.AppendLine("using SzivarClubManager.Datasources.Database;");
         sb.AppendLine("using SzivarClubManager.Datasources.Database.Factories;");
-        sb.AppendLine("using SzivarClubManager.Datasources.Fake.Factories;");
         sb.AppendLine();
         sb.AppendLine("namespace SzivarClubManager.Datasources;");
         sb.AppendLine();
         sb.AppendLine("public sealed partial class FactoryProvider");
         sb.AppendLine("{");
         GenerateFactoriesMap(sb, factories);
-        sb.AppendLine();
-        GenerateFakeFactoriesMap(sb, fakeFactories);
         sb.AppendLine("}");
         return sb.ToString();
     }
@@ -47,14 +44,21 @@ public static class FactoryProvider
         }
 
         sb.AppendLine("        // Helper factories");
-        foreach (var f in factories.Where(x => x.FactoryType is FactoryType.Helper).OrderBy(x => x.Name))
+        foreach (var f in factories.Where(x => x.FactoryType == FactoryType.Helper).OrderBy(x => x.Name))
+        {
+            sb.AppendLine($"        {f.Name} {f.Name.ToLower()} = {f.InstanceCreation(dbConnVarName)};");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("        // Page-Helper factories");
+        foreach (var f in factories.Where(x => (x.FactoryType & (FactoryType.Page | FactoryType.Helper)) == (FactoryType.Page | FactoryType.Helper)).OrderBy(x => x.Name))
         {
             sb.AppendLine($"        {f.Name} {f.Name.ToLower()} = {f.InstanceCreation(dbConnVarName)};");
         }
 
         sb.AppendLine();
         sb.AppendLine("        // Page factories");
-        foreach (var f in factories.Where(x => x.FactoryType is FactoryType.Page).OrderBy(x => x.Dependencies.Length).ThenBy(x => x.Name))
+        foreach (var f in factories.Where(x => x.FactoryType == FactoryType.Page).OrderBy(x => x.Dependencies.Length).ThenBy(x => x.Name))
         {
             if (f.Dependencies.Length == 0)
             {
@@ -71,54 +75,6 @@ public static class FactoryProvider
         sb.AppendLine("        return new Dictionary<Type, IFactory>()");
         sb.AppendLine("        {");
         foreach (var f in factories.OrderBy(x => x.Name))
-        {
-            sb.AppendLine($"            {{ typeof({f.ModelName}), {f.Name.ToLower()} }},");
-        }
-
-        sb.Remove(sb.Length - 2, 1);
-
-        sb.AppendLine("        };");
-
-        sb.AppendLine("    }");
-    }
-
-    private static void GenerateFakeFactoriesMap(StringBuilder sb, ImmutableArray<FakeFactory> fakeFactories)
-    {
-        sb.AppendLine("    private static partial Dictionary<Type, IFactory> GetGeneratedFakeFactoriesMap()");
-        sb.AppendLine("    {");
-
-        if (fakeFactories.Length == 0)
-        {
-            sb.AppendLine("        // No fake factories found");
-            sb.AppendLine("        return new Dictionary<Type, IFactory>();");
-            return;
-        }
-
-        sb.AppendLine("        // Helper factories");
-        foreach (var f in fakeFactories.Where(x => x.FactoryType is FactoryType.Helper).OrderBy(x => x.Name))
-        {
-            sb.AppendLine($"        {f.Name} {f.Name.ToLower()} = {f.InstanceCreation()};");
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("        // Page factories");
-        foreach (var f in fakeFactories.Where(x => x.FactoryType is FactoryType.Page).OrderBy(x => x.Dependencies.Length).ThenBy(x => x.Name))
-        {
-            if (f.Dependencies.Length == 0)
-            {
-                sb.AppendLine($"        {f.Name} {f.Name.ToLower()} = {f.InstanceCreation()};");
-            }
-            else
-            {
-                sb.AppendLine($"        {f.Name} {f.Name.ToLower()} = {f.InstanceCreation(f.Dependencies.Select(x => x.Name.ToLower()))};");
-            }
-        }
-
-
-        sb.AppendLine();
-        sb.AppendLine("        return new Dictionary<Type, IFactory>()");
-        sb.AppendLine("        {");
-        foreach (var f in fakeFactories.OrderBy(x => x.Name))
         {
             sb.AppendLine($"            {{ typeof({f.ModelName}), {f.Name.ToLower()} }},");
         }

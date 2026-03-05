@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.ItemEdit"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Activities.Page.ItemEdit.BrandEditView"
+             x:DataType="vm:BrandEditViewModel">
+
+    <Grid
+        ColumnDefinitions="*,*"
+        RowDefinitions="*,Auto">
+        <ScrollViewer
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0 40 0 40">
+            <StackPanel
+                Orientation="Vertical">
+
+                <shared:EditField Label="Id" IsEditable="False">
+                    <TextBox
+                        IsEnabled="false"
+                        Text="{Binding EditItem.Id}"
+                        Watermark="{Binding SourceItem.Id}" />
+                </shared:EditField>
+
+                <shared:EditField Label="Name" ResetCommand="{Binding ResetNameCommand}">
+                    <TextBox
+                        IsEnabled="{Binding IsEdit}"
+                        Text="{Binding EditItem.Name}"
+                        Watermark="{Binding SourceItem.Name}" />
+                </shared:EditField>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="0"
+            Text="Cancel"
+            Command="{Binding DropChangesCommand}" />
+
+        <shared:BottomActionButton
+            Grid.Row="1" Grid.Column="1"
+            Text="Save"
+            Command="{Binding SaveChangesCommand}" />
+    </Grid>
+</UserControl>

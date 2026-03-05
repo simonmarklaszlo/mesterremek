@@ -7,12 +7,10 @@ public readonly struct ModelGroup
 {
     public Model Model { get; }
     public Factory? Factory { get; }
-    public FakeFactory? FakeFactory { get; }
 
-    public ModelGroup(Model model, Factory? factory, FakeFactory? fakeFactory)
+    public ModelGroup(Model model, Factory? factory)
     {
         Model = model;
         Factory = factory;
-        FakeFactory = fakeFactory;
     }
 }

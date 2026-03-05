@@ -17,7 +17,8 @@ public class PageActivityViewLocator : IDataTemplate
 {
     public Control? Build(object? param)
     {
-        if (param is not PageActivityViewModel) return null;
+        if (param is not PageActivityViewModel pavm) return null;
+        pavm.OnOpening();
 
         Type type = typeof(PageActivityView);
 

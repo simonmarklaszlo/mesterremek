@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,13 +8,12 @@ using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class UserEditViewModel : ViewModelBase
+public sealed partial class UserEditViewModel : ItemEditViewModel<User>
 {
-    public User SourceItem
+    public override User SourceItem
     {
         get;
         set
@@ -24,7 +24,7 @@ public sealed partial class UserEditViewModel : ViewModelBase
             GlobalEditItem = EditableUser.TryGetFrom(value);
             EditItem!.PropertyChanged += EditItemOnPropertyChanged;
         }
-    }
+    } = null!;
 
     private EditableUser? GlobalEditItem
     {
@@ -40,35 +40,34 @@ public sealed partial class UserEditViewModel : ViewModelBase
     [ObservableProperty] private EditableUser _editItem = null!;
 
     [ObservableProperty] private Role[] _roles = [];
+    private DateTime _lastCacheCheck = DateTime.MinValue;
     private bool _isChangingRole;
-
-    private readonly PageController<User> _controller;
-    [ObservableProperty] private bool _isEdit;
 
     private bool CanSaveChanges => IsEdit && !EditItem.PropertiesEqual(GlobalEditItem ?? SourceItem);
     private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;
     private bool CanResetEmail => IsEdit && EditItem.Email != SourceItem.Email;
     private bool CanResetRole => IsEdit && EditItem.Role != SourceItem.Role;
 
-
-    public UserEditViewModel(PageController<User> controller, User sourceItem)
-    {
-        SourceItem = sourceItem;
-        _controller = controller;
-    }
+    public override void OnOpening() => _ = ChangeRole();
 
     private async Task ChangeRole()
     {
         if (_isChangingRole) return;
         _isChangingRole = true;
 
-        Role? role = Roles.FirstOrDefault(x => x.Id == SourceItem.Role.Id);
+        Role? role = Roles.FirstOrDefault();
+        var factory = FactoryProvider.Instance.GetHelperFactory<Role>();
+
         if (role is null)
         {
-            Roles = await FactoryProvider.Instance
-                .GetHelperFactory<Role>()
-                .TryGetAllFromCache(SourceItem.Id);
-            role = Roles.First(x => x.Id == SourceItem.Role.Id);
+            Roles = await factory.TryGetAllFromCache();
+            role = Roles.First();
+        }
+        else if (factory.CacheUpdated > _lastCacheCheck)
+        {
+            _lastCacheCheck = factory.CacheUpdated;
+            Roles = await factory.TryGetAllFromCache();
+            role = Roles.First();
         }
 
         EditItem.Role = role;
@@ -108,7 +107,7 @@ public sealed partial class UserEditViewModel : ViewModelBase
             if (CanResetRole) ResetRole();
         }
 
-        _controller.NavigateBack();
+        Controller.NavigateBack();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -125,6 +124,6 @@ public sealed partial class UserEditViewModel : ViewModelBase
             Changes.Edit<User>(EditItem.Copy());
         }
 
-        _controller.NavigateBack();
+        Controller.NavigateBack();
     }
 }

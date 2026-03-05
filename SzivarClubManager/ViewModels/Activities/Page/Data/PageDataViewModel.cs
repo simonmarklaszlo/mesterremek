@@ -32,8 +32,8 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [ObservableProperty] private string _menuTextSingleDelete = DeleteTextSingle;
     [ObservableProperty] private string _menuTextMultipleDelete = DeleteTextMultiple;
 
-    private readonly IPageFactory<T> _factory;
-    private readonly PageController<T> _controller;
+    public IPageFactory<T> Factory { get; init; } = null!;
+    public PageController<T> Controller { get; init; } = null!;
 
     public IList? SelectedItemsRaw
     {
@@ -47,21 +47,15 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     public object? SelectedItem { get; set; }
     public DataGridColumn? CurrentColumn { get; set; }
 
-    protected PageDataViewModel(IPageFactory<T> factory, PageController<T> controller)
-    {
-        _factory = factory;
-        _controller = controller;
-    }
-
     public Task InitializeAsync() => LoadCurrentPage();
 
     private async Task LoadCurrentPage()
     {
-        CurrentPageData = await _factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize);
+        CurrentPageData = await Factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize);
 
         IsFirstPageButtonEnabled = CurrentPage > 1;
         IsPreviousPageButtonEnabled = CurrentPage > 1;
-        int lastPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
+        int lastPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
         IsNextPageButtonEnabled = lastPage > CurrentPage;
         IsLastPageButtonEnabled = lastPage > CurrentPage;
     }
@@ -79,7 +73,7 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [RelayCommand]
     private async Task LoadNextPage()
     {
-        if (await _factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize))
+        if (await Factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize))
         {
             CurrentPage++;
             await LoadCurrentPage();
@@ -96,7 +90,7 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [RelayCommand]
     private async Task LoadLastPage()
     {
-        CurrentPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
+        CurrentPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
         await LoadCurrentPage();
     }
 
@@ -121,12 +115,12 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     private async Task CopyRecord() => await Clipboard.CopyText(SelectedItems[0].ToCopiableString());
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void ViewRecord() => _controller.SelectItem(SelectedItems[0]);
+    private void ViewRecord() => Controller.SelectItem(SelectedItems[0]);
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void EditRecord() => _controller.EditItem(SelectedItems[0]);
+    private void EditRecord() => Controller.EditItem(SelectedItems[0]);
     [RelayCommand]
-    private void AddRecord() => _controller.AddItem();
+    private void AddRecord() => Controller.AddItem();
 
     [RelayCommand(CanExecute = nameof(SingleDeleteCanExecute))]
     private void DeleteRecord()

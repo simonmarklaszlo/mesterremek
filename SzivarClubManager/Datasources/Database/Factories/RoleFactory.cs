@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,17 @@ public sealed class RoleFactory : IHelperFactory<Role>
     private const string TableName = "roles";
     private readonly DatabaseConnection _connection;
 
-    private Role[]? _cachedItems = [];
+    private Role[]? CachedItems
+    {
+        get;
+        set
+        {
+            field = value;
+            CacheUpdated = DateTime.Now;
+        }
+    } = [];
+
+    public DateTime CacheUpdated { get; private set; }
 
     public RoleFactory(DatabaseConnection connection)
     {
@@ -40,7 +51,9 @@ public sealed class RoleFactory : IHelperFactory<Role>
         await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
         command.Parameters.AddRange(commandParams.ToArray());
 
-        return await command.ExecuteNonQueryAsync();
+        var res = await command.ExecuteNonQueryAsync();
+        InvalidateCache();
+        return res;
     }
 
     public async Task<int> EditRange(IEnumerable<Role> items)
@@ -61,10 +74,16 @@ public sealed class RoleFactory : IHelperFactory<Role>
             count += command.ExecuteNonQuery();
         }
 
+        InvalidateCache();
         return count;
     }
 
-    public Task<int> DeleteRange(IEnumerable<Role> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+    public async Task<int> DeleteRange(IEnumerable<Role> items)
+    {
+        var res = await CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+        InvalidateCache();
+        return res;
+    }
 
     public async Task<Role[]> GetAll()
     {
@@ -86,20 +105,22 @@ public sealed class RoleFactory : IHelperFactory<Role>
         return roles.ToArray();
     }
 
-    public async Task<Role[]> TryGetAllFromCache() => _cachedItems ??= await GetAll();
+    public async Task<Role[]> TryGetAllFromCache() => CachedItems ??= await GetAll();
 
     public async Task<Role[]> TryGetAllFromCache(int mustContainId)
     {
-        if (_cachedItems is null)
+        if (CachedItems is null)
         {
-            return _cachedItems = await GetAll();
+            return CachedItems = await GetAll();
         }
 
-        if (_cachedItems.Any(x => x.Id == mustContainId))
+        if (CachedItems.Any(x => x.Id == mustContainId))
         {
-            return _cachedItems;
+            return CachedItems;
         }
 
-        return _cachedItems = await GetAll();
+        return CachedItems = await GetAll();
     }
+
+    public void InvalidateCache() => CachedItems = null;
 }

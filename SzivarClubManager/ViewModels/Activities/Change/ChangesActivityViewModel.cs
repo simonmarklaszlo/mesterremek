@@ -10,12 +10,7 @@ namespace SzivarClubManager.ViewModels.Activities.Change;
 [ActivityCollectionItem]
 public sealed partial class ChangesActivityViewModel : ActivityViewModel
 {
-    public ObservableCollection<DataChangeRow> DataChangeRows { get; } =
-    [
-        new DataChangeRow<Cigar>(),
-        new DataChangeRow<Shop>(),
-        new DataChangeRow<User>()
-    ];
+    public ObservableCollection<DataChangeRow> DataChangeRows { get; } = GetDataChangeRows();
 
     private DateTime _lastCheck = DateTime.MinValue;
 

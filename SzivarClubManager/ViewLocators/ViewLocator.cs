@@ -16,9 +16,9 @@ public class ViewLocator : IDataTemplate
 {
     public Control? Build(object? param)
     {
-        if (param is null)
-            return null;
+        if (param is null) return null;
 
+        if(param is ViewModelBase vmb) vmb.OnOpening();
         var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
         var type = Type.GetType(name);
 

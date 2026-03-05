@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,22 @@ using SzivarClubManager.SourceGeneration;
 namespace SzivarClubManager.Datasources.Database.Factories;
 
 [FactoryOf(typeof(Brand), true)]
-public sealed class BrandFactory : IHelperFactory<Brand>
+public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
 {
     private const string TableName = "cigar_brands";
     private readonly DatabaseConnection _connection;
 
-    private Brand[]? _cachedItems = [];
+    private Brand[]? CachedItems
+    {
+        get;
+        set
+        {
+            field = value;
+            CacheUpdated = DateTime.Now;
+        }
+    } = [];
+
+    public DateTime CacheUpdated { get; private set; }
 
     public BrandFactory(DatabaseConnection connection)
     {
@@ -40,7 +51,9 @@ public sealed class BrandFactory : IHelperFactory<Brand>
         await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
         command.Parameters.AddRange(commandParams.ToArray());
 
-        return command.ExecuteNonQuery();
+        var res = await command.ExecuteNonQueryAsync();
+        InvalidateCache();
+        return res;
     }
 
     public async Task<int> EditRange(IEnumerable<Brand> items)
@@ -60,10 +73,46 @@ public sealed class BrandFactory : IHelperFactory<Brand>
             count++;
         }
 
+        InvalidateCache();
         return count;
     }
 
-    public Task<int> DeleteRange(IEnumerable<Brand> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+    public async Task<int> DeleteRange(IEnumerable<Brand> items)
+    {
+        var res = await CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+        InvalidateCache();
+        return res;
+    }
+
+    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
+
+    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
+
+    public async Task<Brand[]> GetPage(int page, int pageSize)
+    {
+        const string query = """
+                             SELECT id, name 
+                             FROM cigar_brands
+                             LIMIT @limit OFFSET @offset
+                             """;
+
+        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
+        command.Parameters.AddWithValue("limit", pageSize);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        List<Brand> brands = [];
+
+        while (await reader.ReadAsync())
+        {
+            brands.Add(new Brand(
+                reader.GetInt32(0),
+                reader.GetString(1)
+            ));
+        }
+
+        return brands.ToArray();
+    }
 
     public async Task<Brand[]> GetAll()
     {
@@ -87,20 +136,22 @@ public sealed class BrandFactory : IHelperFactory<Brand>
         return brands.ToArray();
     }
 
-    public async Task<Brand[]> TryGetAllFromCache() => _cachedItems ??= await GetAll();
+    public async Task<Brand[]> TryGetAllFromCache() => CachedItems ??= await GetAll();
 
     public async Task<Brand[]> TryGetAllFromCache(int mustContainId)
     {
-        if (_cachedItems is null)
+        if (CachedItems is null)
         {
-            return _cachedItems = await GetAll();
+            return CachedItems = await GetAll();
         }
 
-        if (_cachedItems.Any(x => x.Id == mustContainId))
+        if (CachedItems.Any(x => x.Id == mustContainId))
         {
-            return _cachedItems;
+            return CachedItems;
         }
 
-        return _cachedItems = await GetAll();
+        return CachedItems = await GetAll();
     }
+
+    public void InvalidateCache() => CachedItems = null;
 }

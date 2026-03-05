@@ -48,14 +48,19 @@ public static class Changes
         foreach (var group in models)
         {
             if (group.Factory is not { } factory) continue;
-            switch (factory.FactoryType)
+
+            if (factory.FactoryType.HasFlag(FactoryType.Page) && factory.FactoryType.HasFlag(FactoryType.Helper))
             {
-                case FactoryType.Page:
-                    sb.Append(indent + $"        {{ typeof({group.Model.Name}), new DataChanges<{group.Model.Name}>(provider.GetPageFactory<{group.Model.Name}>()) }},");
-                    break;
-                case FactoryType.Helper:
-                    sb.Append(indent + $"        {{ typeof({group.Model.Name}), new DataChanges<{group.Model.Name}>(provider.GetHelperFactory<{group.Model.Name}>()) }},");
-                    break;
+                // doesn't matter if passed factory is page or helper, both is IModelFactory<T>
+                sb.Append(indent + $"        {{ typeof({group.Model.Name}), new DataChanges<{group.Model.Name}>(provider.GetPageFactory<{group.Model.Name}>()) }},");
+            }
+            else if (factory.FactoryType.HasFlag(FactoryType.Page))
+            {
+                sb.Append(indent + $"        {{ typeof({group.Model.Name}), new DataChanges<{group.Model.Name}>(provider.GetPageFactory<{group.Model.Name}>()) }},");
+            }
+            else if (factory.FactoryType.HasFlag(FactoryType.Helper))
+            {
+                sb.Append(indent + $"        {{ typeof({group.Model.Name}), new DataChanges<{group.Model.Name}>(provider.GetHelperFactory<{group.Model.Name}>()) }},");
             }
 
             sb.AppendLine($" // {factory.FactoryType.ToTypeName()}");

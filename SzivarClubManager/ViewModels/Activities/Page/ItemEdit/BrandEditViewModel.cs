@@ -1,6 +1,4 @@
-using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,82 +9,48 @@ using SzivarClubManager.Models.Editable;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
+public sealed partial class BrandEditViewModel : ItemEditViewModel<Brand>
 {
-    public override Cigar SourceItem
+    public override Brand SourceItem
     {
         get;
         set
         {
             field = value;
-            _ = ChangeBrand();
             EditItem?.PropertyChanged -= EditItemOnPropertyChanged;
-            GlobalEditItem = EditableCigar.TryGetFrom(value);
+            GlobalEditItem = EditableBrand.TryGetFrom(value);
             EditItem!.PropertyChanged += EditItemOnPropertyChanged;
         }
     } = null!;
 
-    private EditableCigar? GlobalEditItem
+    private EditableBrand? GlobalEditItem
     {
         get;
         set
         {
             field = value;
-            if (value is null) EditItem = EditableCigar.FromModel(SourceItem);
+            if (value is null) EditItem = EditableBrand.FromModel(SourceItem);
             else EditItem = value.Copy();
         }
     }
 
-    [ObservableProperty] private EditableCigar _editItem = null!;
-
-    [ObservableProperty] private Brand[] _brands = [];
-    private DateTime _lastCacheCheck = DateTime.MinValue;
-    private bool _isChangingBrand;
+    [ObservableProperty] private EditableBrand _editItem = null!;
 
     private bool CanSaveChanges => IsEdit && !EditItem.PropertiesEqual(GlobalEditItem ?? SourceItem);
     private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;
-    private bool CanResetBrand => IsEdit && EditItem.Brand != SourceItem.Brand;
 
-    public override void OnOpening() => _ = ChangeBrand();
-
-    private async Task ChangeBrand()
-    {
-        if (_isChangingBrand) return;
-        _isChangingBrand = true;
-
-        Brand? brand = Brands.FirstOrDefault();
-        var factory = FactoryProvider.Instance.GetHelperFactory<Brand>();
-
-        if (brand is null)
-        {
-            Brands = await factory.TryGetAllFromCache();
-            brand = Brands.First();
-        }
-        else if (factory.CacheUpdated > _lastCacheCheck)
-        {
-            _lastCacheCheck = factory.CacheUpdated;
-            Brands = await factory.TryGetAllFromCache();
-            brand = Brands.First();
-        }
-
-        EditItem?.Brand = brand;
-        _isChangingBrand = false;
-    }
 
     private void EditItemOnPropertyChanged(object? sender, PropertyChangedEventArgs? e) => ReCheckCommandCanExecute();
 
     private void ReCheckCommandCanExecute()
     {
         ResetNameCommand.NotifyCanExecuteChanged();
-        ResetBrandCommand.NotifyCanExecuteChanged();
         SaveChangesCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanResetName))]
     private void ResetName() => EditItem.Name = SourceItem.Name;
 
-    [RelayCommand(CanExecute = nameof(CanResetBrand))]
-    private void ResetBrand() => EditItem.Brand = Brands.First(x => x.Id == SourceItem.Brand.Id);
 
     [RelayCommand]
     private void DropChanges()
@@ -98,7 +62,6 @@ public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
         else
         {
             if (CanResetName) ResetName();
-            if (CanResetBrand) ResetBrand();
         }
 
         Controller.NavigateBack();
@@ -111,13 +74,12 @@ public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
         {
             GlobalEditItem.SetPropertiesFrom(EditItem);
 
-            if (GlobalEditItem.PropertiesEqual(SourceItem)) Changes.RemoveEdit<Cigar>(GlobalEditItem);
+            if (GlobalEditItem.PropertiesEqual(SourceItem)) Changes.RemoveEdit<Brand>(GlobalEditItem);
         }
         else
         {
-            Changes.Edit<Cigar>(EditItem.Copy());
+            Changes.Edit<Brand>(EditItem.Copy());
         }
 
         Controller.NavigateBack();
-    }
-}
+    }}

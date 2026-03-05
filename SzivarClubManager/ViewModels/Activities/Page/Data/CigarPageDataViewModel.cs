@@ -1,6 +1,4 @@
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Models;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Data;
 
@@ -21,6 +19,4 @@ public sealed class CigarPageDataViewModel : PageDataViewModel<Cigar>
             OnSelectedItemsChanged();
         }
     } = [];
-
-    public CigarPageDataViewModel(IPageFactory<Cigar> factory, PageController<Cigar> controller) : base(factory, controller) { }
 }

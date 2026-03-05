@@ -12,6 +12,4 @@ public abstract class ActivityViewModel : ViewModelBase
         IsInitialized = true;
         return Task.CompletedTask;
     }
-
-    public virtual void OnOpening() { }
 }

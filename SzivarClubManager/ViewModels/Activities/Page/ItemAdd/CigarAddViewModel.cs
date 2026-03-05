@@ -1,66 +1,64 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 
-public sealed partial class CigarAddViewModel : ViewModelBase
+public sealed partial class CigarAddViewModel : ItemAddViewModel<Cigar>
 {
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private Brand? _brand;
 
-    private readonly PageController<Cigar> _controller;
-
     [ObservableProperty] private Brand[] _brands = [];
+    private DateTime _lastCacheCheck = DateTime.MinValue;
+    private bool _isChangingBrand;
 
+    protected override bool CanAdd => !string.IsNullOrWhiteSpace(Name) && Brand is not null;
 
-    private bool CanAdd => !string.IsNullOrWhiteSpace(Name) && Brand is not null;
-    public CigarAddViewModel(PageController<Cigar> controller)
-    {
-        _ = ChangeBrand();
-        _controller = controller;
-    }
+    public CigarAddViewModel() => _ = ChangeBrand();
 
+    public override void OnOpening() => _ = ChangeBrand();
 
     private async Task ChangeBrand()
     {
+        if (_isChangingBrand) return;
+        _isChangingBrand = true;
+
         Brand? brand = Brands.FirstOrDefault();
+        var factory = FactoryProvider.Instance.GetHelperFactory<Brand>();
+
         if (brand is null)
         {
-            Brands = await FactoryProvider.Instance
-                .GetHelperFactory<Brand>()
-                .TryGetAllFromCache();
+            Brands = await factory.TryGetAllFromCache();
+            brand = Brands.First();
+        }
+        else if (factory.CacheUpdated > _lastCacheCheck)
+        {
+            _lastCacheCheck = factory.CacheUpdated;
+            Brands = await factory.TryGetAllFromCache();
             brand = Brands.First();
         }
 
         Brand = brand;
+        _isChangingBrand = false;
     }
 
     partial void OnNameChanged(string value) => ReCheckCommandCanExecute();
     partial void OnBrandChanged(Brand? value) => ReCheckCommandCanExecute();
 
-    private void ReCheckCommandCanExecute() => AddCommand.NotifyCanExecuteChanged();
-
-
-    [RelayCommand]
-    private void Cancel()
+    protected override void ResetFields()
     {
         Name = string.Empty;
         Brand = Brands.First();
-
-        _controller.NavigateBack();
     }
 
-    [RelayCommand(CanExecute = nameof(CanAdd))]
-    private void Add()
+    protected override void AddNewItemToChanges()
     {
         Cigar newItem = Cigar.CreateNew(Name, Brand!);
         Changes.AddNew(newItem);
-        _controller.NavigateBack();
     }
 }

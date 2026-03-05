@@ -38,7 +38,6 @@ public partial class MainContainerViewModel : ViewModelBase
     {
         var nextActivity = _activities[activityName];
         await nextActivity.InitializeAsync();
-        nextActivity.OnOpening();
         CurrentActivity = nextActivity;
     }
 }

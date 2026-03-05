@@ -4,13 +4,12 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class ShopEditViewModel : ViewModelBase
+public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
 {
-    public Shop SourceItem
+    public override Shop SourceItem
     {
         get;
         set
@@ -22,7 +21,7 @@ public sealed partial class ShopEditViewModel : ViewModelBase
             LatitudeString = EditItem.Location.LatitudeString;
             EditItem.PropertyChanged += EditItemOnPropertyChanged;
         }
-    }
+    } = null!;
 
     private EditableShop? GlobalEditItem
     {
@@ -40,21 +39,12 @@ public sealed partial class ShopEditViewModel : ViewModelBase
     [ObservableProperty] private string _longitudeString = string.Empty;
     [ObservableProperty] private string _latitudeString = string.Empty;
 
-    private readonly PageController<Shop> _controller;
-    [ObservableProperty] private bool _isEdit;
-
     private bool CanSaveChanges => IsEdit && (!EditItem.PropertiesEqualExceptLocation(GlobalEditItem ?? SourceItem) || NewLocationValid());
     private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;
     private bool CanResetAddress => IsEdit && EditItem.Address != SourceItem.Address;
     private bool CanResetCity => IsEdit && EditItem.City != SourceItem.City;
     private bool CanResetLocation => IsEdit && SourceItem.Location.LongitudeString != LongitudeString || SourceItem.Location.LatitudeString != LatitudeString;
 
-
-    public ShopEditViewModel(PageController<Shop> controller, Shop sourceItem)
-    {
-        SourceItem = sourceItem;
-        _controller = controller;
-    }
 
     private bool NewLocationValid()
     {
@@ -117,7 +107,7 @@ public sealed partial class ShopEditViewModel : ViewModelBase
             if (CanResetLocation) ResetLocation();
         }
 
-        _controller.NavigateBack();
+        Controller.NavigateBack();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -136,6 +126,6 @@ public sealed partial class ShopEditViewModel : ViewModelBase
             Changes.Edit<Shop>(EditItem.Copy());
         }
 
-        _controller.NavigateBack();
+        Controller.NavigateBack();
     }
 }

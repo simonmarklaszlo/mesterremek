@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using SzivarClubManager.SourceGenerator.Changes.Generation;
+using SzivarClubManager.SourceGenerator.Changes.Target;
 using SzivarClubManager.SourceGenerator.Targets;
 using SzivarClubManager.SourceGenerator.Targets.Factory;
 using SzivarClubManager.SourceGenerator.Types;
@@ -16,53 +16,43 @@ public class Generator : IIncrementalGenerator
     {
         var models = Model.GetCandidates(context);
         var factories = Factory.GetCandidates(context);
-        var fakeFactories = FakeFactory.GetCandidates(context);
 
-        var combined = models.Collect()
-            .Combine(factories.Collect())
-            .Combine(fakeFactories.Collect());
+        var paVms = PageActivityViewModel.GetCandidates(context);
 
-        context.RegisterSourceOutput(combined, static (spc, source) =>
+        var factoriesCombined = models.Collect()
+            .Combine(factories.Collect());
+
+        context.RegisterSourceOutput(factoriesCombined, RegisterFactories);
+        context.RegisterSourceOutput(paVms.Collect(), RegisterChangesVm);
+    }
+
+    private static void RegisterChangesVm(SourceProductionContext spc, ImmutableArray<PageActivityViewModel> source)
+    {
+        spc.AddSource(ChangesActivityViewModel.FileName, ChangesActivityViewModel.GenerateSource(source));
+    }
+
+    private static void RegisterFactories(SourceProductionContext spc, (ImmutableArray<Model> Left, ImmutableArray<Factory> Right) source)
+    {
+        var (modelArray, factoryArray) = source;
+
+
+        var factoryLookup = factoryArray.GroupBy(f => f.ModelSymbol, SymbolEqualityComparer.Default)
+            .ToDictionary(g => g.Key, g => g.First(), SymbolEqualityComparer.Default);
+
+        ModelGroup[] paired = new ModelGroup[modelArray.Length];
+
+        for (var i = 0; i < modelArray.Length; i++)
         {
-            var ((modelArray, factoryArray), fakeFactoryArray) = source;
-
-
-            var factoryLookup = factoryArray
-                .GroupBy(f => f.ModelSymbol, SymbolEqualityComparer.Default)
-                .ToDictionary(g => g.Key, g => g.First(), SymbolEqualityComparer.Default);
-
-            var fakeFactoryLookup = fakeFactoryArray
-                .GroupBy(f => f.ModelSymbol, SymbolEqualityComparer.Default)
-                .ToDictionary(g => g.Key, g => g.First(), SymbolEqualityComparer.Default);
-
-            ModelGroup[] paired = new ModelGroup[modelArray.Length];
-
-            for (var i = 0; i < modelArray.Length; i++)
+            var model = modelArray[i];
+            if (!factoryLookup.TryGetValue(model.ModelSymbol, out var factory))
             {
-                var model = modelArray[i];
-                if (!factoryLookup.TryGetValue(model.ModelSymbol, out var factory))
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(
-                        Warnings.NoFactoryWarning,
-                        model.ModelSymbol.Locations.FirstOrDefault(),
-                        model.ModelSymbol.Name
-                    ));
-                }
-
-                if (!fakeFactoryLookup.TryGetValue(model.ModelSymbol, out var fakeFactory))
-                {
-                    spc.ReportDiagnostic(Diagnostic.Create(
-                        Warnings.NoFakeFactoryWarning,
-                        model.ModelSymbol.Locations.FirstOrDefault(),
-                        model.ModelSymbol.Name
-                    ));
-                }
-
-                paired[i] = new ModelGroup(model, factory, fakeFactory);
+                spc.ReportDiagnostic(Diagnostic.Create(Warnings.NoFactoryWarning, model.ModelSymbol.Locations.FirstOrDefault(), model.ModelSymbol.Name));
             }
 
-            spc.AddSource(Generation.Changes.FileName, Generation.Changes.GenerateSource(paired));
-            spc.AddSource(ModelRowBackgroundConverter.FileName, ModelRowBackgroundConverter.GenerateSource(paired));
-        });
+            paired[i] = new ModelGroup(model, factory);
+        }
+
+        spc.AddSource(Generation.Changes.FileName, Generation.Changes.GenerateSource(paired));
+        spc.AddSource(ModelRowBackgroundConverter.FileName, ModelRowBackgroundConverter.GenerateSource(paired));
     }
 }
