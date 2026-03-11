@@ -32,7 +32,7 @@ public sealed class ShopFactory : IPageFactory<Shop>
                              LIMIT @limit OFFSET @offset
                              """;
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
@@ -78,10 +78,10 @@ public sealed class ShopFactory : IPageFactory<Shop>
 
         querySb.Remove(querySb.Length - 1, 1);
 
-        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        await using var command = _connection.CreateCommand(querySb.ToString());
         command.Parameters.AddRange(commandParams.ToArray());
 
-        return command.ExecuteNonQuery();
+        return await command.ExecuteNonQueryAsync();
     }
 
     public async Task<int> EditRange(IEnumerable<Shop> items)
@@ -99,7 +99,7 @@ public sealed class ShopFactory : IPageFactory<Shop>
 
         foreach (var item in items)
         {
-            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            await using var command = _connection.CreateCommand(query);
             command.Parameters.AddWithValue("name", item.Name);
             command.Parameters.AddWithValue("address", item.Address);
             command.Parameters.AddWithValue("city", item.City);

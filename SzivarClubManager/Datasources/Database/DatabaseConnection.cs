@@ -5,38 +5,40 @@ using SzivarClubManager.Configs;
 
 namespace SzivarClubManager.Datasources.Database;
 
-public class DatabaseConnection
+public sealed class DatabaseConnection
 {
-    public NpgsqlConnection Connection { get; }
+    private readonly NpgsqlConnection _connection;
 
     private DatabaseConnection(NpgsqlConnection connection)
     {
-        Connection = connection;
+        _connection = connection;
     }
 
-    private static readonly string ConnectionString = new NpgsqlConnectionStringBuilder
-    {
-        Host = GlobalConfig.Instance.DatabaseConfig.Host,
-        Port = GlobalConfig.Instance.DatabaseConfig.Port,
-        Username = GlobalConfig.Instance.DatabaseConfig.User,
-        Password = GlobalConfig.Instance.DatabaseConfig.Password,
-        Database = GlobalConfig.Instance.DatabaseConfig.DatabaseName
-    }.ConnectionString;
+    public DatabaseCommandContext CreateCommand(string query) => new(query, _connection);
 
     public static async Task<DatabaseConnection?> ConnectAsync()
     {
-        var connection = new NpgsqlConnection(ConnectionString);
+        var builder = new NpgsqlDataSourceBuilder(new NpgsqlConnectionStringBuilder
+        {
+            Host = GlobalConfig.Instance.DatabaseConfig.Host,
+            Port = GlobalConfig.Instance.DatabaseConfig.Port,
+            Username = GlobalConfig.Instance.DatabaseConfig.User,
+            Password = GlobalConfig.Instance.DatabaseConfig.Password,
+            Database = GlobalConfig.Instance.DatabaseConfig.DatabaseName
+        }.ConnectionString);
+        builder.UseNetTopologySuite();
+
+        await using var dataSource = builder.Build();
 
         try
         {
-            await connection.OpenAsync();
+            var connection = await dataSource.OpenConnectionAsync();
+            return new DatabaseConnection(connection);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            connection.Dispose();
+            Console.WriteLine(e);
             return null;
         }
-
-        return new DatabaseConnection(connection);
     }
 }

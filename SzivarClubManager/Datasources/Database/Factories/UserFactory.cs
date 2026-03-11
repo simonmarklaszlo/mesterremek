@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Npgsql;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
@@ -36,7 +35,7 @@ public sealed class UserFactory : IPageFactory<User>
                              LIMIT @limit OFFSET @offset
                              """;
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
@@ -60,8 +59,7 @@ public sealed class UserFactory : IPageFactory<User>
     public Task<int> AddRange(IEnumerable<User> items)
     {
         Console.WriteLine("Adding users is not supported");
-        return Task.FromResult(-1);
-        // throw new NotSupportedException();
+        return Task.FromResult(0);
     }
 
     public async Task<int> EditRange(IEnumerable<User> items)
@@ -76,7 +74,7 @@ public sealed class UserFactory : IPageFactory<User>
         int count = 0;
         foreach (var item in items)
         {
-            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            await using var command = _connection.CreateCommand(query);
             command.Parameters.AddWithValue("name", item.Name);
             command.Parameters.AddWithValue("roleId", item.Role.Id);
             command.Parameters.AddWithValue("id", item.Id);

@@ -35,7 +35,7 @@ public sealed class CigarFactory : IPageFactory<Cigar>
                              LIMIT @limit OFFSET @offset
                              """;
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
@@ -71,10 +71,10 @@ public sealed class CigarFactory : IPageFactory<Cigar>
 
         querySb.Remove(querySb.Length - 1, 1);
 
-        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        await using var command = _connection.CreateCommand(querySb.ToString());
         command.Parameters.AddRange(commandParams.ToArray());
 
-        return command.ExecuteNonQuery();
+        return await command.ExecuteNonQueryAsync();
     }
 
     public async Task<int> EditRange(IEnumerable<Cigar> items)
@@ -89,7 +89,7 @@ public sealed class CigarFactory : IPageFactory<Cigar>
 
         foreach (var cigar in items)
         {
-            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            await using var command = _connection.CreateCommand(query);
             command.Parameters.AddWithValue("name", cigar.Name);
             command.Parameters.AddWithValue("brandId", cigar.Brand.Id);
             command.Parameters.AddWithValue("id", cigar.Id);

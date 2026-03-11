@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Npgsql;
 
 namespace SzivarClubManager.Datasources.Database;
 
@@ -12,7 +11,7 @@ public static class CommonQueries
     {
         string query = $"SELECT EXISTS ( SELECT 1 FROM {table} LIMIT @limit OFFSET @offset )";
 
-        await using var command = new NpgsqlCommand(query, connection.Connection);
+        await using var command = connection.CreateCommand(query);
         command.Parameters.AddWithValue("table", table);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
@@ -24,7 +23,7 @@ public static class CommonQueries
     {
         string query = $"SELECT COUNT(*) FROM {table}";
 
-        await using var command = new NpgsqlCommand(query, connection.Connection);
+        await using var command = connection.CreateCommand(query);
 
         int count = Convert.ToInt32(await command.ExecuteScalarAsync());
 
@@ -43,7 +42,7 @@ public static class CommonQueries
                         WHERE id = @id;
                         """;
 
-        await using var command = new NpgsqlCommand(query, connection.Connection);
+        await using var command = connection.CreateCommand(query);
         command.Parameters.AddWithValue("id", id);
 
         return await command.ExecuteNonQueryAsync() == 1;
@@ -58,7 +57,7 @@ public static class CommonQueries
 
         int[] idArr = ids as int[] ?? ids.ToArray();
 
-        await using var command = new NpgsqlCommand(query, connection.Connection);
+        await using var command = connection.CreateCommand(query);
         command.Parameters.AddWithValue("ids", idArr);
 
         return await command.ExecuteNonQueryAsync();

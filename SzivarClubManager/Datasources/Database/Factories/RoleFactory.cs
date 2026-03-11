@@ -48,7 +48,7 @@ public sealed class RoleFactory : IHelperFactory<Role>
 
         querySb.Remove(querySb.Length - 1, 1);
 
-        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        await using var command = _connection.CreateCommand(querySb.ToString());
         command.Parameters.AddRange(commandParams.ToArray());
 
         var res = await command.ExecuteNonQueryAsync();
@@ -68,10 +68,10 @@ public sealed class RoleFactory : IHelperFactory<Role>
 
         foreach (var item in items)
         {
-            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            await using var command = _connection.CreateCommand(query);
             command.Parameters.AddWithValue("name", item.Name);
             command.Parameters.AddWithValue("id", item.Id);
-            count += command.ExecuteNonQuery();
+            count += await command.ExecuteNonQueryAsync();
         }
 
         InvalidateCache();
@@ -89,7 +89,7 @@ public sealed class RoleFactory : IHelperFactory<Role>
     {
         const string query = "SELECT id, name FROM roles;";
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
 
         List<Role> roles = [];
         await using var reader = await command.ExecuteReaderAsync();

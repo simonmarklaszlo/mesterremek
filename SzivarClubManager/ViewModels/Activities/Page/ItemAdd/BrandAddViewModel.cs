@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 

@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 using System.IO;
-using Npgsql;
+using System.Threading.Tasks;
 
 namespace SzivarClubManager;
 
@@ -14,9 +14,15 @@ sealed class Program
     public static void Main(string[] args)
     {
         if (!File.Exists(".env")) throw new FileNotFoundException(".env file required!");
-        NpgsqlConnection.GlobalTypeMapper.UseNetTopologySuite();
+
+        TaskScheduler.UnobservedTaskException += TaskSchedulerOnUnobservedTaskException;
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    private static void TaskSchedulerOnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        Console.WriteLine(e.Exception);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

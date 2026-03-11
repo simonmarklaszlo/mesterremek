@@ -48,7 +48,7 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
 
         querySb.Remove(querySb.Length - 1, 1);
 
-        await using var command = new NpgsqlCommand(querySb.ToString(), _connection.Connection);
+        await using var command = _connection.CreateCommand(querySb.ToString());
         command.Parameters.AddRange(commandParams.ToArray());
 
         var res = await command.ExecuteNonQueryAsync();
@@ -67,7 +67,7 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
 
         foreach (var brand in items)
         {
-            await using var command = new NpgsqlCommand(query, _connection.Connection);
+            await using var command = _connection.CreateCommand(query);
             command.Parameters.AddWithValue("name", brand.Name);
             command.Parameters.AddWithValue("id", brand.Id);
             count++;
@@ -96,7 +96,7 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
                              LIMIT @limit OFFSET @offset
                              """;
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
@@ -120,7 +120,7 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
                              SELECT id, name FROM cigar_brands;
                              """;
 
-        await using var command = new NpgsqlCommand(query, _connection.Connection);
+        await using var command = _connection.CreateCommand(query);
 
         List<Brand> brands = [];
         await using var reader = await command.ExecuteReaderAsync();
