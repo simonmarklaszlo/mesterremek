@@ -39,6 +39,11 @@
               <ion-chip [color]="suggestion.typeCode === 'new_shop' ? 'primary' : 'secondary'" class="type-chip">
                 {{ getSuggestionTypeLabel(suggestion.typeCode || '') }}
               </ion-chip>
+
+              <ion-chip color="medium" class="shopid-chip">
+                Shop #{{ suggestion.shopId ?? '-' }}
+              </ion-chip>
+
               <ion-chip
                 *ngIf="suggestion.statusCode === 'approved'"
                 color="success"
@@ -47,15 +52,26 @@
                 ✓ Jóváhagyva
               </ion-chip>
             </div>
+
+            <!-- Főcím: bolt neve (edit_*), új boltnál a javasolt név -->
             <ion-card-title class="suggestion-title">
-              {{ getSuggestionTypeLabel(suggestion.typeCode) }}
+              {{ (suggestion.typeCode === 'new_shop' ? (suggestion.proposedValue || '-') : (suggestion.shopName || '-')) }}
             </ion-card-title>
+
+            <!-- Cím (mindig látszik) -->
+            <div class="suggestion-address">
+              <ion-icon name="location-outline"></ion-icon>
+              <span>
+                {{ suggestion.typeCode === 'new_shop'
+                  ? ((suggestion.additionalData?.city || '-') + ', ' + (suggestion.additionalData?.address || '-'))
+                  : ((suggestion.shopCity || '-') + ', ' + (suggestion.shopAddress || '-'))
+                }}
+              </span>
+            </div>
 
             <!-- edit_name -->
             <div *ngIf="suggestion.typeCode === 'edit_name'" class="suggestion-details">
-              <ion-text color="medium">
-                <small>Bolt jelenlegi neve: <strong>{{ suggestion.shopName || '-' }}</strong></small>
-              </ion-text>
+              <!-- Jelenlegi név sor elrejtve kérésre -->
               <ion-text>
                 <p>Javasolt név: <strong>{{ suggestion.proposedValue || '-' }}</strong></p>
               </ion-text>
@@ -64,6 +80,7 @@
             <!-- edit_address -->
             <div *ngIf="suggestion.typeCode === 'edit_address'" class="suggestion-details">
               <ion-text color="medium">
+                <small>Bolt: <strong>{{ suggestion.shopName || '-' }}</strong></small><br />
                 <small>Jelenlegi cím: <strong>{{ (suggestion.shopAddress || '-') }}</strong></small><br />
                 <small>Jelenlegi város: <strong>{{ (suggestion.shopCity || '-') }}</strong></small>
               </ion-text>
@@ -77,16 +94,13 @@
 
             <!-- edit_hours -->
             <div *ngIf="suggestion.typeCode === 'edit_hours'" class="suggestion-details">
-              <ion-text>
-                <p><strong>{{ suggestion.proposedValue || 'Nyitvatartás módosítása' }}</strong></p>
+              <ion-text color="medium">
+
               </ion-text>
             </div>
 
             <!-- new_shop -->
             <div *ngIf="suggestion.typeCode === 'new_shop'" class="suggestion-details">
-              <ion-text>
-                <p>Bolt neve: <strong>{{ suggestion.proposedValue || '-' }}</strong></p>
-              </ion-text>
               <ion-text color="medium">
                 <small>Cím: <strong>{{ suggestion.additionalData?.address || '-' }}</strong></small><br />
                 <small>Város: <strong>{{ suggestion.additionalData?.city || '-' }}</strong></small>

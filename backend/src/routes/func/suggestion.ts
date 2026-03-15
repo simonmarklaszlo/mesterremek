@@ -51,6 +51,22 @@ export async function handleListSuggestions(req: Request, res: Response): Promis
     currentUserId: userId,
   });
 
+  // Debug: gyors sanity check, hogy jön-e shopName a backendből
+  try {
+    const sample = suggestions.slice(0, 5).map((s: any) => ({
+      id: s.id,
+      typeCode: s.typeCode,
+      shopId: s.shopId,
+      shopName: s.shopName,
+      shopAddress: s.shopAddress,
+      shopCity: s.shopCity,
+      proposedValue: s.proposedValue,
+    }));
+    console.log("[handleListSuggestions] sample:", sample);
+  } catch {
+    // ignore logging errors
+  }
+
   res.status(200).json({ success: true, suggestions, total: suggestions.length });
 }
 

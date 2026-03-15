@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   Suggestion,
@@ -36,37 +36,97 @@ export class SuggestionService {
       params = params.set('shopId', filters.shopId.toString());
     }
 
+    console.log('[SuggestionService.getSuggestions] request:', {
+      url: this.apiUrl,
+      params: filters ?? {}
+    });
+
     return this.http.get<SuggestionsResponse>(this.apiUrl, { params })
-      .pipe(map(response => response.suggestions));
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.getSuggestions] response:', response);
+        }),
+        map(response => response.suggestions),
+        tap((suggestions) => {
+          console.log('[SuggestionService.getSuggestions] suggestions:', suggestions);
+        })
+      );
   }
 
   getSuggestionById(id: number): Observable<Suggestion> {
-    return this.http.get<SuggestionResponse>(`${this.apiUrl}/${id}`)
-      .pipe(map(response => response.suggestion));
+    const url = `${this.apiUrl}/${id}`;
+    console.log('[SuggestionService.getSuggestionById] request:', { url, id });
+
+    return this.http.get<SuggestionResponse>(url)
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.getSuggestionById] response:', response);
+        }),
+        map(response => response.suggestion)
+      );
   }
 
   createSuggestion(data: CreateSuggestionRequest): Observable<Suggestion> {
+    console.log('[SuggestionService.createSuggestion] request:', { url: this.apiUrl, body: data });
+
     return this.http.post<SuggestionResponse>(this.apiUrl, data)
-      .pipe(map(response => response.suggestion));
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.createSuggestion] response:', response);
+        }),
+        map(response => response.suggestion)
+      );
   }
 
   voteSuggestion(id: number, voteType: VoteType): Observable<Suggestion> {
-    return this.http.post<SuggestionResponse>(`${this.apiUrl}/${id}/vote`, { voteType })
-      .pipe(map(response => response.suggestion));
+    const url = `${this.apiUrl}/${id}/vote`;
+    const body = { voteType };
+    console.log('[SuggestionService.voteSuggestion] request:', { url, id, body });
+
+    return this.http.post<SuggestionResponse>(url, body)
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.voteSuggestion] response:', response);
+        }),
+        map(response => response.suggestion)
+      );
   }
 
   removeVote(id: number): Observable<Suggestion> {
-    return this.http.delete<SuggestionResponse>(`${this.apiUrl}/${id}/vote`)
-      .pipe(map(response => response.suggestion));
+    const url = `${this.apiUrl}/${id}/vote`;
+    console.log('[SuggestionService.removeVote] request:', { url, id });
+
+    return this.http.delete<SuggestionResponse>(url)
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.removeVote] response:', response);
+        }),
+        map(response => response.suggestion)
+      );
   }
 
   deleteSuggestion(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    const url = `${this.apiUrl}/${id}`;
+    console.log('[SuggestionService.deleteSuggestion] request:', { url, id });
+
+    return this.http.delete<void>(url)
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.deleteSuggestion] response:', response);
+        })
+      );
   }
 
   applySuggestion(id: number): Observable<Suggestion> {
-    return this.http.post<SuggestionResponse>(`${this.apiUrl}/${id}/apply`, {})
-      .pipe(map(response => response.suggestion));
+    const url = `${this.apiUrl}/${id}/apply`;
+    console.log('[SuggestionService.applySuggestion] request:', { url, id, body: {} });
+
+    return this.http.post<SuggestionResponse>(url, {})
+      .pipe(
+        tap((response) => {
+          console.log('[SuggestionService.applySuggestion] response:', response);
+        }),
+        map(response => response.suggestion)
+      );
   }
 }
-

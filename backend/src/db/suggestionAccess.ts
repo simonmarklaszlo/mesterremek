@@ -50,6 +50,8 @@ function mapSuggestion(r: SuggestionRow) {
     return trimmed;
   };
 
+  const shopName = normalize(r.shop_name) ?? "Traffik";
+
   return {
     id: r.id,
     typeId: r.type_id,
@@ -59,7 +61,7 @@ function mapSuggestion(r: SuggestionRow) {
     statusCode: r.status_code,
     statusName: r.status_name,
     shopId: r.shop_id ?? undefined,
-    shopName: normalize(r.shop_name),
+    shopName,
     shopAddress: normalize((r as any).shop_address),
     shopCity: normalize((r as any).shop_city),
     proposedValue: r.proposed_value,
@@ -115,9 +117,9 @@ const suggestionAccess = {
         s.status_code,
         s.status_name,
         s.shop_id,
-        s.shop_name,
-        s.shop_address,
-        s.shop_city,
+        COALESCE(s.shop_name, sh.name) AS shop_name,
+        COALESCE(s.shop_address, sh.address) AS shop_address,
+        COALESCE(s.shop_city, sh.city) AS shop_city,
         s.proposed_value,
         s.additional_data,
         s.user_id,
@@ -126,6 +128,7 @@ const suggestionAccess = {
         s.updated_at,
         s.net_votes
       FROM suggestions_with_votes s
+      LEFT JOIN shops sh ON sh.id = s.shop_id
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY s.created_at DESC
     `;
@@ -153,9 +156,9 @@ const suggestionAccess = {
         s.status_code,
         s.status_name,
         s.shop_id,
-        s.shop_name,
-        s.shop_address,
-        s.shop_city,
+        COALESCE(s.shop_name, sh.name) AS shop_name,
+        COALESCE(s.shop_address, sh.address) AS shop_address,
+        COALESCE(s.shop_city, sh.city) AS shop_city,
         s.proposed_value,
         s.additional_data,
         s.user_id,
@@ -164,6 +167,7 @@ const suggestionAccess = {
         s.updated_at,
         s.net_votes
       FROM suggestions_with_votes s
+      LEFT JOIN shops sh ON sh.id = s.shop_id
       WHERE s.id = $1`,
       [id]
     );
