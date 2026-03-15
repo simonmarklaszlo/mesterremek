@@ -1,9 +1,54 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>Térkép</ion-title>
-  </ion-toolbar>
-</ion-header>
 
-<ion-content [fullscreen]="true">
-  <!-- Tartalom ide jön -->
-</ion-content>
+<div class="map-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <ion-icon name="bonfire" color="primary" size="large" class="szivar-icon"></ion-icon>
+      <span class="sidebar-logo">Térkép</span>
+    </div>
+    <div class="sidebar-controls">
+      <ion-input 
+        type="text"
+        name="varos"
+        id="varos"
+        [(ngModel)]="searchCity"
+        (keyup.enter)="varos_kereses()"
+        placeholder="Város keresése">
+      </ion-input>
+      <ion-button fill="clear" shape="round" size="small" (click)="varos_kereses()">
+        <ion-icon slot="icon-only" name="search"></ion-icon>
+      </ion-button>
+      <!--<ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()"></ion-toggle>-->
+    </div>
+    <div class="sidebar-content">
+      <ng-container *ngIf="sidebar?.type === 'list'">
+        <div *ngFor="let shop of sidebar?.data ?? []" class="sidebar-shop-item" (click)="focusShop(shop)">
+          <strong>{{ shop?.address || 'N/A' }}</strong><br>
+          <small>{{ shop?.name || 'Shop' }}</small>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="sidebar?.type === 'details'">
+        <ion-button (click)="BackToSidebarList()">
+          <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+        </ion-button>
+        <div class="sidebar-shop-details">
+          <h3>{{ sidebar?.data?.name || 'Shop' }}</h3>
+          <p><strong>Address:</strong> {{ sidebar?.data?.address || 'N/A' }}</p>
+          <p><strong>Phone:</strong> {{ sidebar?.data?.phone || 'N/A' }}</p>
+          <div [innerHTML]="sidebar?.data?.openingHoursHtml"></div>
+          <ion-button (click)="openInGoogleMaps(sidebar?.data?.latitude, sidebar?.data?.longitude, sidebar?.data?.name, sidebar?.data?.city, sidebar?.data?.address)">
+            Open in Maps
+          </ion-button>
+        </div>
+      </ng-container>
+    </div>
+  </aside>
+  <main class="map-main">
+    <div id="map"></div>
+    <div id="log-container" style="white-space: pre-wrap; word-wrap: break-word;"></div>
+    <ion-fab vertical="top" horizontal="end" slot="fixed" class="map-fab">
+      <ion-fab-button (click)="centerOnUser()">
+        <ion-icon name="locate"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </main>
+</div>

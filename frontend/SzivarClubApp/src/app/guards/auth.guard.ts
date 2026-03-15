@@ -14,5 +14,7 @@ export const authGuard = () => {
   console.log('Auth Guard: Nincs bejelentkezve, átirányítás login-ra');
   router.navigate(['/login']);
   return false;
+
+
 };
 

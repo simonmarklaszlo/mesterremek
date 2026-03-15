@@ -28,9 +28,12 @@ import {
   starOutline,
   star,
   checkmarkCircle,
-  closeCircle
+  closeCircle,
+  createOutline
 } from 'ionicons/icons';
 import { ShopService, ShopDetails } from '../../services/shop.service';
+import { ModalController } from '@ionic/angular/standalone';
+import { EditSuggestionModalComponent } from '../edit-suggestion-modal/edit-suggestion-modal.component';
 
 @Component({
   selector: 'app-shop-details-modal',
@@ -71,7 +74,10 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
   // Math objektum elérhetővé tétele a template számára
   Math = Math;
 
-  constructor(private shopService: ShopService) {
+  constructor(
+    private shopService: ShopService,
+    private modalCtrl: ModalController
+  ) {
     addIcons({
       closeOutline,
       locationOutline,
@@ -79,7 +85,8 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       starOutline,
       star,
       checkmarkCircle,
-      closeCircle
+      closeCircle,
+      createOutline
     });
   }
 
@@ -141,5 +148,26 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  // Módosítási javaslat modal megnyitása
+  async openEditModal() {
+    if (!this.shopDetails) return;
+
+    const modal = await this.modalCtrl.create({
+      component: EditSuggestionModalComponent,
+      componentProps: {
+        shopDetails: this.shopDetails
+      }
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.role === 'submit' && result.data) {
+        console.log('Módosítási javaslat beküldve:', result.data);
+        // Opcionálisan: Toast üzenet vagy értesítés
+      }
+    });
+
+    return await modal.present();
   }
 }

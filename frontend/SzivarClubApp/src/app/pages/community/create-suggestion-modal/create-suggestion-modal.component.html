@@ -85,13 +85,19 @@
 
   <!-- Submit gomb -->
   <div class="submit-section">
+    <!-- Error message -->
+    <ion-text *ngIf="errorMessage" color="danger" class="error-message">
+      <p>{{ errorMessage }}</p>
+    </ion-text>
+
     <ion-button
       expand="block"
-      [disabled]="!isFormValid()"
+      [disabled]="!isFormValid() || isSubmitting"
       (click)="submitSuggestion()"
       class="submit-btn"
     >
-      Javaslat beküldése
+      <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+      <span *ngIf="!isSubmitting">Javaslat beküldése</span>
     </ion-button>
     <ion-text color="medium" class="hint-text">
       A javaslat beküldése után a közösség szavazhat róla.

@@ -17,43 +17,95 @@
     </ion-segment>
   </div>
 
+  <!-- Loading & Error states -->
+  <div *ngIf="isLoading" class="loading-container ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Betöltés...</p>
+  </div>
+
+  <div *ngIf="errorMessage && !isLoading" class="error-container ion-padding">
+    <ion-text color="danger">
+      <p>{{ errorMessage }}</p>
+    </ion-text>
+  </div>
+
   <!-- Javaslatok listája -->
-  <ion-list lines="none" class="suggestions-list">
+  <ion-list *ngIf="!isLoading && !errorMessage" lines="none" class="suggestions-list">
     <ion-card *ngFor="let suggestion of filteredSuggestions" class="suggestion-card">
       <ion-card-header>
         <div class="card-header-content">
           <div class="suggestion-info">
             <div class="suggestion-meta">
-              <ion-chip [color]="suggestion.type === 'shop' ? 'primary' : 'secondary'" class="type-chip">
-                {{ getSuggestionTypeLabel(suggestion.type) }}
+              <ion-chip [color]="suggestion.typeCode === 'new_shop' ? 'primary' : 'secondary'" class="type-chip">
+                {{ getSuggestionTypeLabel(suggestion.typeCode || '') }}
               </ion-chip>
               <ion-chip
-                *ngIf="suggestion.status === 'approved'"
+                *ngIf="suggestion.statusCode === 'approved'"
                 color="success"
                 class="status-chip"
               >
                 ✓ Jóváhagyva
               </ion-chip>
             </div>
-            <ion-card-title class="suggestion-title">{{ suggestion.proposedValue }}</ion-card-title>
-            <ion-card-subtitle *ngIf="suggestion.shopAddress" class="suggestion-address">
-              <ion-icon name="location-outline"></ion-icon>
-              {{ suggestion.shopAddress }}
-            </ion-card-subtitle>
+            <ion-card-title class="suggestion-title">
+              {{ getSuggestionTypeLabel(suggestion.typeCode) }}
+            </ion-card-title>
+
+            <!-- edit_name -->
+            <div *ngIf="suggestion.typeCode === 'edit_name'" class="suggestion-details">
+              <ion-text color="medium">
+                <small>Bolt jelenlegi neve: <strong>{{ suggestion.shopName || '-' }}</strong></small>
+              </ion-text>
+              <ion-text>
+                <p>Javasolt név: <strong>{{ suggestion.proposedValue || '-' }}</strong></p>
+              </ion-text>
+            </div>
+
+            <!-- edit_address -->
+            <div *ngIf="suggestion.typeCode === 'edit_address'" class="suggestion-details">
+              <ion-text color="medium">
+                <small>Jelenlegi cím: <strong>{{ (suggestion.shopAddress || '-') }}</strong></small><br />
+                <small>Jelenlegi város: <strong>{{ (suggestion.shopCity || '-') }}</strong></small>
+              </ion-text>
+              <ion-text>
+                <p>Javasolt cím: <strong>{{ suggestion.proposedValue || '-' }}</strong></p>
+              </ion-text>
+              <ion-text color="medium" *ngIf="suggestion.additionalData?.city">
+                <small>Javasolt város: <strong>{{ suggestion.additionalData.city }}</strong></small>
+              </ion-text>
+            </div>
+
+            <!-- edit_hours -->
+            <div *ngIf="suggestion.typeCode === 'edit_hours'" class="suggestion-details">
+              <ion-text>
+                <p><strong>{{ suggestion.proposedValue || 'Nyitvatartás módosítása' }}</strong></p>
+              </ion-text>
+            </div>
+
+            <!-- new_shop -->
+            <div *ngIf="suggestion.typeCode === 'new_shop'" class="suggestion-details">
+              <ion-text>
+                <p>Bolt neve: <strong>{{ suggestion.proposedValue || '-' }}</strong></p>
+              </ion-text>
+              <ion-text color="medium">
+                <small>Cím: <strong>{{ suggestion.additionalData?.address || '-' }}</strong></small><br />
+                <small>Város: <strong>{{ suggestion.additionalData?.city || '-' }}</strong></small>
+              </ion-text>
+            </div>
           </div>
         </div>
       </ion-card-header>
 
       <ion-card-content>
-        <!-- Nyitvatartás expand -->
-        <div *ngIf="suggestion.openingHours && suggestion.openingHours.length > 0" class="opening-hours-section">
+        <!-- Nyitvatartás expand (ha van additionalData.openingHours) -->
+        <div *ngIf="suggestion.additionalData?.openingHours && suggestion.additionalData.openingHours.length > 0" class="opening-hours-section">
           <div class="opening-hours-header" (click)="toggleExpand(suggestion)">
             <ion-icon name="time-outline"></ion-icon>
             <span>Nyitvatartás</span>
             <ion-icon [name]="suggestion.expanded ? 'chevron-up-outline' : 'chevron-down-outline'" class="expand-icon"></ion-icon>
           </div>
           <ion-list *ngIf="suggestion.expanded" lines="none" class="opening-hours-list">
-            <ion-item *ngFor="let hours of suggestion.openingHours">
+            <ion-item *ngFor="let hours of suggestion.additionalData.openingHours">
               <ion-label>
                 <strong>{{ hours.dayOfWeek }}</strong>
               </ion-label>
@@ -68,7 +120,7 @@
         <div class="suggestion-footer">
           <div class="author-info">
             <ion-icon name="person-outline"></ion-icon>
-            <ion-text color="medium">{{ suggestion.author }}</ion-text>
+            <ion-text color="medium">{{ suggestion.userName || 'Ismeretlen' }}</ion-text>
             <ion-icon name="time-outline"></ion-icon>
             <ion-text color="medium">{{ formatDate(suggestion.createdAt) }}</ion-text>
           </div>
@@ -110,7 +162,7 @@
     </ion-card>
 
     <!-- Nincs javaslat üzenet -->
-    <div *ngIf="filteredSuggestions.length === 0" class="no-suggestions">
+    <div *ngIf="filteredSuggestions.length === 0 && !isLoading" class="no-suggestions">
       <ion-icon name="chatbubbles-outline" class="no-suggestions-icon"></ion-icon>
       <h3>Még nincsenek javaslatok</h3>
       <p *ngIf="selectedSegment === 'community'">Légy az első, aki javaslatot tesz!</p>

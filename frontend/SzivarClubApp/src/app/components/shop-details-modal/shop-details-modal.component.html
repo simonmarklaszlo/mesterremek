@@ -4,8 +4,11 @@
       <ion-toolbar color="primary">
         <ion-title>Bolt részletei</ion-title>
         <ion-buttons slot="end">
+          <ion-button (click)="openEditModal()" *ngIf="shopDetails">
+            <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+          </ion-button>
           <ion-button (click)="closeModal()">
-            <ion-icon name="close-outline"></ion-icon>
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>

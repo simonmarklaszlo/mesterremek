@@ -1,0 +1,209 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Módosítási javaslat</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Bolt információ -->
+  <ion-card class="shop-info-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="storefront-outline"></ion-icon>
+        {{ shopDetails.name }}
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-text color="medium">
+        <p>
+          <ion-icon name="location-outline"></ion-icon>
+          {{ shopDetails.address }}, {{ shopDetails.city }}
+        </p>
+      </ion-text>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Típus választó -->
+  <div class="section">
+    <h3 class="section-title">
+      <ion-icon name="create-outline"></ion-icon>
+      Mit szeretnél módosítani?
+    </h3>
+
+    <ion-item class="type-select">
+      <ion-select
+        [(ngModel)]="selectedType"
+        (ionChange)="onTypeChange($event)"
+        interface="popover"
+        placeholder="Válassz típust"
+      >
+        <ion-select-option value="edit_name">Bolt neve</ion-select-option>
+        <ion-select-option value="edit_address">Cím</ion-select-option>
+        <ion-select-option value="edit_hours">Nyitvatartás</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-text color="medium" class="type-description">
+      <small>{{ typeDescriptions[selectedType] }}</small>
+    </ion-text>
+  </div>
+
+  <!-- NÉV MÓDOSÍTÁS -->
+  <div *ngIf="selectedType === 'edit_name'" class="section animate-in">
+    <h3 class="section-title">
+      <ion-icon name="storefront-outline"></ion-icon>
+      Új név
+    </h3>
+
+    <ion-list class="form-list">
+      <ion-item>
+        <ion-label position="stacked">Jelenlegi név</ion-label>
+        <ion-input
+          [value]="shopDetails.name"
+          readonly
+          disabled
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Javasolt új név *</ion-label>
+        <ion-input
+          [(ngModel)]="newName"
+          placeholder="Add meg az új nevet"
+          type="text"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-text color="medium" class="hint-text">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <small>Ha hibás a bolt neve, add meg a helyes nevet.</small>
+    </ion-text>
+  </div>
+
+  <!-- CÍM MÓDOSÍTÁS -->
+  <div *ngIf="selectedType === 'edit_address'" class="section animate-in">
+    <h3 class="section-title">
+      <ion-icon name="location-outline"></ion-icon>
+      Új cím
+    </h3>
+
+    <ion-list class="form-list">
+      <ion-item>
+        <ion-label position="stacked">Jelenlegi cím</ion-label>
+        <ion-input
+          [value]="shopDetails.address"
+          readonly
+          disabled
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Javasolt új cím *</ion-label>
+        <ion-input
+          [(ngModel)]="newAddress"
+          placeholder="Utca, házszám"
+          type="text"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Jelenlegi város</ion-label>
+        <ion-input
+          [value]="shopDetails.city"
+          readonly
+          disabled
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Javasolt új város *</ion-label>
+        <ion-input
+          [(ngModel)]="newCity"
+          placeholder="Város neve"
+          type="text"
+        ></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-text color="medium" class="hint-text">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <small>Ha hibás a cím vagy a város, javítsd ki!</small>
+    </ion-text>
+  </div>
+
+  <!-- NYITVATARTÁS MÓDOSÍTÁS -->
+  <div *ngIf="selectedType === 'edit_hours'" class="section animate-in">
+    <h3 class="section-title">
+      <ion-icon name="time-outline"></ion-icon>
+      Nyitvatartási idő
+    </h3>
+
+    <div class="opening-hours-container">
+      <div *ngFor="let hours of openingHours" class="opening-hour-item">
+        <div class="day-label">
+          {{ hours.dayOfWeek }}
+        </div>
+
+        <div class="time-inputs" *ngIf="!hours.isClosed">
+          <ion-input
+            [(ngModel)]="hours.openHour"
+            type="time"
+            class="time-input"
+            placeholder="09:00"
+          ></ion-input>
+          <span class="time-separator">-</span>
+          <ion-input
+            [(ngModel)]="hours.closeHour"
+            type="time"
+            class="time-input"
+            placeholder="18:00"
+          ></ion-input>
+        </div>
+
+        <div class="closed-text" *ngIf="hours.isClosed">
+          <ion-text color="medium">Zárva</ion-text>
+        </div>
+
+        <ion-checkbox
+          [(ngModel)]="hours.isClosed"
+          class="closed-checkbox"
+          labelPlacement="start"
+        >
+          <ion-label>Zárva</ion-label>
+        </ion-checkbox>
+      </div>
+    </div>
+
+    <ion-text color="medium" class="hint-text">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <small>Jelöld be a "Zárva" opciót, ha a bolt aznap nem tart nyitva.</small>
+    </ion-text>
+  </div>
+
+  <!-- Submit gomb -->
+  <div class="submit-section">
+    <ion-button
+      expand="block"
+      [disabled]="!isFormValid()"
+      (click)="submitSuggestion()"
+      class="submit-btn"
+    >
+      <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+      Javaslat beküldése
+    </ion-button>
+
+    <ion-text color="medium" class="hint-text">
+      <small>
+        A javaslat beküldése után a közösség szavazással dönt róla.
+        Ha eléri a +5 szavazatot, automatikusan jóváhagyásra kerül.
+      </small>
+    </ion-text>
+  </div>
+</ion-content>
+

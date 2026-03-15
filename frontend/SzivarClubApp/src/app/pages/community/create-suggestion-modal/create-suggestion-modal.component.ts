@@ -15,10 +15,13 @@ import {
   IonIcon,
   IonText,
   IonCheckbox,
+  IonSpinner,
   ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { closeOutline, storefrontOutline, timeOutline } from 'ionicons/icons';
+import { SuggestionService } from '../../../services/suggestion.service';
+import { CreateSuggestionRequest } from '../../../models/suggestion.model';
 
 interface OpeningHourInput {
   dayOfWeek: string;
@@ -47,7 +50,8 @@ interface OpeningHourInput {
     IonList,
     IonIcon,
     IonText,
-    IonCheckbox
+    IonCheckbox,
+    IonSpinner
   ]
 })
 export class CreateSuggestionModalComponent implements OnInit {
@@ -57,6 +61,9 @@ export class CreateSuggestionModalComponent implements OnInit {
     address: '',
     city: ''
   };
+
+  isSubmitting = false;
+  errorMessage = '';
 
   // Nyitvatartás
   openingHours: OpeningHourInput[] = [
@@ -69,7 +76,10 @@ export class CreateSuggestionModalComponent implements OnInit {
     { dayOfWeek: 'Vasárnap', openHour: '', closeHour: '', isClosed: true }
   ];
 
-  constructor(private modalController: ModalController) {
+  constructor(
+    private modalController: ModalController,
+    private suggestionService: SuggestionService
+  ) {
     addIcons({ closeOutline, storefrontOutline, timeOutline });
   }
 
@@ -84,26 +94,36 @@ export class CreateSuggestionModalComponent implements OnInit {
   }
 
   submitSuggestion() {
-    if (!this.isFormValid()) return;
+    if (!this.isFormValid() || this.isSubmitting) return;
 
-    const suggestionData = {
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    const suggestionData: CreateSuggestionRequest = {
       type: 'new_shop',
       proposedValue: this.newShop.name,
-      shopAddress: this.newShop.address,
-      city: this.newShop.city,
-      openingHours: this.openingHours.map(oh => ({
-        dayOfWeek: oh.dayOfWeek,
-        openHour: oh.isClosed ? 'Zárva' : oh.openHour,
-        closeHour: oh.isClosed ? '' : oh.closeHour
-      }))
+      additionalData: {
+        address: this.newShop.address,
+        city: this.newShop.city,
+        openingHours: this.openingHours.map(oh => ({
+          dayOfWeek: oh.dayOfWeek,
+          openHour: oh.isClosed ? 'Zárva' : oh.openHour,
+          closeHour: oh.isClosed ? '' : oh.closeHour
+        }))
+      }
     };
 
-    console.log('Javaslat beküldése:', suggestionData);
-
-    // TODO: API hívás
-    // this.shopService.createSuggestion(suggestionData).subscribe(...)
-
-    this.modalController.dismiss(suggestionData, 'submit');
+    this.suggestionService.createSuggestion(suggestionData).subscribe({
+      next: (suggestion) => {
+        console.log('Javaslat létrehozva:', suggestion);
+        this.modalController.dismiss(suggestion, 'submit');
+      },
+      error: (error) => {
+        console.error('Hiba a javaslat létrehozásakor:', error);
+        this.errorMessage = error.error?.message || 'Nem sikerült elküldeni a javaslatot.';
+        this.isSubmitting = false;
+      }
+    });
   }
 }
 

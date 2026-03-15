@@ -32,7 +32,152 @@
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+@import "@ionic/angular/css/palettes/dark.system.css";
+
+@import 'leaflet/dist/leaflet.css';
+
+/**
+ * Custom Theme Configuration
+ * Light and Dark mode support
+ */
+
+// Light Theme
+body.light-theme {
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #000000;
+  --ion-text-color-rgb: 0, 0, 0;
+  --ion-border-color: #e0e0e0;
+  --ion-color-light: #f5f5f5;
+  --ion-color-light-rgb: 245, 245, 245;
+  --ion-color-light-tint: #ebebeb;
+  --ion-color-medium: #999999;
+  --ion-color-medium-rgb: 153, 153, 153;
+  --ion-color-medium-tint: #d0d0d0;
+  --ion-color-step-50: #f2f2f2;
+  --ion-color-step-100: #e6e6e6;
+  --ion-color-step-150: #d9d9d9;
+  --ion-color-step-200: #cccccc;
+  --ion-color-step-250: #bfbfbf;
+  --ion-color-step-300: #b3b3b3;
+  --ion-color-step-350: #a6a6a6;
+  --ion-color-step-400: #999999;
+  --ion-color-step-450: #8d8d8d;
+  --ion-color-step-500: #808080;
+  --ion-color-step-550: #737373;
+  --ion-color-step-600: #666666;
+  --ion-color-step-650: #5a5a5a;
+  --ion-color-step-700: #4d4d4d;
+  --ion-color-step-750: #404040;
+  --ion-color-step-800: #333333;
+  --ion-color-step-850: #262626;
+  --ion-color-step-900: #1a1a1a;
+  --ion-color-step-950: #0d0d0d;
+
+  ion-content {
+    --background: #ffffff;
+  }
+
+  ion-header {
+    --background: #f9f9f9;
+    --border-color: #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  ion-card {
+    --background: #f5f5f5;
+    --color: #000000;
+  }
+
+  ion-item {
+    --background: transparent;
+    --color: #000000;
+    --border-color: #e0e0e0;
+  }
+
+  ion-input {
+    --color: #000000;
+
+    &::placeholder {
+      color: #999999;
+    }
+  }
+
+  ion-button {
+    &.button-solid {
+      --background: var(--ion-color-primary);
+      --color: #ffffff;
+    }
+  }
+}
+
+// Dark Theme
+body.dark-theme {
+  --ion-background-color: #121212;
+  --ion-background-color-rgb: 18, 18, 18;
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+  --ion-border-color: #333333;
+  --ion-color-light: #1e1e1e;
+  --ion-color-light-rgb: 30, 30, 30;
+  --ion-color-light-tint: #2a2a2a;
+  --ion-color-medium: #999999;
+  --ion-color-medium-rgb: 153, 153, 153;
+  --ion-color-medium-tint: #404040;
+  --ion-color-step-50: #1a1a1a;
+  --ion-color-step-100: #232323;
+  --ion-color-step-150: #2b2b2b;
+  --ion-color-step-200: #333333;
+  --ion-color-step-250: #3c3c3c;
+  --ion-color-step-300: #444444;
+  --ion-color-step-350: #4d4d4d;
+  --ion-color-step-400: #555555;
+  --ion-color-step-450: #5e5e5e;
+  --ion-color-step-500: #666666;
+  --ion-color-step-550: #707070;
+  --ion-color-step-600: #787878;
+  --ion-color-step-650: #808080;
+  --ion-color-step-700: #898989;
+  --ion-color-step-750: #919191;
+  --ion-color-step-800: #999999;
+  --ion-color-step-850: #a1a1a1;
+  --ion-color-step-900: #aaaaaa;
+  --ion-color-step-950: #b2b2b2;
+
+  ion-content {
+    --background: #121212;
+  }
+
+  ion-header {
+    --background: #1e1e1e;
+    --border-color: #333333;
+    border-bottom: 1px solid #333333;
+  }
+
+  ion-card {
+    --background: #1e1e1e;
+    --color: #ffffff;
+  }
+
+  ion-item {
+    --background: transparent;
+    --color: #ffffff;
+    --border-color: #333333;
+  }
+
+  ion-input {
+    --color: #ffffff;
+
+    &::placeholder {
+      color: #666666;
+    }
+  }
+
+  ion-button {
+    &.button-solid {
+      --background: var(--ion-color-primary);
+      --color: #ffffff;
+    }
+  }
+}
 

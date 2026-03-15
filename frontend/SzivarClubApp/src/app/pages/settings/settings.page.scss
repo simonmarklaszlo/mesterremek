@@ -1,0 +1,33 @@
+.settings-container {
+  max-width: 600px;
+  margin: 0 auto;
+
+  h2 {
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--ion-color-primary);
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+ion-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+
+ion-label {
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+ion-toggle {
+  --background-checked: var(--ion-color-primary);
+}
