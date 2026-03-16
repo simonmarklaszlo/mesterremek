@@ -1,0 +1,26 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Beállítások</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="settings-container">
+    <h2>Megjelenítés</h2>
+    <ion-item>
+      <ion-label>Sötét mód</ion-label>
+      <ion-toggle 
+        slot="end" 
+        [checked]="isDarkTheme$ | async" 
+        (ionChange)="onThemeChange($event)">
+      </ion-toggle>
+    </ion-item>
+
+    <h2>Fiók beállítások</h2>
+
+    <ion-button expand="block" color="danger" (click)="onLogout()">
+      <ion-icon slot="start" name="log-out-outline"></ion-icon>
+      Kijelentkezés
+    </ion-button>
+  </div>
+</ion-content>

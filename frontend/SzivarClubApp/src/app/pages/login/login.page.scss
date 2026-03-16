@@ -1,0 +1,87 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 3rem;
+
+  .logo-icon {
+    font-size: 80px;
+    color: var(--ion-color-primary);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    color: var(--ion-color-primary);
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+}
+
+.login-form {
+  width: 100%;
+  background: transparent;
+
+  .input-item {
+    --background: var(--ion-color-light);
+    --border-radius: 12px;
+    margin-bottom: 1rem;
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+  }
+
+  .login-button {
+    margin-top: 1.5rem;
+    --border-radius: 12px;
+    height: 50px;
+    font-weight: 600;
+  }
+}
+
+.footer-links {
+  margin-top: 2rem;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  ion-button {
+    text-transform: none;
+    margin: 0;
+  }
+
+  ion-text {
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+
+      ion-button {
+        display: inline-flex;
+        vertical-align: middle;
+        height: auto;
+        min-height: auto;
+        padding: 0;
+        margin: 0;
+      }
+    }
+  }
+}

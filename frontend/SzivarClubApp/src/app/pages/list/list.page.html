@@ -1,0 +1,138 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Szivarboltok</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Keresősáv -->
+  <div class="search-section">
+    <ion-searchbar
+      [(ngModel)]="searchText"
+      placeholder="Keresés név vagy cím alapján..."
+      [animated]="true"
+      showClearButton="always"
+      [debounce]="0"
+      maxlength="100"
+    ></ion-searchbar>
+  </div>
+
+  <!-- Lenyitható szűrők -->
+  <div class="filter-toggle">
+    <ion-item lines="none" [button]="true" (click)="toggleFilters()" class="filter-header">
+      <ion-icon name="filter-outline" slot="start"></ion-icon>
+      <ion-label>Szűrők</ion-label>
+      <ion-icon
+        [name]="showFilters ? 'chevron-up-outline' : 'chevron-down-outline'"
+        slot="end"
+      ></ion-icon>
+    </ion-item>
+  </div>
+
+  <!-- Szűrő szekció (lenyitható) -->
+  <div class="filter-section" [class.expanded]="showFilters">
+    <div class="filter-content">
+      <ion-item lines="none">
+        <ion-checkbox
+          slot="start"
+          [(ngModel)]="filterCigars"
+        ></ion-checkbox>
+        <ion-label>Csak szivar kínálattal</ion-label>
+      </ion-item>
+
+      <ion-item lines="none" class="distance-filter">
+        <ion-icon name="location-outline" slot="start"></ion-icon>
+        <ion-label>Távolság: {{ maxDistance }} km</ion-label>
+        <ion-range
+          [(ngModel)]="maxDistance"
+          [min]="1"
+          [max]="20"
+          [step]="1"
+          [pin]="true"
+          color="primary"
+        ></ion-range>
+      </ion-item>
+
+      <!-- Keresés gomb -->
+      <ion-button
+        expand="block"
+        (click)="searchShops()"
+        [disabled]="isLoading"
+        class="search-button"
+      >
+        <ion-icon slot="start" [name]="isLoading ? 'sync-outline' : 'search-outline'"></ion-icon>
+        {{ isLoading ? 'Keresés...' : 'Keresés indítása' }}
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Találatok száma (csak ha van eredmény) -->
+  <div class="results-info" *ngIf="hasSearched">
+    <ion-text color="medium">
+      <p>{{ filteredShops.length }} találat{{ userLocation ? ' a közeledben' : '' }}</p>
+    </ion-text>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Boltok keresése...</p>
+  </div>
+
+  <!-- Boltok listája -->
+  <ion-list lines="none" class="shops-list" *ngIf="!isLoading && hasSearched">
+    <ion-card *ngFor="let shop of filteredShops" (click)="openShopDetails(shop)" class="shop-card">
+      <ion-card-header>
+        <div class="card-header-content">
+          <div class="shop-info">
+            <ion-card-title class="shop-name">{{ shop.name }}</ion-card-title>
+            <ion-card-subtitle class="shop-address">
+              <ion-icon name="location-outline"></ion-icon>
+              {{ shop.address }}, {{ shop.city }}
+            </ion-card-subtitle>
+            <!-- Rating és review count -->
+            <div class="shop-rating" *ngIf="shop.rating && shop.reviewCount">
+              <ion-text color="warning">
+                ⭐ {{ shop.rating.toFixed(1) }}
+              </ion-text>
+              <ion-text color="medium" class="review-count">
+                ({{ shop.reviewCount }} értékelés)
+              </ion-text>
+            </div>
+          </div>
+          <div class="shop-badges">
+            <ion-chip color="primary" class="distance-chip">
+              {{ shop.distance }} km
+            </ion-chip>
+            <ion-chip *ngIf="shop.hasCigars" color="success" class="cigar-chip">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Szivar
+            </ion-chip>
+          </div>
+        </div>
+      </ion-card-header>
+    </ion-card>
+  </ion-list>
+
+  <!-- Nincs találat üzenet -->
+  <div *ngIf="!isLoading && hasSearched && filteredShops.length === 0" class="no-results">
+    <ion-icon name="search-outline" class="no-results-icon"></ion-icon>
+    <h3>Nincs találat</h3>
+    <p>Próbálj más keresési feltételekkel vagy növeld a távolságot.</p>
+  </div>
+
+  <!-- Kezdeti állapot (még nem keresett) -->
+  <div *ngIf="!isLoading && !hasSearched" class="initial-state">
+    <ion-icon name="location-outline" class="initial-icon"></ion-icon>
+    <h3>Keresd meg a közeli szivarboltokat</h3>
+    <p>Állítsd be a szűrőket és nyomd meg a "Keresés indítása" gombot!</p>
+  </div>
+
+  <!-- Shop Details Modal -->
+  <app-shop-details-modal
+    *ngIf="selectedShopId"
+    [shopId]="selectedShopId"
+    [isOpen]="isModalOpen"
+    (didDismiss)="closeModal()"
+  ></app-shop-details-modal>
+</ion-content>
