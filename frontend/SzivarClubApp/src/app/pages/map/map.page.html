@@ -1,54 +1,227 @@
 
-<div class="map-layout">
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <ion-icon name="bonfire" color="primary" size="large" class="szivar-icon"></ion-icon>
-      <span class="sidebar-logo">Térkép</span>
-    </div>
-    <div class="sidebar-controls">
-      <ion-input 
+<ion-header [translucent]="true" [class.mobile-header]="!isWideLayout">
+  <ion-toolbar color="primary">
+    <ion-title>Térkép</ion-title>
+    <!-- Mobile search bar in header on the right -->
+    <div *ngIf="!isWideLayout" slot="end" class="mobile-search-container">
+      <ion-input
+        *ngIf="showMobileSearch"
         type="text"
         name="varos"
         id="varos"
-        [(ngModel)]="searchCity"
+        class="mobile-search-input"
+        [(ngModel)]="searchText"
+        (keyup.enter)="toggleMobileSearch()"
+        placeholder="Város">
+      </ion-input>
+      <ion-button fill="clear" shape="round" size="small" (click)="toggleMobileSearch()" class="mobile-search-button">
+        <ion-icon slot="icon-only" name="search" color="light" style="font-size: 28px;"></ion-icon>
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<!-- Desktop layout with sidebar -->
+<div class="map-layout" *ngIf="isWideLayout">
+  <aside class="sidebar">
+    <div class="sidebar-controls">
+      <ion-input
+        type="text"
+        name="varos"
+        id="varos"
+        [(ngModel)]="searchText"
         (keyup.enter)="varos_kereses()"
         placeholder="Város keresése">
       </ion-input>
       <ion-button fill="clear" shape="round" size="small" (click)="varos_kereses()">
-        <ion-icon slot="icon-only" name="search"></ion-icon>
+        <ion-icon slot="icon-only" name="search" style="font-size: 28px;"></ion-icon>
       </ion-button>
-      <!--<ion-toggle [checked]="isThemeDark" (ionChange)="ToggleTheme()"></ion-toggle>-->
     </div>
     <div class="sidebar-content">
-      <ng-container *ngIf="sidebar?.type === 'list'">
+      <!-- Shop List View -->
+      <div *ngIf="sidebar?.type === 'list'">
         <div *ngFor="let shop of sidebar?.data ?? []" class="sidebar-shop-item" (click)="focusShop(shop)">
           <strong>{{ shop?.address || 'N/A' }}</strong><br>
           <small>{{ shop?.name || 'Shop' }}</small>
         </div>
-      </ng-container>
-      <ng-container *ngIf="sidebar?.type === 'details'">
-        <ion-button (click)="BackToSidebarList()">
-          <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
-        </ion-button>
-        <div class="sidebar-shop-details">
-          <h3>{{ sidebar?.data?.name || 'Shop' }}</h3>
-          <p><strong>Address:</strong> {{ sidebar?.data?.address || 'N/A' }}</p>
-          <p><strong>Phone:</strong> {{ sidebar?.data?.phone || 'N/A' }}</p>
-          <div [innerHTML]="sidebar?.data?.openingHoursHtml"></div>
-          <ion-button (click)="openInGoogleMaps(sidebar?.data?.latitude, sidebar?.data?.longitude, sidebar?.data?.name, sidebar?.data?.city, sidebar?.data?.address)">
-            Open in Maps
+      </div>
+
+      <!-- Shop Details View -->
+      <div *ngIf="sidebar?.type === 'details'" class="shop-details-sidebar">
+        <div class="details-header">
+          <ion-button fill="clear" size="small" (click)="BackToSidebarList()">
+            <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
           </ion-button>
+          <h3>Bolt részletei</h3>
         </div>
-      </ng-container>
+
+        <!-- Loading állapot -->
+        <div *ngIf="isSidebarLoading" class="loading-container">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p>Betöltés...</p>
+        </div>
+
+        <!-- Hiba üzenet -->
+        <div *ngIf="sidebarErrorMessage && !isSidebarLoading" class="error-container">
+          <ion-text color="danger">
+            <p>{{ sidebarErrorMessage }}</p>
+          </ion-text>
+        </div>
+
+        <!-- Bolt adatok -->
+        <div *ngIf="sidebarShopDetails && !isSidebarLoading" class="details-content">
+          <!-- Fejléc információk -->
+          <div class="shop-header">
+            <h1>{{ sidebarShopDetails.name }}</h1>
+            <div class="location-info">
+              <ion-icon name="location-outline"></ion-icon>
+              <span>{{ sidebarShopDetails.address }}, {{ sidebarShopDetails.city }}</span>
+            </div>
+
+            <ion-button expand="block" shape="round" class="ion-margin-vertical" (click)="openInGoogleMaps(sidebarShopDetails.latitude, sidebarShopDetails.longitude, sidebarShopDetails.name, sidebarShopDetails.city, sidebarShopDetails.address)">
+              <ion-icon slot="start" name="map-outline"></ion-icon>
+              Megnyitás térképen
+            </ion-button>
+
+            <!-- Nyitvatartási státusz -->
+            <ion-chip [color]="sidebarShopDetails.isOpenNow ? 'success' : 'danger'" class="status-chip">
+              <ion-icon [name]="sidebarShopDetails.isOpenNow ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+              <ion-label>
+                {{ sidebarShopDetails.isOpenNow ? 'Most nyitva' : 'Zárva' }}
+                <span *ngIf="sidebarShopDetails.isOpenNow && sidebarShopDetails.nextClosingTime">
+                  - {{ sidebarShopDetails.nextClosingTime }}-ig
+                </span>
+              </ion-label>
+            </ion-chip>
+
+            <!-- Értékelés -->
+            <div class="rating-section" *ngIf="sidebarShopDetails.totalReviews > 0">
+              <div class="stars">
+                <ion-icon
+                  *ngFor="let filled of getStars(Math.round(sidebarShopDetails.averageRating))"
+                  [name]="filled ? 'star' : 'star-outline'"
+                  [color]="filled ? 'warning' : 'medium'"
+                ></ion-icon>
+              </div>
+              <ion-text color="medium">
+                <span>{{ sidebarShopDetails.averageRating.toFixed(1) }} ({{ sidebarShopDetails.totalReviews }} értékelés)</span>
+              </ion-text>
+            </div>
+
+            <!-- Nincs még értékelés -->
+            <div class="rating-section" *ngIf="sidebarShopDetails.totalReviews === 0">
+              <ion-text color="medium">
+                <span>Még nincs értékelés</span>
+              </ion-text>
+            </div>
+          </div>
+
+          <!-- Nyitvatartás -->
+          <ion-card *ngIf="sidebarShopDetails.openingHours.length > 0">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="time-outline"></ion-icon>
+                Nyitvatartás
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list lines="none" class="opening-hours-list">
+                <ion-item *ngFor="let hours of sidebarShopDetails.openingHours">
+                  <ion-label>
+                    <strong>{{ hours.dayOfWeek }}</strong>
+                  </ion-label>
+                  <ion-text slot="end" color="medium">
+                    {{ hours.openHour }} - {{ hours.closeHour }}
+                  </ion-text>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Szivar márkák -->
+          <ion-card *ngIf="sidebarShopDetails.cigarBrands.length > 0">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="checkmark-circle"></ion-icon>
+                Elérhető szivar márkák
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="brands-chips">
+                <ion-chip *ngFor="let brand of sidebarShopDetails.cigarBrands" color="primary">
+                  <ion-label>{{ brand.brandName }}</ion-label>
+                </ion-chip>
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Értékelések -->
+          <ion-card *ngIf="sidebarShopDetails.reviews.length > 0">
+            <ion-card-header>
+              <ion-card-title>
+                <ion-icon name="star-outline"></ion-icon>
+                Értékelések
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <div class="reviews-list">
+                <div *ngFor="let review of sidebarShopDetails.reviews" class="review-item">
+                  <div class="review-header">
+                    <strong>{{ review.userName }}</strong>
+                    <div class="review-stars">
+                      <ion-icon
+                        *ngFor="let filled of getStars(review.rating)"
+                        [name]="filled ? 'star' : 'star-outline'"
+                        [color]="filled ? 'warning' : 'medium'"
+                        class="small-star"
+                      ></ion-icon>
+                    </div>
+                  </div>
+                  <p class="review-comment">{{ review.comment }}</p>
+                  <ion-text color="medium" class="review-date">
+                    <small>{{ formatDate(review.createdAt) }}</small>
+                  </ion-text>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </div>
+
+      <!-- Default List when no sidebar content -->
+      <div *ngIf="!sidebar">
+        <div *ngFor="let shop of Shop_Data ?? []" class="sidebar-shop-item" (click)="focusShop(shop)">
+          <strong>{{ shop?.address || 'N/A' }}</strong><br>
+          <small>{{ shop?.name || 'Shop' }}</small>
+        </div>
+      </div>
     </div>
   </aside>
   <main class="map-main">
-    <div id="map"></div>
     <div id="log-container" style="white-space: pre-wrap; word-wrap: break-word;"></div>
-    <ion-fab vertical="top" horizontal="end" slot="fixed" class="map-fab">
-      <ion-fab-button (click)="centerOnUser()">
-        <ion-icon name="locate"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
   </main>
 </div>
+
+<!-- Mobile layout - map only -->
+<div class="map-layout-mobile" *ngIf="!isWideLayout">
+  <main class="map-main-mobile">
+    <div id="log-container" style="white-space: pre-wrap; word-wrap: break-word;"></div>
+  </main>
+</div>
+
+<!-- Shared map container -->
+<div id="map" [ngClass]="{'desktop-map': isWideLayout, 'mobile-map': !isWideLayout}"></div>
+
+<!-- Shared fab button -->
+<ion-fab vertical="top" horizontal="end" slot="fixed" class="map-fab">
+  <ion-fab-button (click)="centerOnUser()">
+    <ion-icon name="locate"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Modal for shop details on mobile -->
+<app-shop-details-modal
+  [isOpen]="isModalOpen"
+  [shopId]="selectedShopId"
+  (close)="closeModal()">
+</app-shop-details-modal>

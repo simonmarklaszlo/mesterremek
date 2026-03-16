@@ -82,8 +82,10 @@ ion-card {
 .opening-hours-list {
   padding: 0;
 
+
   ion-item {
-    --padding-start: 0;
+    --padding-start: 10px;
+    --padding-end: 10px;
     --inner-padding-end: 0;
     --background: transparent;
     margin-bottom: 0.5rem;

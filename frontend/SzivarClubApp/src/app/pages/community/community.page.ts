@@ -16,6 +16,7 @@ import {
   IonCard,
   IonCardHeader,
   IonCardTitle,
+  IonCardSubtitle,
   IonCardContent,
   IonChip,
   IonText,

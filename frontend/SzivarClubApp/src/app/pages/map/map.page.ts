@@ -1,17 +1,24 @@
-import { Component, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, ApplicationRef } from '@angular/core';
+// #region Imports and Setup
+import { Component, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, ApplicationRef, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { IonInput, IonButton, IonIcon, IonFab } from '@ionic/angular/standalone';
+import { IonInput, IonButton, IonIcon, IonHeader, IonToolbar, IonTitle,
+         IonLabel, IonChip, IonText, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import * as L from 'leaflet';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
-import { radioButtonOn, person, locationSharp, storefront, search, locate,bonfire, arrowBack } from 'ionicons/icons';
+import { radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
+         timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline } from 'ionicons/icons';
 import { ThemeService } from '../../services/theme.service';
 import { ErrorLogService } from '../../services/error-log.service';
+import { SearchService } from '../../services/search.service';
+import { ShopService, ShopDetails } from '../../services/shop.service';
+import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 // Fix Leaflet marker paths
@@ -21,8 +28,9 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'assets/leaflet/images/marker-icon.png',
   shadowUrl: 'assets/leaflet/images/marker-shadow.png'
 });
+// #endregion
 
-
+// #region Component Decorator
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -31,21 +39,46 @@ L.Icon.Default.mergeOptions({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
-    IonInput, IonButton, IonIcon, IonFab, FormsModule
+    IonInput, IonButton, IonIcon, IonHeader, IonToolbar, IonTitle,
+    IonLabel, IonChip, IonText, IonSpinner, FormsModule,
+    ShopDetailsModalComponent
   ]
 })
+// #endregion
 
-export class MapPage implements AfterViewInit, OnDestroy {
+// #region Class Definition and Properties
+export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   map?: L.Map;
   Varos_Coords: any[] = [];
   Shop_Data: any[] = [];
   isThemeDark = true;
   userLat = 0;
   userLong = 0;
-  searchCity: string = '';
+  searchText: string = '';
+  private currentTheme = true;
+
+  // Modal state for mobile
+  isModalOpen: boolean = false;
+  selectedShopId: number = 0;
+
+  // Window width for responsive design
+  windowWidth: number = window.innerWidth;
+  windowHeight: number = window.innerHeight;
+  isWideLayout: boolean = (window.innerWidth / window.innerHeight) > 1;
+
+  // Mobile search visibility
+  showMobileSearch: boolean = false;
 
   // Sidebar state (remade)
   sidebar: { type: 'list', data: any[] } | { type: 'details', data: any } | null = null;
+
+  // Detailed shop data for sidebar
+  sidebarShopDetails: ShopDetails | null = null;
+  isSidebarLoading: boolean = false;
+  sidebarErrorMessage: string = '';
+
+  // Math object for template
+  Math = Math;
 
   private tileLayer?: L.TileLayer;
   private shopMarkersLayer?: L.LayerGroup;
@@ -53,6 +86,7 @@ export class MapPage implements AfterViewInit, OnDestroy {
   private userMarker?: L.Marker;
   private shopMarkerIndex: Map<string, L.Marker> = new Map();
   private pendingOpenShop?: { lat: number; lng: number };
+  private destroy$ = new Subject<void>();
 
   private keyFor(lat: number, lng: number): string {
     return `${lat.toFixed(6)},${lng.toFixed(6)}`;
@@ -75,7 +109,9 @@ export class MapPage implements AfterViewInit, OnDestroy {
   });
 
   hungaryBounds: L.LatLngBoundsExpression = [[45.637, 16.113], [48.685, 22.897]];
+  // #endregion
 
+  // #region Constructor and Initialization
   constructor(
     private http: HttpClient,
     private theme: ThemeService,
@@ -83,33 +119,94 @@ export class MapPage implements AfterViewInit, OnDestroy {
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
     private appRef: ApplicationRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private searchService: SearchService,
+    private shopService: ShopService
   ) {
-    addIcons({ radioButtonOn, person, locationSharp, storefront, search, locate,bonfire,arrowBack});
+    addIcons({ radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
+               timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline });
+    // Listen to window resize events
+    window.addEventListener('resize', () => {
+      this.windowWidth = window.innerWidth;
+      this.windowHeight = window.innerHeight;
+
+      const wasWideLayout = this.isWideLayout;
+      const isWideLayoutNow = (this.windowWidth / this.windowHeight) > 1;
+      this.isWideLayout = isWideLayoutNow;
+
+      if (wasWideLayout !== isWideLayoutNow) {
+        // Layout mode changed, need to fix map
+        this.handleModeChange();
+      } else if (this.map) {
+        // Just a resize within the same mode
+        this.map.invalidateSize();
+      }
+
+      this.cdr.detectChanges();
+    });
+  }
+  // #endregion
+
+  // #region Lifecycle Hooks
+  private handleModeChange() {
+    // Wait for DOM to update, then fix map
+    setTimeout(() => {
+      if (this.map) {
+        // Force complete recalculation of map size and center
+        this.map.invalidateSize(true);
+        // Re-center the map to ensure it's properly positioned
+        const currentCenter = this.map.getCenter();
+        const currentZoom = this.map.getZoom();
+        this.map.setView(currentCenter, currentZoom || 13);
+        // Force a complete redraw
+        this.updateMarkers();
+      }
+    }, 200);
   }
 
   ngOnInit() {
-    // Only subscribe to theme changes and update local state/tile layer, not body classes
-    this.isThemeDark = true;
-    this.theme.theme$.subscribe((isDark: boolean) => {
-      const prev = this.isThemeDark;
-      this.isThemeDark = isDark;
-      if (this.map && this.tileLayer && prev !== isDark) {
-        const url = isDark
-          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-        try {
-          (this.tileLayer as any).setUrl(url);
-          this.map.invalidateSize(true);
-        } catch {}
-      }
-    });
+    // Set initial theme (already handled by ThemeService)
+    this.isThemeDark = this.theme.isDark;
+    this.currentTheme = this.theme.isDark;
+
+    // Subscribe to theme changes
+    this.theme.theme$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isDark: boolean) => {
+        this.isThemeDark = isDark;
+        // Update tile layer if map is initialized and theme actually changed
+        if (this.map && this.tileLayer && this.currentTheme !== isDark) {
+          this.currentTheme = isDark;
+          this.updateTileLayer(isDark);
+        }
+      });
+
+    // Subscribe to search service changes for text sync
+    this.searchService.searchState$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((state) => {
+        this.searchText = state.searchText;
+      });
+
+    // Subscribe to search triggers from list page
+    this.searchService.searchTriggered$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((trigger) => {
+        // Only respond if the search was triggered from the list page
+        if (trigger.source === 'list') {
+          this.searchText = trigger.searchText;
+          // Execute search without triggering back to prevent loops
+          this.executeVarosKereses(false);
+        }
+      });
   }
 
   ngAfterViewInit() {
     setTimeout(() => this.initMap(), 100);
   }
+  // #endregion
 
+  // #region Map Initialization
   private initMap() {
     this.map = L.map('map', {
       center: [47.4979, 19.0402],
@@ -149,9 +246,11 @@ export class MapPage implements AfterViewInit, OnDestroy {
 
     setTimeout(() => {
       this.map?.invalidateSize();
-    }, 100);
+    }, 300);
   }
+  // #endregion
 
+  // #region User Interactions and Search
   centerOnUser() {
     if (!this.map) return;
     if (!this.userLat || !this.userLong || !this.userMarker) {
@@ -163,10 +262,31 @@ export class MapPage implements AfterViewInit, OnDestroy {
   }
 
   varos_kereses(event?: Event) {
+    // Manual search - trigger other page
+    this.executeVarosKereses(true, event);
+  }
+
+  toggleMobileSearch() {
+    if (!this.showMobileSearch) {
+      // Show search bar and focus on input
+      this.showMobileSearch = true;
+      setTimeout(() => {
+        const input = document.getElementById('varos') as HTMLInputElement;
+        if (input) {
+          input.focus();
+        }
+      }, 100);
+    } else {
+      // Perform search
+      this.varos_kereses();
+    }
+  }
+
+  private executeVarosKereses(triggerOtherPage: boolean = false, event?: Event) {
     this.Varos_Coords = [];
     this.Shop_Data = [];
     this.sidebar = null;
-    let raw = this.searchCity ?? '';
+    let raw = this.searchText ?? '';
     if (!raw) {
       const el = document.getElementById('varos') as HTMLInputElement | null;
       raw = el?.value ?? '';
@@ -215,6 +335,13 @@ export class MapPage implements AfterViewInit, OnDestroy {
               if (this.Shop_Data.length > 0) {
                 this.showShopList(this.Shop_Data);
               }
+
+              // Only trigger other page after search completes
+              if (triggerOtherPage) {
+                this.searchService.triggerSearch('map', {
+                  searchText: this.searchText
+                });
+              }
             },
             error: (err) => console.error('Error loading shop data:', err)
           });
@@ -223,7 +350,9 @@ export class MapPage implements AfterViewInit, OnDestroy {
       error: (error) => console.error('Error:', error)
     });
   }
+  // #endregion
 
+  // #region Marker Management
   private updateMarkers() {
     if (!this.shopMarkersLayer || !this.clusterMarkersLayer || !this.map) return;
     this.shopMarkersLayer.clearLayers();
@@ -283,14 +412,42 @@ export class MapPage implements AfterViewInit, OnDestroy {
       });
 
       const marker = L.marker([avgLat, avgLng], { icon: clusterIcon }).addTo(this.clusterMarkersLayer!);
-      // Always show the data from the icons on the sidebar
+      // Show shop list in sidebar on cluster click
       marker.on('click', () => {
         this.ngZone.run(() => {
           if (count === 1) {
-            this.showShopDetails(cluster.shops[0]);
+            // Single shop in cluster - show details
+            if (!this.isWideLayout) {
+              this.openShopDetails(cluster.shops[0]);
+              if (avgLat && avgLng) {
+                this.map?.setView([avgLat, avgLng], 15);
+              }
+
+            } else {
+              this.showShopDetails(cluster.shops[0]);
+              if (avgLat && avgLng) {
+                this.map?.setView([avgLat, avgLng], 15);
+              }
+            }
           } else {
-            // Always show the current cluster's shop list
-            this.showShopList([...cluster.shops]);
+            // Multiple shops in cluster
+            if (!this.isWideLayout) {
+              // Mobile: zoom to fit all shops in cluster
+              const bounds = L.latLngBounds(cluster.shops.map((shop: any)   => [
+                Number(shop.latitude ?? shop.lat),
+                Number(shop.longitude ?? shop.lng)
+              ]));
+              this.map?.fitBounds(bounds, { padding: [50, 50] });
+              if (avgLat && avgLng) {
+                this.map?.setView([avgLat, avgLng], 15);
+              }
+            } else {
+              // Desktop: show list in sidebar
+              this.showShopList([...cluster.shops]);
+              if (avgLat && avgLng) {
+                this.map?.setView([avgLat, avgLng], 15);
+              }
+            }
           }
         });
       });
@@ -307,14 +464,22 @@ export class MapPage implements AfterViewInit, OnDestroy {
 
       const marker = L.marker([lat, lng], { icon: this.storeIcon }).addTo(this.shopMarkersLayer!);
       this.shopMarkerIndex.set(this.keyFor(lat, lng), marker);
-      // Show shop details in sidebar on click
+      // Show shop details on click
       marker.on('click', () => {
-        this.ngZone.run(() => this.showShopDetails(shop));
+        this.ngZone.run(() => {
+          if (!this.isWideLayout) {
+            this.openShopDetails(shop);
+          } else {
+            this.showShopDetails(shop);
+          }
+        });
       });
     });
   }
+  // #endregion
 
-  // Sidebar logic
+  // #region Sidebar Management
+  // Sidebar logic for showing shop list
   showShopList(shops: any[]) {
     console.log('Sidebar: showing shop list', shops);
     this.sidebar = { type: 'list', data: shops };
@@ -322,31 +487,104 @@ export class MapPage implements AfterViewInit, OnDestroy {
     this.appRef.tick();
   }
 
+  // Sidebar logic for showing shop details
   showShopDetails(shop: any) {
-    const details = {
-      ...shop,
-      openingHoursHtml: this.sanitizer.bypassSecurityTrustHtml(this.formatOpeningHoursHTML(shop)),
-      latitude: Number(shop.latitude ?? shop.lat),
-      longitude: Number(shop.longitude ?? shop.lng)
-    };
-    console.log('Sidebar: showing shop details', details);
-    this.sidebar = { type: 'details', data: details };
+    console.log('Sidebar: showing shop details', shop);
+    this.sidebar = { type: 'details', data: shop };
+    this.loadSidebarShopDetails(shop.id);
     this.cdr.detectChanges();
     this.appRef.tick();
-    // Focus map on shop
-    if (this.map && !isNaN(details.latitude) && !isNaN(details.longitude)) {
-      this.map.setView([details.latitude, details.longitude], Math.max(this.map.getZoom() || 13, 15), { animate: true });
+  }
+
+  loadSidebarShopDetails(shopId: number) {
+    this.isSidebarLoading = true;
+    this.sidebarErrorMessage = '';
+    this.sidebarShopDetails = null;
+
+    this.shopService.getShopDetails(shopId).subscribe({
+      next: (response) => {
+        console.log('Sidebar shop details response:', response);
+        if (response && response.success && response.data) {
+          this.sidebarShopDetails = response.data;
+        } else {
+          this.sidebarErrorMessage = 'Nem sikerült betölteni a bolt adatait.';
+          console.error('Invalid shop details response:', response);
+        }
+        this.isSidebarLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Sidebar shop details error:', error);
+        this.sidebarErrorMessage = 'Hiba történt az adatok betöltése során.';
+        this.isSidebarLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  getStars(rating: number): boolean[] {
+    return Array(5).fill(false).map((_, i) => i < rating);
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  // #endregion
+
+  // #region Modal and Shop Details
+  BackToSidebarList() {
+    if (this.sidebar && this.sidebar.type === 'details') {
+      this.showShopList((this.sidebar as any).previousList || this.Shop_Data);
     }
   }
 
-  BackToSidebarList() {
-    if (this.sidebar?.type === 'details' && this.Shop_Data.length > 0) {
-      this.showShopList(this.Shop_Data);
-    }
+  // Modal methods for mobile
+  openShopDetails(shop: any) {
+    console.log('Opening shop details modal:', shop);
+    this.selectedShopId = shop.id;
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+    this.selectedShopId = 0;
+    // Force change detection
+    this.cdr.detectChanges();
   }
 
   focusShop(shop: any) {
-    this.showShopDetails(shop);
+    // Center map on the shop
+    const lat = Number(shop.latitude ?? shop.lat);
+    const lng = Number(shop.longitude ?? shop.lng);
+
+    if (this.map && lat && lng) {
+      // Zoom to level 15 to show individual markers
+      this.map.setView([lat, lng], 15, { animate: true });
+
+      // Wait for animation, then ensure markers are updated and open popup
+      setTimeout(() => {
+        this.updateMarkers();
+        const key = this.keyFor(lat, lng);
+        const marker = this.shopMarkerIndex.get(key);
+        if (marker) {
+          marker.openPopup();
+        }
+      }, 300);
+    }
+
+    // Use modal on mobile, sidebar on desktop
+    if (!this.isWideLayout) {
+      this.openShopDetails(shop);
+    } else {
+      this.showShopDetails(shop);
+    }
   }
 
   private openShopFromCluster(lat: number, lng: number) {
@@ -376,7 +614,9 @@ export class MapPage implements AfterViewInit, OnDestroy {
       }
     }
   }
+  // #endregion
 
+  // #region Geolocation and User Location
   private async User_Marker_Place() {
     try {
       let lat = 0, lng = 0;
@@ -418,43 +658,9 @@ export class MapPage implements AfterViewInit, OnDestroy {
       console.warn('Geolocation error', err);
     }
   }
+  // #endregion
 
-  formatOpeningHoursHTML(shopData: any): string {
-    const oh = shopData.openingHours ?? shopData.opening_hours ?? shopData.hours ?? shopData.opening;
-    if (!oh) return '<p style="margin:5px 0;"><strong>Opening Hours:</strong> N/A</p>';
-    let rows = '';
-    const formatTime = (val: any) => {
-      if (!val && val !== 0) return 'N/A';
-      const s = String(val);
-      const parts = s.split(':');
-      if (parts.length >= 2) return parts[0].padStart(2,'0') + ':' + parts[1].padStart(2,'0');
-      return s;
-    };
-    if (Array.isArray(oh)) {
-      oh.forEach((day: any) => {
-        if (!day) return;
-        if (typeof day === 'string') rows += `<tr><td colspan="2">${day}</td></tr>`;
-        else {
-          const dow = day.dayOfWeek;
-          const open = day.openHour;
-          const close = day.closeHour;
-          rows += `<tr><td><strong>${dow || ''}</strong></td><td>${formatTime(open)} - ${formatTime(close)}</td></tr>`;
-        }
-      });
-    } else if (typeof oh === 'object') {
-      Object.entries(oh).forEach(([k, v]: [string, any]) => {
-        if (!v && v !== 0) return;
-        if (typeof v === 'string') rows += `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`;
-        else if (typeof v === 'object') {
-          const open = v.open ?? v.opens ?? v.openingTime ?? 'N/A';
-          const close = v.close ?? v.closes ?? v.closingTime ?? 'N/A';
-          rows += `<tr><td><strong>${k}</strong></td><td>${open} - ${close}</td></tr>`;
-        }
-      });
-    } else rows = `<tr><td colspan="2">${String(oh)}</td></tr>`;
-    return `<table style="width:100%; margin-top:6px;">${rows}</table>`;
-  }
-
+  // #region Google Maps Integration
   openInGoogleMaps(lat: number, lng: number, label?: string, city?: string, address?: string) {
     let query = '';
     if (city && address) {
@@ -485,12 +691,16 @@ export class MapPage implements AfterViewInit, OnDestroy {
     }
     window.open(webUrl, '_blank');
   }
+  // #endregion
 
+  // #region Theme Management
   ToggleTheme() {
     // Persist desired theme; subscription above updates the tiles and body class
     this.theme.setTheme(!this.isThemeDark);
   }
+  // #endregion
 
+  // #region UI and Layout
   private setMapHeight = () => {
     const el = document.getElementById('map');
     if (!el) return;
@@ -505,11 +715,48 @@ export class MapPage implements AfterViewInit, OnDestroy {
     try { this.map?.invalidateSize(); } catch {}
   }
 
-  private setMapHeightBound = this.setMapHeight.bind(this);
+  private updateTileLayer(isDark: boolean) {
+    if (!this.map || !this.tileLayer) return;
+    try {
+      // Remove old tile layer
+      this.map.removeLayer(this.tileLayer);
 
+      // Create new tile layer
+      const url = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+      this.tileLayer = L.tileLayer(url, {
+        attribution: '&copy; OpenStreetMap & CARTO',
+        subdomains: ['a', 'b', 'c', 'd'],
+        crossOrigin: true as any
+      });
+
+      // Insert at the bottom so markers are on top
+      this.tileLayer.addTo(this.map);
+      if (this.shopMarkersLayer) {
+        (this.shopMarkersLayer as any).bringToFront();
+      }
+      if (this.clusterMarkersLayer) {
+        (this.clusterMarkersLayer as any).bringToFront();
+      }
+
+      this.map.invalidateSize(true);
+    } catch (err) {
+      console.error('Error updating tile layer:', err);
+    }
+  }
+
+  private setMapHeightBound = this.setMapHeight.bind(this);
+  // #endregion
+
+  // #region Cleanup
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.map) this.map.remove();
     window.removeEventListener('resize', this.setMapHeightBound);
     window.removeEventListener('orientationchange', this.setMapHeightBound);
   }
+  // #endregion
 }

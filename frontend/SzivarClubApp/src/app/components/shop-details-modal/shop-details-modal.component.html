@@ -1,4 +1,4 @@
-<ion-modal [isOpen]="isOpen" (didDismiss)="closeModal()">
+<ion-modal [isOpen]="isOpen" (didDismiss)="close.emit()">
   <ng-template>
     <ion-header>
       <ion-toolbar color="primary">
@@ -37,6 +37,11 @@
             <ion-icon name="location-outline"></ion-icon>
             <span>{{ shopDetails.address }}, {{ shopDetails.city }}</span>
           </div>
+
+          <ion-button expand="block" shape="round" class="ion-margin-vertical" (click)="openInGoogleMaps(shopDetails.latitude, shopDetails.longitude, shopDetails.name, shopDetails.city, shopDetails.address)">
+            <ion-icon slot="start" name="map-outline"></ion-icon>
+            Megnyitás térképen
+          </ion-button>
 
           <!-- Nyitvatartási státusz -->
           <ion-chip [color]="shopDetails.isOpenNow ? 'success' : 'danger'" class="status-chip">
@@ -86,7 +91,7 @@
                   <strong>{{ hours.dayOfWeek }}</strong>
                 </ion-label>
                 <ion-text slot="end" color="medium">
-                  {{ hours.openHour }} - {{ hours.closeHour }}
+                   {{ hours.openHour }} - {{ hours.closeHour }}
                 </ion-text>
               </ion-item>
             </ion-list>
