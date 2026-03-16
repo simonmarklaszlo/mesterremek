@@ -31,11 +31,19 @@ log.txt
 
 # Node
 /node_modules
+/node-moduls
 npm-debug.log
 yarn-error.log
 
+# Local project structure
+/backend
+/database
+/android
+/ios
+
 # IDEs and editors
 .idea/
+
 .project
 .classpath
 .c9/
@@ -68,3 +76,4 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
