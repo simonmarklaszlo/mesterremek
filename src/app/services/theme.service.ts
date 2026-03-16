@@ -23,8 +23,12 @@ export class ThemeService {
   }
 
   private applyTheme(isDark: boolean): void {
-    // Remove both theme classes first
-    document.body.classList.remove('dark-theme', 'light-theme', 'dark', 'light');
+    // Remove both theme classes first from body
+    document.body.classList.remove('dark-theme', 'light-theme');
+    // Apply Ionic dark mode to html element using ion-palette-dark class
+    const htmlElement = document.documentElement;
+    htmlElement.classList.toggle('ion-palette-dark', isDark);
+    
     if (isDark) {
       document.body.classList.add('dark-theme');
     } else {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -35,6 +35,9 @@ import {
 } from 'ionicons/icons';
 import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
 import { ShopService, Shop } from '../../services/shop.service';
+import { SearchService } from '../../services/search.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-list',
@@ -66,7 +69,7 @@ import { ShopService, Shop } from '../../services/shop.service';
     ShopDetailsModalComponent
   ]
 })
-export class ListPage implements OnInit {
+export class ListPage implements OnInit, OnDestroy {
   searchText: string = '';
   filterCigars: boolean = false;
   maxDistance: number = 10;
@@ -82,7 +85,10 @@ export class ListPage implements OnInit {
   isModalOpen: boolean = false;
   selectedShopId: number | null = null;
 
-  constructor(private shopService: ShopService) {
+  private destroy$ = new Subject<void>();
+  private isUpdatingFromSync = false;
+
+  constructor(private shopService: ShopService, private searchService: SearchService) {
     addIcons({
       listOutline,
       locationOutline,
@@ -98,6 +104,36 @@ export class ListPage implements OnInit {
   ngOnInit() {
     // GPS pozíció lekérése
     this.getUserLocation();
+
+    // search servive státuszára update
+    this.searchService.searchState$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((state) => {
+        this.isUpdatingFromSync = true;
+        this.searchText = state.searchText;
+        this.filterCigars = state.filterCigars;
+        this.maxDistance = state.maxDistance;
+        this.isUpdatingFromSync = false;
+      });
+
+    // Trigger ha a map oldalon történt keresés
+    this.searchService.searchTriggered$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((trigger) => {
+        // Only respond if the search was triggered from the map page
+        if (trigger.source === 'map') {
+          this.searchText = trigger.searchText;
+          this.filterCigars = trigger.filterCigars;
+          this.maxDistance = trigger.maxDistance;
+          // Execute search without triggering back to prevent loops
+          this.executeSearch(false);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // GPS pozíció megszerzése
@@ -138,10 +174,17 @@ export class ListPage implements OnInit {
 
   // Keresés indítása (gombra kattintva)
   async searchShops() {
+    // Only trigger if this is a manual search (not from a trigger)
+    const triggerOtherPage = true;
+    await this.executeSearch(triggerOtherPage);
+  }
+
+  // Actual search execution
+  private async executeSearch(triggerOtherPage: boolean = false) {
     if (!this.userLocation) {
       console.error('User location not available yet');
       // Várunk egy kicsit és újra próbáljuk
-      setTimeout(() => this.searchShops(), 500);
+      setTimeout(() => this.executeSearch(triggerOtherPage), 500);
       return;
     }
 
@@ -174,6 +217,15 @@ export class ListPage implements OnInit {
           this.filteredShops = [];
         }
         this.isLoading = false;
+
+        // Ha kész a keresés, másik oldal triggerelése
+        if (triggerOtherPage) {
+          this.searchService.triggerSearch('list', {
+            searchText: this.searchText,
+            filterCigars: this.filterCigars,
+            maxDistance: this.maxDistance
+          });
+        }
       },
       error: (error) => {
         console.error('Search error:', error);

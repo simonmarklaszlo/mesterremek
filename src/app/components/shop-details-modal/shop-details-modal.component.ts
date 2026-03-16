@@ -28,7 +28,8 @@ import {
   starOutline,
   star,
   checkmarkCircle,
-  closeCircle
+  closeCircle,
+  mapOutline
 } from 'ionicons/icons';
 import { ShopService, ShopDetails } from '../../services/shop.service';
 
@@ -62,7 +63,7 @@ import { ShopService, ShopDetails } from '../../services/shop.service';
 export class ShopDetailsModalComponent implements OnInit, OnChanges {
   @Input() shopId!: number;
   @Input() isOpen: boolean = false;
-  @Output() didDismiss = new EventEmitter<void>();
+  @Output() close = new EventEmitter<void>();
 
   shopDetails: ShopDetails | null = null;
   isLoading: boolean = false;
@@ -79,7 +80,8 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       starOutline,
       star,
       checkmarkCircle,
-      closeCircle
+      closeCircle,
+      mapOutline
     });
   }
 
@@ -90,6 +92,12 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    // If modal closes, clear error message and reset state
+    if (changes['isOpen'] && !this.isOpen && changes['isOpen'].previousValue) {
+      this.errorMessage = '';
+      this.shopDetails = null;
+      this.isLoading = false;
+    }
     // Ha a modal megnyílik vagy a shopId megváltozik, töltsd újra az adatokat
     if ((changes['isOpen'] && this.isOpen && this.shopId) ||
         (changes['shopId'] && this.shopId && this.isOpen)) {
@@ -122,8 +130,8 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
   }
 
   closeModal() {
-    this.isOpen = false;
-    this.didDismiss.emit();
+    // Only emit event - parent handles state changes
+    this.close.emit();
   }
 
   // Csillagok tömbje az értékeléshez
@@ -141,5 +149,37 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  openInGoogleMaps(lat: number | undefined, lng: number | undefined, label?: string, city?: string, address?: string) {
+    if (!lat || !lng) return;
+    let query = '';
+    if (city && address) {
+      query = encodeURIComponent(`${city} ${address}`);
+    } else if (address) {
+      query = encodeURIComponent(address);
+    } else if (label) {
+      query = encodeURIComponent(label);
+    } else {
+      query = encodeURIComponent(`${lat},${lng}`);
+    }
+    const webUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    const ua = navigator.userAgent || '';
+    const isAndroid = /android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    if (isAndroid) {
+      const intentUrl = `intent://maps.google.com/maps?daddr=${query}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+      try {
+        window.location.href = intentUrl;
+        setTimeout(() => { window.location.href = webUrl; }, 1200);
+      } catch { window.open(webUrl, '_blank'); }
+      return;
+    }
+    if (isIOS) {
+      const appleScheme = `maps://?q=${query}`;
+      try { window.location.href = appleScheme; } catch { window.open(webUrl, '_blank'); }
+      return;
+    }
+    window.open(webUrl, '_blank');
   }
 }
