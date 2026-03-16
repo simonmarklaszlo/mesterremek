@@ -1,0 +1,13 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "SzivarClubApp",
+	"webDir": "www",
+	"packageClassList": [
+		"AppPlugin",
+		"FilesystemPlugin",
+		"GeolocationPlugin",
+		"HapticsPlugin",
+		"KeyboardPlugin",
+		"StatusBarPlugin"
+	]
+}

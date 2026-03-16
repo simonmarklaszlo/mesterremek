@@ -1,7 +1,0 @@
-{
-  "name": "SzivarClubApp",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular-standalone"
-}
