@@ -5,6 +5,7 @@ namespace SzivarClubManager.SourceGenerator.Generators.Filters.Generation;
 
 public static class ModelFilter
 {
+    private const string FilterValueHandler = "global::SzivarClubManager.Datasources.Database.Filters.FilterValueHandler";
     public static string GetFileName(FilterModel model) => $"{model.FilterType.Name}.g.cs";
 
     public static string GenerateSource(FilterModel filter)
@@ -60,8 +61,6 @@ public static class ModelFilter
 
     private static void GenerateToString(StringBuilder sb, FilterModel filter)
     {
-        string filterIFace = $"global::SzivarClubManager.Datasources.Database.Filters.IFilter<{filter.ModelType.GlobalName()}>";
-
         sb.AppendLine("    public override string ToString()");
         sb.AppendLine("    {");
         sb.AppendLine("        global::System.Text.StringBuilder sb = new();");
@@ -78,7 +77,7 @@ public static class ModelFilter
                 sb.AppendLine("            else valueBefore = true;");
                 if (pair.Value[0].Type is PropertyTypes.String)
                 {
-                    sb.AppendLine($"            sb.Append(\"{pair.Value[0].Name}=\").Append({filterIFace}.ToDisplayString({pair.Value[0].Name}));");
+                    sb.AppendLine($"            sb.Append(\"{pair.Value[0].Name}=\").Append({FilterValueHandler}.ToDisplayString({pair.Value[0].Name}));");
                 }
                 else
                 {
@@ -132,7 +131,7 @@ public static class ModelFilter
         sb.AppendLine();
         sb.AppendLine("        bool valueBefore = false;");
         sb.AppendLine();
-        sb.AppendLine("        sb.AppendLine(\"WHERE \");");
+        sb.AppendLine("        sb.Append(\"WHERE \");");
         sb.AppendLine();
         foreach (var pair in filter.PropertyGroups)
         {
@@ -214,7 +213,7 @@ public static class ModelFilter
         sb.AppendLine("    {");
         sb.AppendLine($"        {filter.FilterType.GlobalName()} filter = new();");
         sb.AppendLine();
-        sb.AppendLine($"        global::System.Collections.Generic.IEnumerable<string> kvps = {filterIFace}.SplitToEntries(filterString);");
+        sb.AppendLine($"        global::System.Collections.Generic.IEnumerable<string> kvps = {FilterValueHandler}.SplitToEntries(filterString);");
         sb.AppendLine();
         sb.AppendLine("        try");
         sb.AppendLine("        {");
@@ -232,15 +231,15 @@ public static class ModelFilter
             switch (pair.Value[0].Type)
             {
                 case PropertyTypes.String:
-                    sb.AppendLine($"                        filter.{pair.Value[0].Name} = {filterIFace}.ParseStringValue(value);");
+                    sb.AppendLine($"                        filter.{pair.Value[0].Name} = {FilterValueHandler}.ParseStringValue(value);");
                     sb.AppendLine("                        break;");
                     break;
                 case PropertyTypes.Int:
-                    sb.AppendLine($"                        (filter.{pair.Value[0].Name}, filter.{pair.Value[1].Name}) = {filterIFace}.ParseIntValues(value);");
+                    sb.AppendLine($"                        (filter.{pair.Value[0].Name}, filter.{pair.Value[1].Name}) = {FilterValueHandler}.ParseIntValues(value);");
                     sb.AppendLine("                        break;");
                     break;
                 case PropertyTypes.Double:
-                    sb.AppendLine($"                        (filter.{pair.Value[0].Name}, filter.{pair.Value[1].Name}) = {filterIFace}.ParseDoubleValues(value);");
+                    sb.AppendLine($"                        (filter.{pair.Value[0].Name}, filter.{pair.Value[1].Name}) = {FilterValueHandler}.ParseDoubleValues(value);");
                     sb.AppendLine("                        break;");
                     break;
             }
