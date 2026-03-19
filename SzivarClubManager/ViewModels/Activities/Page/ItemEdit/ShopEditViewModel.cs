@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
+using SzivarClubManager.ViewModels.Components;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
@@ -15,6 +16,7 @@ public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
         set
         {
             field = value;
+            ScheduleViewModel.SetShop(value);
             EditItem?.PropertyChanged -= EditItemOnPropertyChanged;
             GlobalEditItem = EditableShop.TryGetFrom(value);
             LongitudeString = EditItem!.Location.LongitudeString;
@@ -38,6 +40,8 @@ public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
 
     [ObservableProperty] private string _longitudeString = string.Empty;
     [ObservableProperty] private string _latitudeString = string.Empty;
+
+    public ShopOpeningScheduleViewModel ScheduleViewModel { get; } = new();
 
     private bool CanSaveChanges => IsEdit && (!EditItem.PropertiesEqualExceptLocation(GlobalEditItem ?? SourceItem) || NewLocationValid());
     private bool CanResetName => IsEdit && EditItem.Name != SourceItem.Name;

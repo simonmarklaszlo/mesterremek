@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Shared.FilterField"
+             x:Name="Root">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="LabelGroup" MinWidth="100" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="ClearButtonGroup" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock
+            Grid.Column="0"
+            FontSize="17"
+            FontWeight="Bold"
+            Margin="40 0"
+            TextAlignment="Center"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="{Binding Label, ElementName=Root}" />
+        <TextBox
+            Grid.Column="1"
+            Margin="0 25"
+            Text="{Binding Text, Mode=TwoWay, ElementName=Root}">
+        </TextBox>
+        <Button
+            Grid.Column="2"
+            Margin="20 0"
+            MaxHeight="48"
+            MaxWidth="48"
+            Command="{Binding ClearCommand, ElementName=Root}">
+            <Image>
+                <Image.Styles>
+
+                    <Style Selector=" Image">
+                        <Setter Property="Source" Value="{DynamicResource ClearIcon}" />
+                        <Setter Property="Opacity" Value="1" />
+                    </Style>
+
+                    <Style Selector="Button:disabled Image">
+                        <Setter Property="Source" Value="/Assets/clear-gray.png" />
+                        <Setter Property="Opacity" Value="0.5" />
+                    </Style>
+                </Image.Styles>
+            </Image>
+        </Button>
+    </Grid>
+</UserControl>

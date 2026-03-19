@@ -52,7 +52,8 @@ public sealed class EditableShop : Shop, IEditableModel, INotifyPropertyChanged
 
 
     private EditableShop(int id, string name, string address, string city, DateTime createdAt, DateTime updatedAt, CustomPgPoint location) :
-        base(id, name, address, city, createdAt, updatedAt, location) { }
+        base(id, name, address, city, createdAt, updatedAt, location)
+    { }
 
 
     /*

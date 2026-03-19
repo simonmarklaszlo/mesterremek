@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.CommonTargets;
+using SzivarClubManager.SourceGenerator.Targets;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Activities.Target;
 
@@ -13,7 +13,8 @@ public class PageActivity : Activity
         _modelSymbol = modelSymbol;
     }
 
-    public string InstanceCreation(string factoryProviderVariableName) => $"new {ActivitySymbol.GlobalName()}({factoryProviderVariableName}.GetPageFactory<{_modelSymbol.GlobalName()}>())";
+    public string InstanceCreation(string popupserviceVarName, string factoryProviderVarName) =>
+        $"new {ActivitySymbol.GlobalName()}({popupserviceVarName}, {factoryProviderVarName}.GetPageFactory<{_modelSymbol.GlobalName()}>())";
 
     public new static IncrementalValuesProvider<PageActivity> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 

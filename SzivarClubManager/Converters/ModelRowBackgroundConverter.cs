@@ -18,5 +18,5 @@ public sealed partial class ModelRowBackgroundConverter : IValueConverter
 
     private static bool IsDarkTheme() => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
     private static IImmutableSolidColorBrush GetEditBrush() => IsDarkTheme() ? Brushes.DarkSlateBlue : Brushes.LightBlue;
-    private static IImmutableSolidColorBrush GetDeleteBrush() => IsDarkTheme() ? Brushes.DarkRed: Brushes.IndianRed;
+    private static IImmutableSolidColorBrush GetDeleteBrush() => IsDarkTheme() ? Brushes.DarkRed : Brushes.IndianRed;
 }

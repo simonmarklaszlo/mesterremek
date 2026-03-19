@@ -1,4 +1,5 @@
 using System;
+using SzivarClubManager.Models.Time;
 
 namespace SzivarClubManager.Models;
 
@@ -11,6 +12,7 @@ public class Shop : IModel
     public DateTime CreatedAt { get; }
     public DateTime UpdatedAt { get; }
     public CustomPgPoint Location { get; protected set; }
+    public ShopOpeningSchedule? Schedule { get; set; } = null;
 
     public Shop(int id, string name, string address, string city, DateTime createdAt, DateTime updatedAt, CustomPgPoint location)
     {

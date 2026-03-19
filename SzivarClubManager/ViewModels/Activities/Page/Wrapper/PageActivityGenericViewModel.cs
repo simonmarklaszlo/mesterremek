@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
-using SzivarClubManager.Datasources;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Data;
 using SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
@@ -8,9 +10,10 @@ using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-public abstract class PageActivityViewModel<TModel, TDataViewModel, TAddViewModel, TEditViewModel> : PageActivityViewModel
+public abstract class PageActivityViewModel<TModel, TFilter, TDataViewModel, TAddViewModel, TEditViewModel> : PageActivityViewModel
     where TModel : class, IModel
-    where TDataViewModel : PageDataViewModel<TModel>, new()
+    where TFilter : IFilter<TModel>, new()
+    where TDataViewModel : PageDataViewModel<TModel, TFilter>, new()
     where TAddViewModel : ItemAddViewModel<TModel>, new()
     where TEditViewModel : ItemEditViewModel<TModel>, new()
 {
@@ -21,7 +24,7 @@ public abstract class PageActivityViewModel<TModel, TDataViewModel, TAddViewMode
     private readonly PageController<TModel> _controller;
 
 
-    protected PageActivityViewModel(IPageFactory<TModel> factory, bool itemAddSupported = true, bool itemEditSupported = true)
+    protected PageActivityViewModel(PopupService popupService, IPageFactory<TModel> factory, bool itemAddSupported = true, bool itemEditSupported = true) : base(popupService)
     {
         _controller = new PageController<TModel>();
         _controller.ItemSelected += ControllerOnItemSelected;
@@ -32,7 +35,8 @@ public abstract class PageActivityViewModel<TModel, TDataViewModel, TAddViewMode
         _pageDataViewModel = new TDataViewModel
         {
             Factory = factory,
-            Controller = _controller
+            Controller = _controller,
+            PopupService = popupService
         };
 
         ViewModel = _pageDataViewModel;

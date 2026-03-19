@@ -1,19 +1,25 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.CommonTargets;
+using SzivarClubManager.SourceGenerator.Targets;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Changes.Target;
 
-public record PageActivityViewModel(
-    INamedTypeSymbol ActivitySymbol,
-    INamedTypeSymbol ModelSymbol
-    )
+public class PageActivityViewModel
 {
+    public INamedTypeSymbol ActivitySymbol { get; }
+    public INamedTypeSymbol ModelSymbol { get; }
+
+    public PageActivityViewModel(INamedTypeSymbol activitySymbol, INamedTypeSymbol modelSymbol)
+    {
+        ActivitySymbol = activitySymbol;
+        ModelSymbol = modelSymbol;
+    }
+
     public static IncrementalValuesProvider<PageActivityViewModel> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 
     private static PageActivityViewModel? IsTarget(GeneratorSyntaxContext context)
     {
-        const string pageActivityViewModel = "SzivarClubManager.ViewModels.Activities.Page.Wrapper.PageActivityViewModel`4";
+        const string pageActivityViewModel = "SzivarClubManager.ViewModels.Activities.Page.Wrapper.PageActivityViewModel`5";
 
 
         if (context.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)context.Node) is not INamedTypeSymbol typeSymbol) return null;
@@ -26,7 +32,7 @@ public record PageActivityViewModel(
 
         if (!SymbolEqualityComparer.Default.Equals(typeSymbol.BaseType.OriginalDefinition, pageActivityViewModelSymbol)) return null;
 
-        if(typeSymbol.BaseType.TypeArguments.Length < 1 || typeSymbol.BaseType.TypeArguments[0] is not INamedTypeSymbol modelSymbol) return null;
+        if (typeSymbol.BaseType.TypeArguments.Length < 1 || typeSymbol.BaseType.TypeArguments[0] is not INamedTypeSymbol modelSymbol) return null;
 
         return new PageActivityViewModel(typeSymbol, modelSymbol);
     }

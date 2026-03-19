@@ -46,7 +46,7 @@
                                 <Image>
                                     <Image.Styles>
                                         <Style Selector="Image">
-                                            <Setter Property="Source" Value="../../Assets/refresh-black.png" />
+                                            <Setter Property="Source" Value="{DynamicResource RefreshIcon}" />
                                             <Setter Property="Opacity" Value="1" />
                                         </Style>
 

@@ -2,28 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Models;
 
 namespace SzivarClubManager.Datasources.Database;
 
 public static class CommonQueries
 {
-    public static async Task<bool> PageExitstOnTable(DatabaseConnection connection, string table, int page, int pageSize)
+    public static async Task<bool> PageExitstOnTable<T>(DatabaseConnection connection, string table, int page, int pageSize, IFilter<T> filter) where T : class, IModel
     {
-        string query = $"SELECT EXISTS ( SELECT 1 FROM {table} LIMIT @limit OFFSET @offset )";
+        string query = $"""
+                        SELECT EXISTS (
+                            SELECT 1
+                            FROM {table}
+                            {filter.ConstructParameterizedQuery()}
+                            LIMIT @limit OFFSET @offset
+                        );
+                        """;
 
         await using var command = connection.CreateCommand(query);
         command.Parameters.AddWithValue("table", table);
+        filter.AddParameters(command.Parameters);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
         return (bool)(await command.ExecuteScalarAsync() ?? Task.FromResult(false));
     }
 
-    public static async Task<int> GetLastPageOnTable(DatabaseConnection connection, string table, int pageSize)
+    public static async Task<int> GetLastPageOnTable<T>(DatabaseConnection connection, string table, int pageSize, IFilter<T> filter) where T : class, IModel
     {
-        string query = $"SELECT COUNT(*) FROM {table}";
+        string query = $"""
+                        SELECT COUNT(*) 
+                        FROM {table}
+                        {filter.ConstructParameterizedQuery()}
+                        """;
 
         await using var command = connection.CreateCommand(query);
+        filter.AddParameters(command.Parameters);
 
         int count = Convert.ToInt32(await command.ExecuteScalarAsync());
 
@@ -56,6 +71,8 @@ public static class CommonQueries
                         """;
 
         int[] idArr = ids as int[] ?? ids.ToArray();
+
+        if (idArr.Length == 0) return 0;
 
         await using var command = connection.CreateCommand(query);
         command.Parameters.AddWithValue("ids", idArr);

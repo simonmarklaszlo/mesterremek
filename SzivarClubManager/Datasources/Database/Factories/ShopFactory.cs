@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using Npgsql;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
@@ -20,19 +22,21 @@ public sealed class ShopFactory : IPageFactory<Shop>
         _connection = connection;
     }
 
-    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
+    public Task<bool> PageExists(int page, int pageSize, IFilter<Shop> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, filter);
 
-    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
+    public Task<int> GetLastPage(int pageSize, IFilter<Shop> filter) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize, filter);
 
-    public async Task<Shop[]> GetPage(int page, int pageSize)
+    public async Task<Shop[]> GetPage(int page, int pageSize, IFilter<Shop> filter)
     {
-        const string query = """
-                             SELECT id, name, address, city, created_at, updated_at, location
-                             FROM shops
-                             LIMIT @limit OFFSET @offset
-                             """;
+        string query = $"""
+                        SELECT id, name, address, city, created_at, updated_at, location
+                        FROM shops
+                        {filter.ConstructParameterizedQuery()}
+                        LIMIT @limit OFFSET @offset
+                        """;
 
         await using var command = _connection.CreateCommand(query);
+        filter.AddParameters(command.Parameters);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 
@@ -75,6 +79,8 @@ public sealed class ShopFactory : IPageFactory<Shop>
             commandParams.Add(new NpgsqlParameter($"city{index}", cigar.City));
             commandParams.Add(new NpgsqlParameter($"location{index}", cigar.Location.ToPgPoint()));
         }
+
+        if (commandParams.Count == 0) return 0;
 
         querySb.Remove(querySb.Length - 1, 1);
 

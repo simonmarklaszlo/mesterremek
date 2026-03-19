@@ -31,6 +31,7 @@
         <PackageReference Include="NetTopologySuite" Version="2.6.0" />
         <PackageReference Include="Npgsql" Version="10.0.0"/>
         <PackageReference Include="Npgsql.NetTopologySuite" Version="10.0.0" />
+        <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.4" />
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9"/>
     </ItemGroup>
 

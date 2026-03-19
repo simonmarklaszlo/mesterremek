@@ -66,7 +66,7 @@ public static partial class Changes
 
     public static void DropAll()
     {
-        foreach (var (_, change)in _dataChanges)
+        foreach (var (_, change) in _dataChanges)
         {
             change.Drop();
         }

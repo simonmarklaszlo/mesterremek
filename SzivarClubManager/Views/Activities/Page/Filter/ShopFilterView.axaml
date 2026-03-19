@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.Filter"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Activities.Page.Filter.ShopFilterView"
+             x:DataType="vm:ShopFilterViewModel">
+    <shared:FilterView
+        CancelCommand="{Binding CancelCommand}"
+        ApplyCommand="{Binding ApplyCommand}">
+        <shared:FilterView.FilterItems>
+            <shared:FilterRangeField
+                Label="Id"
+                MinText="{Binding MinIdText}"
+                MinState="{Binding MinIdState}"
+                MaxText="{Binding MaxIdText}"
+                MaxState="{Binding MaxIdState}"
+                ClearCommand="{Binding ClearIdTextCommand}" />
+
+            <shared:FilterField
+                Label="Name"
+                Text="{Binding NameText}"
+                State="{Binding NameState}"
+                ClearCommand="{Binding ClearNameTextCommand}" />
+
+            <shared:FilterField
+                Label="Address"
+                Text="{Binding AddressText}"
+                State="{Binding AddressState}"
+                ClearCommand="{Binding ClearAddressTextCommand}" />
+
+            <shared:FilterField
+                Label="City"
+                Text="{Binding CityText}"
+                State="{Binding CityState}"
+                ClearCommand="{Binding ClearCityTextCommand}" />
+
+            <shared:FilterRangeField
+                Label="Latitude"
+                MinText="{Binding MinLatitudeText}"
+                MinState="{Binding MinLatitudeState}"
+                MaxText="{Binding MaxLatitudeText}"
+                MaxState="{Binding MaxLongitudeState}"
+                ClearCommand="{Binding ClearLatitudeTextCommand}" />
+
+            <shared:FilterRangeField
+                Label="Longitude"
+                MinText="{Binding MinLongitudeText}"
+                MinState="{Binding MinLongitudeState}"
+                MaxText="{Binding MaxLongitudeText}"
+                MaxState="{Binding MaxLongitudeState}"
+                ClearCommand="{Binding ClearLongitudeTextCommand}" />
+        </shared:FilterView.FilterItems>
+    </shared:FilterView>
+</UserControl>

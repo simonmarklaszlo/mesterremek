@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SzivarClubManager.SourceGen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseSeeder", "DatabaseSeeder\DatabaseSeeder.csproj", "{D7A4CD41-A4DE-4772-8C1C-BDBF8968F76F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SzivarClubManager.UnitTests", "SzivarClubManager.UnitTests\SzivarClubManager.UnitTests.csproj", "{3B0C6908-B600-42C2-93BA-10193BE762A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{D7A4CD41-A4DE-4772-8C1C-BDBF8968F76F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7A4CD41-A4DE-4772-8C1C-BDBF8968F76F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7A4CD41-A4DE-4772-8C1C-BDBF8968F76F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B0C6908-B600-42C2-93BA-10193BE762A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B0C6908-B600-42C2-93BA-10193BE762A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B0C6908-B600-42C2-93BA-10193BE762A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B0C6908-B600-42C2-93BA-10193BE762A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

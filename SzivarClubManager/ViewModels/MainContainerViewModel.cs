@@ -3,7 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SzivarClubManager.Datasources;
+using SzivarClubManager.Datasources.Factory;
+using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration.Generated;
 using SzivarClubManager.ViewModels.Activities;
 
@@ -16,11 +17,11 @@ public partial class MainContainerViewModel : ViewModelBase
     [ObservableProperty] private string? _selectedActivityName;
     public string[] ActivityNames { get; }
 
-    public MainContainerViewModel(FactoryProvider provider)
+    public MainContainerViewModel(FactoryProvider provider, PopupService popupService)
     {
-        _activities = ActivityCollection.GetActivities(provider);
+        _activities = ActivityCollection.GetActivities(provider, popupService);
 
-        _currentActivity = new NoActivityViewModel();
+        _currentActivity = new NoActivityViewModel(popupService);
         ActivityNames = _activities.Keys.ToArray();
         if (ActivityNames.Length > 0)
         {

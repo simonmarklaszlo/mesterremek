@@ -1,5 +1,5 @@
-using SzivarClubManager.SourceGenerator.CommonTargets;
-using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
+using SzivarClubManager.SourceGenerator.Targets;
+using SzivarClubManager.SourceGenerator.Targets.Factory;
 
 namespace SzivarClubManager.SourceGenerator;
 

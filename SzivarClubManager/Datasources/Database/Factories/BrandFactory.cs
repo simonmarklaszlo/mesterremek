@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Npgsql;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
@@ -46,6 +48,12 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
             commandParams.Add(new NpgsqlParameter($"name{index}", brand.Name));
         }
 
+        if (commandParams.Count == 0)
+        {
+            InvalidateCache();
+            return 0;
+        }
+
         querySb.Remove(querySb.Length - 1, 1);
 
         await using var command = _connection.CreateCommand(querySb.ToString());
@@ -84,19 +92,21 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
         return res;
     }
 
-    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
+    public Task<bool> PageExists(int page, int pageSize, IFilter<Brand> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, filter);
 
-    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
+    public Task<int> GetLastPage(int pageSize, IFilter<Brand> filter) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize, filter);
 
-    public async Task<Brand[]> GetPage(int page, int pageSize)
+    public async Task<Brand[]> GetPage(int page, int pageSize, IFilter<Brand> filter)
     {
-        const string query = """
-                             SELECT id, name 
-                             FROM cigar_brands
-                             LIMIT @limit OFFSET @offset
-                             """;
+        string query = $"""
+                        SELECT id, name 
+                        FROM cigar_brands
+                        {filter.ConstructParameterizedQuery()}
+                        LIMIT @limit OFFSET @offset
+                        """;
 
         await using var command = _connection.CreateCommand(query);
+        filter.AddParameters(command.Parameters);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
         command.Parameters.AddWithValue("limit", pageSize);
 

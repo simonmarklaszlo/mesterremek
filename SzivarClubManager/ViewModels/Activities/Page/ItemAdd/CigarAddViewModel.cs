@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemAdd;

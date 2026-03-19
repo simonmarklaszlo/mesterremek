@@ -80,4 +80,5 @@ public sealed partial class BrandEditViewModel : ItemEditViewModel<Brand>
         }
 
         Controller.NavigateBack();
-    }}
+    }
+}

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.ItemEdit"
              xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+             xmlns:components="clr-namespace:SzivarClubManager.Views.Components"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.ItemEdit.ShopEditView"
              x:DataType="vm:ShopEditViewModel">
@@ -74,6 +75,8 @@
                             Watermark="{Binding SourceItem.Location.LatitudeString}" />
                     </Grid>
                 </shared:EditField>
+
+                <ContentControl Content="{Binding ScheduleViewModel}"/>
             </StackPanel>
         </ScrollViewer>
 

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
 

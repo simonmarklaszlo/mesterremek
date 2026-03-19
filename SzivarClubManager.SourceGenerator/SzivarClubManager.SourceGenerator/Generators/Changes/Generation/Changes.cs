@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
+using SzivarClubManager.SourceGenerator.Targets.Factory;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Changes.Generation;
 
@@ -37,7 +37,7 @@ public static class Changes
 
     private static void GenerateInitialize(StringBuilder sb, IEnumerable<ModelGroup> models, string indent = "")
     {
-        const string factoryProvider = "global::SzivarClubManager.Datasources.FactoryProvider";
+        const string factoryProvider = "global::SzivarClubManager.Datasources.Factory.FactoryProvider";
 
         sb.AppendLine(indent + $"public static void Initialize({factoryProvider} provider)");
         sb.AppendLine(indent + "{");

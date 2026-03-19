@@ -5,6 +5,7 @@
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Page.Data"
              xmlns:converters="clr-namespace:SzivarClubManager.Converters"
              xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
+             xmlns:models="clr-namespace:SzivarClubManager.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.Data.BrandPageDataView"
              x:DataType="vm:BrandPageDataViewModel">
@@ -12,82 +13,92 @@
         <converters:ModelRowBackgroundConverter x:Key="RowBgConverter" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="*,Auto">
-        <DataGrid
+    <Grid RowDefinitions="Auto, *">
+        <ContentControl
             Grid.Row="0"
-            ItemsSource="{Binding CurrentPageData}"
-            SelectionMode="Extended"
-            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            Content="{Binding MinimalFilterViewModel}" />
 
-            IsReadOnly="True"
-            AutoGenerateColumns="True"
-            CanUserResizeColumns="True"
-            GridLinesVisibility="All">
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Copy Value" Command="{Binding CopyCellCommand}" />
-                    <MenuItem Header="Copy Row" Command="{Binding CopyRecordCommand}" />
-                    <MenuItem Header="View" Command="{Binding ViewRecordCommand}" />
-                    <MenuItem Header="Edit" Command="{Binding EditRecordCommand}" />
-                    <MenuItem Header="{Binding MenuTextSingleDelete}" Command="{Binding DeleteRecordCommand}" />
+        <Grid Grid.Row="1" RowDefinitions="*,Auto">
+            <DataGrid
+                Grid.Row="0"
+                ItemsSource="{Binding CurrentPageData}"
+                SelectionMode="Extended"
+                SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
 
-                    <MenuItem Header="{Binding MenuTextMultipleDelete}" Command="{Binding DeleteSelectedCommand}" />
-                </ContextMenu>
-            </DataGrid.ContextMenu>
-            <DataGrid.Styles>
-                <Style Selector="DataGridRow">
-                    <Setter Property="Background" Value="{Binding ., Converter={StaticResource RowBgConverter}}" />
-                </Style>
-            </DataGrid.Styles>
-            <Interaction.Behaviors>
-                <behaviors:DataGridCurrentColumnBehavior CurrentColumn="{Binding CurrentColumn, Mode=TwoWay}" />
-                <behaviors:DataGridSelectedItemsBehavior SelectedItems="{Binding SelectedItemsRaw, Mode=TwoWay}" />
-            </Interaction.Behaviors>
-        </DataGrid>
+                IsReadOnly="True"
+                AutoGenerateColumns="False"
+                CanUserResizeColumns="True"
+                GridLinesVisibility="All">
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy Value" Command="{Binding CopyCellCommand}" />
+                        <MenuItem Header="Copy Row" Command="{Binding CopyRecordCommand}" />
+                        <MenuItem Header="View" Command="{Binding ViewRecordCommand}" />
+                        <MenuItem Header="Edit" Command="{Binding EditRecordCommand}" />
+                        <MenuItem Header="{Binding MenuTextSingleDelete}" Command="{Binding DeleteRecordCommand}" />
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,2*,*">
-            <Button Grid.Column="0" Content="Add" Command="{Binding AddRecordCommand}" />
-            <Grid
-                Grid.Column="1"
-                ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                HorizontalAlignment="Center"
-                Margin="0 20">
+                        <MenuItem Header="{Binding MenuTextMultipleDelete}" Command="{Binding DeleteSelectedCommand}" />
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+                <DataGrid.Styles>
+                    <Style Selector="DataGridRow">
+                        <Setter Property="Background" Value="{Binding ., Converter={StaticResource RowBgConverter}}" />
+                    </Style>
+                </DataGrid.Styles>
+                <Interaction.Behaviors>
+                    <behaviors:DataGridCurrentColumnBehavior CurrentColumn="{Binding CurrentColumn, Mode=TwoWay}" />
+                    <behaviors:DataGridSelectedItemsBehavior SelectedItems="{Binding SelectedItemsRaw, Mode=TwoWay}" />
+                </Interaction.Behaviors>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Id" Binding="{Binding Id}" x:DataType="models:Brand" />
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" x:DataType="models:Brand" />
+                </DataGrid.Columns>
+            </DataGrid>
 
-                <Button
-                    Grid.Column="0"
-                    IsEnabled="{Binding IsFirstPageButtonEnabled}"
-                    Command="{Binding LoadFirstPageCommand}"
-                    Content="&lt;&lt;"
-                    Margin="10 0" />
-
-                <Button
+            <Grid Grid.Row="1" ColumnDefinitions="*,2*,*">
+                <Button Grid.Column="0" Content="Add" Command="{Binding AddRecordCommand}" />
+                <Grid
                     Grid.Column="1"
-                    IsEnabled="{Binding IsPreviousPageButtonEnabled}"
-                    Command="{Binding LoadPreviousPageCommand}"
-                    Content="&lt;"
-                    Margin="10 0" />
-
-                <TextBlock
-                    Grid.Column="2"
-                    Text="{Binding CurrentPage}"
-                    FontWeight="Bold"
-                    VerticalAlignment="Center"
+                    ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
                     HorizontalAlignment="Center"
-                    Margin="20 0" />
+                    Margin="0 20">
 
-                <Button
-                    Grid.Column="3"
-                    IsEnabled="{Binding IsNextPageButtonEnabled}"
-                    Command="{Binding LoadNextPageCommand}"
-                    Content="&gt;"
-                    Margin="10 0" />
+                    <Button
+                        Grid.Column="0"
+                        IsEnabled="{Binding IsFirstPageButtonEnabled}"
+                        Command="{Binding LoadFirstPageCommand}"
+                        Content="&lt;&lt;"
+                        Margin="10 0" />
 
-                <Button
-                    Grid.Column="4"
-                    IsEnabled="{Binding IsLastPageButtonEnabled}"
-                    Command="{Binding LoadLastPageCommand}"
-                    Content="&gt;&gt;"
-                    Margin="10 0" />
+                    <Button
+                        Grid.Column="1"
+                        IsEnabled="{Binding IsPreviousPageButtonEnabled}"
+                        Command="{Binding LoadPreviousPageCommand}"
+                        Content="&lt;"
+                        Margin="10 0" />
+
+                    <TextBlock
+                        Grid.Column="2"
+                        Text="{Binding CurrentPage}"
+                        FontWeight="Bold"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="20 0" />
+
+                    <Button
+                        Grid.Column="3"
+                        IsEnabled="{Binding IsNextPageButtonEnabled}"
+                        Command="{Binding LoadNextPageCommand}"
+                        Content="&gt;"
+                        Margin="10 0" />
+
+                    <Button
+                        Grid.Column="4"
+                        IsEnabled="{Binding IsLastPageButtonEnabled}"
+                        Command="{Binding LoadLastPageCommand}"
+                        Content="&gt;&gt;"
+                        Margin="10 0" />
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

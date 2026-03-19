@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:model="clr-namespace:SzivarClubManager.Models.Time"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Components.ShopOpeningHourView"
+             x:DataType="model:ShopOpeningHour">
+    <Grid ColumnDefinitions="*,*">
+        <Border
+            Margin="20 5 40 5"
+            Grid.Column="0">
+            <TextBlock
+                FontSize="21"
+                Text="{Binding DayOfWeekString}" />
+        </Border>
+        <Border
+            Margin="40 5 20 5"
+            Grid.Column="1">
+            <TextBlock
+                FontSize="21"
+                Text="{Binding ScheduleString}" />
+        </Border>
+    </Grid>
+</UserControl>

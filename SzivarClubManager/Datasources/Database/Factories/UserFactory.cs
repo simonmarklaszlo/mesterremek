@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
@@ -20,20 +22,21 @@ public sealed class UserFactory : IPageFactory<User>
         _roleFactory = roleFactory;
     }
 
-    public Task<bool> PageExists(int page, int pageSize) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize);
+    public Task<bool> PageExists(int page, int pageSize, IFilter<User> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, filter);
 
-    public Task<int> GetLastPage(int pageSize) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize);
+    public Task<int> GetLastPage(int pageSize, IFilter<User> filter) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize, filter);
 
-    public async Task<User[]> GetPage(int page, int pageSize)
+    public async Task<User[]> GetPage(int page, int pageSize, IFilter<User> filter)
     {
         Dictionary<int, Role> roles = (await _roleFactory.GetAll()).ToDictionary(x => x.Id);
 
-        const string query = """
-                             SELECT u.id, u.name, u.email, u.created_at, r.id
-                             FROM users u 
-                             JOIN roles r ON u.role_id = r.id 
-                             LIMIT @limit OFFSET @offset
-                             """;
+        string query = $"""
+                        SELECT u.id, u.name, u.email, u.created_at, r.id
+                        FROM users u 
+                        JOIN roles r ON u.role_id = r.id 
+                        {filter.ConstructParameterizedQuery()}
+                        LIMIT @limit OFFSET @offset
+                        """;
 
         await using var command = _connection.CreateCommand(query);
         command.Parameters.AddWithValue("offset", (page - 1) * pageSize);

@@ -6,6 +6,7 @@
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
+        <viewLocators:MinimalFilterViewLocator />
         <viewLocators:PageActivityViewLocator />
         <viewLocators:ViewLocator />
     </Application.DataTemplates>
@@ -90,4 +91,29 @@
 
         <StyleInclude Source="avares://SzivarClubManager/Views/Shared/SharedStyles.axaml" />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- Region colors -->
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FFF7FFFF" />
+                    <Bitmap x:Key="ClearIcon">/Assets/clear-black.png</Bitmap>
+                    <Bitmap x:Key="OpenFilterIcon">/Assets/settings-black.png</Bitmap>
+                    <Bitmap x:Key="SearchIcon">/Assets/search-black.png</Bitmap>
+                    <Bitmap x:Key="RefreshIcon">/Assets/refresh-black.png</Bitmap>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FF353819" />
+                    <Bitmap x:Key="ClearIcon">/Assets/clear-white.png</Bitmap>
+                    <Bitmap x:Key="OpenFilterIcon">/Assets/settings-white.png</Bitmap>
+                    <Bitmap x:Key="SearchIcon">/Assets/search-white.png</Bitmap>
+                    <Bitmap x:Key="RefreshIcon">/Assets/refresh-white.png</Bitmap>
+                </ResourceDictionary>
+
+
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

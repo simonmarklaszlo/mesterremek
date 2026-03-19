@@ -6,18 +6,37 @@ using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Configs;
-using SzivarClubManager.Datasources;
 using SzivarClubManager.Datasources.Change;
+using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Helper;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
+using SzivarClubManager.ViewModels.Activities.Page.Filter;
+using SzivarClubManager.ViewModels.Activities.Page.MinimalFilter;
 using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Data;
 
-public abstract partial class PageDataViewModel<T> : ViewModelBase where T : class, IModel
+public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
+    where TModel : class, IModel
+    where TFilter : IFilter<TModel>, new()
 {
-    public abstract T[] CurrentPageData { get; protected set; }
+    public abstract TModel[] CurrentPageData { get; protected set; }
     [ObservableProperty] private int _currentPage = 1;
+
+    public IList? SelectedItemsRaw
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value)) SelectedItems = value?.Cast<TModel>().ToArray() ?? [];
+        }
+    }
+
+    public abstract TModel[] SelectedItems { get; set; }
+    public object? SelectedItem { get; set; }
+    public DataGridColumn? CurrentColumn { get; set; }
 
     [ObservableProperty] private bool _isFirstPageButtonEnabled;
     [ObservableProperty] private bool _isPreviousPageButtonEnabled;
@@ -32,30 +51,31 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [ObservableProperty] private string _menuTextSingleDelete = DeleteTextSingle;
     [ObservableProperty] private string _menuTextMultipleDelete = DeleteTextMultiple;
 
-    public IPageFactory<T> Factory { get; init; } = null!;
-    public PageController<T> Controller { get; init; } = null!;
-
-    public IList? SelectedItemsRaw
+    public IPageFactory<TModel> Factory { get; init; } = null!;
+    public PageController<TModel> Controller { get; init; } = null!;
+    public PopupService PopupService
     {
         get;
-        set
+        init
         {
-            if (SetProperty(ref field, value)) SelectedItems = value?.Cast<T>().ToArray() ?? [];
+            field = value;
+            FilterViewModel.PopupService = value;
         }
-    }
-    public abstract T[] SelectedItems { get; set; }
-    public object? SelectedItem { get; set; }
-    public DataGridColumn? CurrentColumn { get; set; }
+    } = null!;
+    protected abstract TFilter Filter { get; }
+    public abstract MinimalFilterViewModel<TFilter, TModel> MinimalFilterViewModel { get; }
+    public abstract FilterViewModel<TFilter, TModel> FilterViewModel { get; }
+
 
     public Task InitializeAsync() => LoadCurrentPage();
 
     private async Task LoadCurrentPage()
     {
-        CurrentPageData = await Factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize);
+        CurrentPageData = await Factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize, Filter);
 
         IsFirstPageButtonEnabled = CurrentPage > 1;
         IsPreviousPageButtonEnabled = CurrentPage > 1;
-        int lastPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
+        int lastPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
         IsNextPageButtonEnabled = lastPage > CurrentPage;
         IsLastPageButtonEnabled = lastPage > CurrentPage;
     }
@@ -73,7 +93,7 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [RelayCommand]
     private async Task LoadNextPage()
     {
-        if (await Factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize))
+        if (await Factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize, Filter))
         {
             CurrentPage++;
             await LoadCurrentPage();
@@ -90,7 +110,7 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
     [RelayCommand]
     private async Task LoadLastPage()
     {
-        CurrentPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize);
+        CurrentPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
         await LoadCurrentPage();
     }
 
@@ -119,6 +139,7 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
     private void EditRecord() => Controller.EditItem(SelectedItems[0]);
+
     [RelayCommand]
     private void AddRecord() => Controller.AddItem();
 
@@ -211,5 +232,20 @@ public abstract partial class PageDataViewModel<T> : ViewModelBase where T : cla
         EditRecordCommand.NotifyCanExecuteChanged();
         DeleteRecordCommand.NotifyCanExecuteChanged();
         DeleteSelectedCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand]
+    private void ShowFilterPopup()
+    {
+        FilterViewModel.RefreshFilterFields();
+        PopupService.ShowPopup(FilterViewModel);
+    }
+
+    [RelayCommand]
+    private async Task TriggerSearch()
+    {
+        MinimalFilterViewModel.SearchText = Filter.ToString();
+        CurrentPage = 1;
+        await LoadCurrentPage();
     }
 }

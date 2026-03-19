@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Shared.FilterView"
+             x:Name="Root">
+    <Grid
+        RowDefinitions="*, Auto"
+        ColumnDefinitions="*, *">
+
+        <Grid
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            IsSharedSizeScope="True">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding FilterItems, ElementName=Root}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <shared:BottomActionButton
+            Grid.Row="1"
+            Grid.Column="0"
+            Text="Cancel"
+            Command="{Binding CancelCommand, ElementName=Root}" />
+
+
+        <shared:BottomActionButton
+            Grid.Row="1"
+            Grid.Column="1"
+            Text="Apply"
+            Command="{Binding ApplyCommand, ElementName=Root}" />
+    </Grid>
+</UserControl>

@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.CommonTargets;
+using SzivarClubManager.SourceGenerator.Targets;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Activities.Target;
 
@@ -17,7 +17,7 @@ public class Activity
         OrderGroup = orderGroup ?? byte.MaxValue;
     }
 
-    public string InstanceCreation() => $"new {ActivitySymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}()";
+    public string InstanceCreation(string popupServiceVarName) => $"new {ActivitySymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}({popupServiceVarName})";
 
     public static IncrementalValuesProvider<Activity> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
 

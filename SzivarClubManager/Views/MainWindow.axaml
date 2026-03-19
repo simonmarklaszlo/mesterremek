@@ -9,7 +9,34 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="SzivarClubManager">
+    <Grid>
+        <ContentControl
+            ZIndex="0"
+            Content="{Binding CurrentViewModel}" />
+        <Border
+            ZIndex="1"
+            Cursor="Hand"
+            Opacity="0.5"
+            Background="Black"
+            IsVisible="{Binding IsPopupVisible}">
+            <Interaction.Behaviors>
+                <EventTriggerBehavior EventName="Tapped">
+                    <InvokeCommandAction Command="{Binding ClosePopupCommand}" />
+                </EventTriggerBehavior>
+            </Interaction.Behaviors>
+        </Border>
+        <Border
+            ZIndex="2"
+            Opacity="1"
+            Margin="100"
+            CornerRadius="25"
+            BorderBrush="Black"
+            BorderThickness="2"
+            ClipToBounds="True"
+            Background="{DynamicResource PopupBackgroundBrush}"
+            IsVisible="{Binding IsPopupVisible}">
+            <ContentControl Content="{Binding PopupViewModel}" />
+        </Border>
 
-
-    <ContentControl Content="{Binding CurrentViewModel}" />
+    </Grid>
 </Window>

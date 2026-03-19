@@ -18,7 +18,7 @@ public record Cigar(int Id, string Name, int BrandId)
     public static void Seed(NpgsqlConnection connection)
     {
         var brands = new Faker<Cigar>()
-            .CustomInstantiator(f => new Cigar(f.IndexFaker + 1, f.Commerce.ProductName(), Random.Shared.Next(1,Brand.BrandCount)))
+            .CustomInstantiator(f => new Cigar(f.IndexFaker + 1, f.Commerce.ProductName(), Random.Shared.Next(1, Brand.BrandCount)))
             .Generate(CigarCount);
 
         StringBuilder querySb = new();

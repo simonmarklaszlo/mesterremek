@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
-using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
 using SzivarClubManager.SourceGenerator.Generators.Factories.Generation;
+using SzivarClubManager.SourceGenerator.Targets.Factory;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Factories;
 

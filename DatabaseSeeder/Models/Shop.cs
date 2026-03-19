@@ -18,25 +18,25 @@ public record Shop(int Id, string Name, string Address, string City, DateTime Cr
 
     public static void Seed(NpgsqlConnection connection)
     {
-       var shops = new Faker<Shop>()
-            .CustomInstantiator(f =>
-            {
-                var created = f.Date.Past(3);
+        var shops = new Faker<Shop>()
+             .CustomInstantiator(f =>
+             {
+                 var created = f.Date.Past(3);
 
-                return new Shop(
-                    f.IndexFaker,
-                    f.Company.CompanyName(),
-                    f.Address.StreetAddress(),
-                    f.Address.City(),
-                    created,
-                    f.Date.Between(created, DateTime.Now),
-                    new CustomPgPoint(
-                        f.Address.Longitude(),
-                        f.Address.Latitude()
-                    )
-                );
-            })
-            .Generate(ShopCount);
+                 return new Shop(
+                     f.IndexFaker,
+                     f.Company.CompanyName(),
+                     f.Address.StreetAddress(),
+                     f.Address.City(),
+                     created,
+                     f.Date.Between(created, DateTime.Now),
+                     new CustomPgPoint(
+                         f.Address.Longitude(),
+                         f.Address.Latitude()
+                     )
+                 );
+             })
+             .Generate(ShopCount);
 
         StringBuilder querySb = new();
         querySb.Append("INSERT INTO shops (name, address, city, location, created_at, updated_at) VALUES ");

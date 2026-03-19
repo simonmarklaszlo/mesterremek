@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Npgsql;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
 
@@ -44,6 +45,12 @@ public sealed class RoleFactory : IHelperFactory<Role>
         {
             querySb.Append($"(@name{index}),");
             commandParams.Add(new NpgsqlParameter($"name{index}", role.Name));
+        }
+
+        if (commandParams.Count == 0)
+        {
+            InvalidateCache();
+            return 0;
         }
 
         querySb.Remove(querySb.Length - 1, 1);

@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using SzivarClubManager.SourceGenerator.CommonTargets;
-using SzivarClubManager.SourceGenerator.CommonTargets.Factory;
 using SzivarClubManager.SourceGenerator.Generators.Changes.Generation;
 using SzivarClubManager.SourceGenerator.Generators.Changes.Target;
+using SzivarClubManager.SourceGenerator.Targets;
+using SzivarClubManager.SourceGenerator.Targets.Factory;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Changes;
 

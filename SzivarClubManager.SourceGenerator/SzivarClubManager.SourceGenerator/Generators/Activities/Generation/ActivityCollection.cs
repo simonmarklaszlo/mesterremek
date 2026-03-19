@@ -12,11 +12,13 @@ public static class ActivityCollection
     public static string GenerateSource(IEnumerable<Activity> activities)
     {
         const string activityVm = "global::SzivarClubManager.ViewModels.Activities.ActivityViewModel";
-        const string factoryProvider = "global::SzivarClubManager.Datasources.FactoryProvider";
+        const string factoryProvider = "global::SzivarClubManager.Datasources.Factory.FactoryProvider";
         const string readOnlyDict = $"global::System.Collections.Generic.IReadOnlyDictionary<string, {activityVm}>";
         const string dictionary = $"global::System.Collections.Generic.Dictionary<string, {activityVm}>";
+        const string popupservice = "SzivarClubManager.Services.PopupService";
 
         const string factoryProviderVarName = "factoryProvider";
+        const string popupServiceVarName = "popupService";
 
         StringBuilder sb = new();
 
@@ -26,7 +28,7 @@ public static class ActivityCollection
         sb.AppendLine();
         sb.AppendLine("public static class ActivityCollection");
         sb.AppendLine("{");
-        sb.AppendLine($"    public static {readOnlyDict} GetActivities({factoryProvider} {factoryProviderVarName}) => new {dictionary}");
+        sb.AppendLine($"    public static {readOnlyDict} GetActivities({factoryProvider} {factoryProviderVarName}, {popupservice} {popupServiceVarName}) => new {dictionary}");
         sb.AppendLine("    {");
 
         foreach (var a in activities
@@ -35,7 +37,7 @@ public static class ActivityCollection
                      .Select(x => x.OrderBy(a => a.DisplayName))
                      .SelectMany(x => x))
         {
-            sb.AppendLine($"        {{ \"{a.DisplayName}\", {(a is PageActivity pa ? pa.InstanceCreation(factoryProviderVarName) : a.InstanceCreation())} }},");
+            sb.AppendLine($"        {{ \"{a.DisplayName}\", {(a is PageActivity pa ? pa.InstanceCreation(popupServiceVarName, factoryProviderVarName) : a.InstanceCreation(popupServiceVarName))} }},");
         }
 
         sb.AppendLine("    };");
