@@ -31,9 +31,8 @@ public sealed class UserFactory : IPageFactory<User>
         Dictionary<int, Role> roles = (await _roleFactory.GetAll()).ToDictionary(x => x.Id);
 
         string query = $"""
-                        SELECT u.id, u.name, u.email, u.created_at, r.id
+                        SELECT u.id, u.name, u.email, u.created_at, u.role_id
                         FROM users u 
-                        JOIN roles r ON u.role_id = r.id 
                         {filter.ConstructParameterizedQuery()}
                         LIMIT @limit OFFSET @offset
                         """;
@@ -89,4 +88,58 @@ public sealed class UserFactory : IPageFactory<User>
     }
 
     public Task<int> DeleteRange(IEnumerable<User> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+
+    public async Task<User?> GetModel(int id)
+    {
+        Dictionary<int, Role> roles = (await _roleFactory.GetAll()).ToDictionary(x => x.Id);
+
+        string query = $"""
+                        SELECT u.id, u.name, u.email, u.created_at, u.role_id
+                        FROM users u 
+                        WHERE u.id = @id
+                        LIMIT 1
+                        """;
+
+        await using var command = _connection.CreateCommand(query);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync()) return null;
+
+        return new User(
+            reader.GetInt32(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetDateTime(3),
+            roles[reader.GetInt32(4)]
+        );
+    }
+
+    public async Task<User[]> GetModel(IEnumerable<int> ids)
+    {
+        Dictionary<int, Role> roles = (await _roleFactory.GetAll()).ToDictionary(x => x.Id);
+
+        const string query = """
+                        SELECT id, name, email, created_at, role_id
+                        FROM users 
+                        where id = ANY(@ids)
+                        """;
+
+        await using var command = _connection.CreateCommand(query);
+        command.Parameters.AddWithValue("ids", ids.ToArray());
+        await using var reader = await command.ExecuteReaderAsync();
+        List<User> users = [];
+
+        while (await reader.ReadAsync())
+        {
+            users.Add(new User(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetDateTime(3),
+                roles[reader.GetInt32(4)]
+            ));
+        }
+
+        return users.ToArray();
+    }
 }

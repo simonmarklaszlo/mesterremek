@@ -8,7 +8,7 @@ namespace SzivarClubManager.Datasources.Factory;
 /// Defines batch operations for model instances.
 /// </summary>
 /// <typeparam name="T">The model type handled by the factory.</typeparam>
-public interface IModelFactory<in T> : IFactory where T : IModel
+public interface IModelFactory<T> : IFactory where T : IModel
 {
     /// <summary>
     /// Adds a collection of models.
@@ -30,4 +30,7 @@ public interface IModelFactory<in T> : IFactory where T : IModel
     /// <param name="items">The models to delete.</param>
     /// <returns>The number of affected records.</returns>
     Task<int> DeleteRange(IEnumerable<T> items);
+
+    Task<T?> GetModel(int id);
+    Task<T[]> GetModel(IEnumerable<int> ids);
 }

@@ -26,6 +26,8 @@ public static class ModelFilter
         sb.AppendLine();
         GenerateAddParameters(sb, filter);
         sb.AppendLine();
+        GenerateEmptyFilterProperty(sb, filter);
+        sb.AppendLine();
         GenerateParse(sb, filter);
         sb.AppendLine("}");
         return sb.ToString();
@@ -206,6 +208,11 @@ public static class ModelFilter
         sb.AppendLine("    }");
     }
 
+    private static void GenerateEmptyFilterProperty(StringBuilder sb, FilterModel filter)
+    {
+        string filterIFace = $"global::SzivarClubManager.Datasources.Database.Filters.IFilter<{filter.ModelType.GlobalName()}>";
+        sb.AppendLine($"    public static {filterIFace} Empty => field ??= new {filter.FilterType.GlobalName()}();");
+    }
     private static void GenerateParse(StringBuilder sb, FilterModel filter)
     {
         string filterIFace = $"global::SzivarClubManager.Datasources.Database.Filters.IFilter<{filter.ModelType.GlobalName()}>";

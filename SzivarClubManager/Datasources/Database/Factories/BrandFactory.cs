@@ -25,7 +25,7 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
             field = value;
             CacheUpdated = DateTime.Now;
         }
-    } = [];
+    } = null;
 
     public DateTime CacheUpdated { get; private set; }
 
@@ -90,6 +90,15 @@ public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
         var res = await CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
         InvalidateCache();
         return res;
+    }
+
+    public Task<Brand?> GetModel(int id)
+    {
+        throw new NotImplementedException();
+    }
+    public Task<Brand[]> GetModel(IEnumerable<int> ids)
+    {
+        throw new NotImplementedException();
     }
 
     public Task<bool> PageExists(int page, int pageSize, IFilter<Brand> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, filter);

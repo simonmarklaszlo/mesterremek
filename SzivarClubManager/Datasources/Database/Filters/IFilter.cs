@@ -18,5 +18,6 @@ public partial interface IFilter<T> where T : class, IModel
     string ConstructParameterizedQuery();
 
     void AddParameters(NpgsqlParameterCollection parameters);
+    static IFilter<T> Empty => throw new NotSupportedException();
     static virtual IFilter<T> Parse(string filterString) => throw new NotSupportedException();
 }

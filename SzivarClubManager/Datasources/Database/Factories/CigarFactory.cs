@@ -106,4 +106,12 @@ public sealed class CigarFactory : IPageFactory<Cigar>
     }
 
     public Task<int> DeleteRange(IEnumerable<Cigar> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+    public Task<Cigar?> GetModel(int id)
+    {
+        throw new System.NotImplementedException();
+    }
+    public Task<Cigar[]> GetModel(IEnumerable<int> ids)
+    {
+        throw new System.NotImplementedException();
+    }
 }

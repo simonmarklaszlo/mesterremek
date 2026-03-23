@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:model="clr-namespace:SzivarClubManager.Models.Suggestions"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Components.SuggestionView"
+             x:DataType="model:Suggestion">
+    <Border Padding="10" Margin="5" CornerRadius="8" Background="#222">
+        <StackPanel Spacing="4">
+
+            <!-- Type -->
+            <TextBlock Text="{Binding Type.Name}" FontWeight="Bold" />
+
+            <!-- Proposed value -->
+            <TextBlock Text="{Binding ProposedValue}" FontSize="16" />
+
+            <!-- Shop (nullable) -->
+            <TextBlock Text="{Binding Shop.Name}" IsVisible="{Binding Shop}" />
+
+            <!-- User -->
+            <TextBlock Text="{Binding User.Name}" FontSize="12" Opacity="0.7" />
+
+            <!-- Status -->
+            <TextBlock Text="{Binding Status.Name}" FontSize="12" />
+
+            <!-- Dates -->
+            <TextBlock Text="{Binding CreatedAt}" FontSize="10" Opacity="0.5" />
+
+        </StackPanel>
+    </Border>
+</UserControl>

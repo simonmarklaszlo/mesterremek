@@ -29,6 +29,18 @@ public static class DayOfWeekExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(d), d, null)
         };
 
+        public static DayOfWeek? TryMatch(string day) => day switch
+        {
+            "Hétfő" => DayOfWeek.Monday,
+            "Kedd" => DayOfWeek.Tuesday,
+            "Szerda" => DayOfWeek.Wednesday,
+            "Csütörtök" => DayOfWeek.Thursday,
+            "Péntek" => DayOfWeek.Friday,
+            "Szombat" => DayOfWeek.Saturday,
+            "Vasárnap" => DayOfWeek.Sunday,
+            _ => null
+        };
+
         public static DayOfWeek FromId(int id) => (DayOfWeek)id;
     }
 }

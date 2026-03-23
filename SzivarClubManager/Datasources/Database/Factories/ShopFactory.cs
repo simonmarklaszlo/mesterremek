@@ -14,6 +14,7 @@ namespace SzivarClubManager.Datasources.Database.Factories;
 [FactoryOf(typeof(Shop))]
 public sealed class ShopFactory : IPageFactory<Shop>
 {
+    private const string NamePlaceholder = "Traffik";
     private const string TableName = "shops";
     private readonly DatabaseConnection _connection;
 
@@ -45,9 +46,8 @@ public sealed class ShopFactory : IPageFactory<Shop>
 
         while (await reader.ReadAsync())
         {
-            const string namePlaceholder = "Traffik";
             var name = reader.GetString(1);
-            if (name == "NULL") name = namePlaceholder;
+            if (name == "NULL") name = NamePlaceholder;
 
             shops.Add(new Shop(
                 reader.GetInt32(0),
@@ -118,4 +118,66 @@ public sealed class ShopFactory : IPageFactory<Shop>
     }
 
     public Task<int> DeleteRange(IEnumerable<Shop> items) => CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
+
+    public async Task<Shop?> GetModel(int id)
+    {
+        const string query = """
+                             SELECT id, name, address, city, created_at, updated_at, location
+                             FROM shops
+                             WHERE id = @id
+                             LIMIT 1
+                             """;
+
+        await using var command = _connection.CreateCommand(query);
+        command.Parameters.AddWithValue("id", id);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync()) return null;
+
+        return new Shop(
+            reader.GetInt32(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetDateTime(4),
+            reader.GetDateTime(5),
+            CustomPgPoint.FromPgPoint(reader.GetFieldValue<Point>(6))
+        );
+    }
+
+    public async Task<Shop[]> GetModel(IEnumerable<int> ids)
+    {
+        int[] idArr = ids.ToArray();
+        if (idArr.Length == 0) return [];
+
+        const string query = """
+                             SELECT id, name, address, city, created_at, updated_at, location
+                             FROM shops
+                             WHERE id = ANY(@ids)
+                             """;
+
+        await using var command = _connection.CreateCommand(query);
+        command.Parameters.AddWithValue("ids", idArr);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        List<Shop> shops = new(idArr.Length);
+
+        while (await reader.ReadAsync())
+        {
+            var name = reader.GetString(1);
+            if (name == "NULL") name = NamePlaceholder;
+
+            shops.Add(new Shop(
+                reader.GetInt32(0),
+                name,
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetDateTime(4),
+                reader.GetDateTime(5),
+                CustomPgPoint.FromPgPoint(reader.GetFieldValue<Point>(6))
+            ));
+        }
+
+        return shops.ToArray();
+    }
 }

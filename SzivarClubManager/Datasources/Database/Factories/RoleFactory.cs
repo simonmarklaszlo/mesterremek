@@ -24,7 +24,7 @@ public sealed class RoleFactory : IHelperFactory<Role>
             field = value;
             CacheUpdated = DateTime.Now;
         }
-    } = [];
+    } = null;
 
     public DateTime CacheUpdated { get; private set; }
 
@@ -90,6 +90,15 @@ public sealed class RoleFactory : IHelperFactory<Role>
         var res = await CommonQueries.Delete(_connection, TableName, items.Select(x => x.Id));
         InvalidateCache();
         return res;
+    }
+
+    public Task<Role?> GetModel(int id)
+    {
+        throw new NotImplementedException();
+    }
+    public Task<Role[]> GetModel(IEnumerable<int> ids)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<Role[]> GetAll()
