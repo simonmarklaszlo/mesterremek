@@ -22,9 +22,18 @@ public static class Changes
         sb.AppendLine();
         sb.AppendLine("namespace SzivarClubManager.Datasources.Change;");
         sb.AppendLine();
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Stores generated change-tracking state and helpers.");
+        sb.AppendLine("/// </summary>");
         sb.AppendLine("public static partial class Changes");
         sb.AppendLine("{");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Contains per-model-type change trackers.");
+        sb.AppendLine("    /// </summary>");
         sb.AppendLine($"    private static {Dictionary} _dataChanges = null!;");
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Indicates whether the change tracker registry has already been initialized.");
+        sb.AppendLine("    /// </summary>");
         sb.AppendLine("    private static bool _isInitialized = false;");
         sb.AppendLine();
         GenerateInitialize(sb, models, "    ");
@@ -39,12 +48,15 @@ public static class Changes
     {
         const string factoryProvider = "global::SzivarClubManager.Datasources.Factory.FactoryProvider";
 
+        sb.AppendLine(indent + "/// <summary>");
+        sb.AppendLine(indent + "/// Initializes change tracking for all models that have a supported factory.");
+        sb.AppendLine(indent + "/// </summary>");
+        sb.AppendLine(indent + $"/// <param name=\"provider\"><see cref=\"{factoryProvider.Replace("global::", "")}\"/> used to resolve model factories.</param>");
         sb.AppendLine(indent + $"public static void Initialize({factoryProvider} provider)");
         sb.AppendLine(indent + "{");
         sb.AppendLine(indent + "    if(_isInitialized) return;");
         sb.AppendLine(indent + "    _isInitialized = true;");
         sb.AppendLine();
-
         sb.AppendLine(indent + $"    _dataChanges = new {Dictionary}()");
         sb.AppendLine(indent + "    {");
         foreach (var group in models.Where(x => x.Factory is not null).OrderBy(x => x.Factory!.FactoryType))
@@ -81,6 +93,10 @@ public static class Changes
     {
         const string modelInterface = "global::SzivarClubManager.Models.IModel";
 
+        sb.AppendLine(indent + "/// <summary>");
+        sb.AppendLine(indent + "/// Gets the change tracker for the specified model type.");
+        sb.AppendLine(indent + "/// </summary>");
+        sb.AppendLine(indent + "/// <typeparam name=\"T\">The model type.</typeparam>");
         sb.AppendLine(indent + $"private static {DataChanges}<T> GetDataChange<T>() where T : class, {modelInterface}");
         sb.AppendLine(indent + "{");
         sb.AppendLine(indent + $"    return ({DataChanges}<T>)_dataChanges[typeof(T)];");

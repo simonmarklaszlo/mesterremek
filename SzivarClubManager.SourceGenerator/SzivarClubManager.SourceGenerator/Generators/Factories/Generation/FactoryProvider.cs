@@ -17,6 +17,9 @@ public static class FactoryProvider
         sb.AppendLine();
         sb.AppendLine("namespace SzivarClubManager.Datasources.Factory;");
         sb.AppendLine();
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Generated part of <see cref=\"FactoryProvider\"/> containing factory registrations.");
+        sb.AppendLine("/// </summary>");
         sb.AppendLine("public sealed partial class FactoryProvider");
         sb.AppendLine("{");
         GenerateFactoriesMap(sb, factories);
@@ -33,6 +36,11 @@ public static class FactoryProvider
 
         const string dbConnVarName = "connection";
 
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Builds a map of model types to generated factory instances.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    /// <param name=\"connection\">Active database connection used to initialize factory instances.</param>");
+        sb.AppendLine("    /// <returns>A dictionary that maps model types to factory instances.</returns>");
         sb.AppendLine($"    private static partial {dictionary} GetGeneratedFactoriesMap({databaseConnection} {dbConnVarName})");
         sb.AppendLine("    {");
 
