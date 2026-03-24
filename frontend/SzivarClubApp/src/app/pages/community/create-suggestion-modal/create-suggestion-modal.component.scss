@@ -1,0 +1,12 @@
+/* Restored after merge: modal-specific styles.
+   Keep minimal to avoid blocking builds; adjust as needed. */
+
+:host {
+  display: block;
+}
+
+ion-content {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
