@@ -286,6 +286,11 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     this.Varos_Coords = [];
     this.Shop_Data = [];
     this.sidebar = null;
+
+    // Get user location if available, fallback to Budapest
+    let searchLat = this.userLat || 47.4979;
+    let searchLng = this.userLong || 19.0402;
+
     let raw = this.searchText ?? '';
     if (!raw) {
       const el = document.getElementById('varos') as HTMLInputElement | null;
@@ -295,59 +300,54 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
       const tgt = event.target as any;
       raw = tgt?.value ?? '';
     }
-    const cap_value = raw ? raw.toString().charAt(0).toUpperCase() + raw.toString().slice(1).toLowerCase() : '';
 
-    this.http.get(`http://localhost:3000/api/shops/cities/${cap_value}`).subscribe({
+    // Use the same API as list page with large maxDistance to show everything
+    const searchParams = {
+      latitude: searchLat,
+      longitude: searchLng,
+      maxDistance: 200, // Very large distance to show all results
+      search: raw || undefined,
+      limit: 100,
+      offset: 0
+    };
+
+    this.shopService.searchShops(searchParams).subscribe({
       next: (response) => {
-        const shopRequests: any[] = [];
-        Object.entries(response).forEach(([key, row]: [string, any]) => {
-          if (Array.isArray(row)) {
-            row.forEach((element: any) => {
-              const shopId = (typeof element === 'object')
-                ? (element.id ?? element.shopId ?? element._id ?? element)
-                : element;
-              if (!shopId) return;
-              shopRequests.push(this.http.get(`http://localhost:3000/api/shops/${shopId}`));
-            });
+        console.log('Map search response:', response);
+
+        if (response && response.success && Array.isArray(response.data)) {
+          this.Shop_Data = response.data;
+          console.log(`Found ${response.data.length} shops`);
+          this.updateMarkers();
+
+          // Center map on first result if available
+          if (this.Shop_Data.length > 0 && this.map) {
+            const firstShop = this.Shop_Data[0];
+            this.map.setView([firstShop.latitude, firstShop.longitude], 13);
           }
-        });
 
-        if (shopRequests.length > 0) {
-          forkJoin(shopRequests).subscribe({
-            next: (allShopResponses) => {
-              allShopResponses.forEach((shopResponse: any) => {
-                const shops = Array.isArray(shopResponse) ? shopResponse : Object.values(shopResponse);
-                shops.forEach((row2: any) => {
-                  const latNum = parseFloat(row2.latitude ?? row2.lat ?? row2.coords?.latitude ?? NaN);
-                  const lngNum = parseFloat(row2.longitude ?? row2.lng ?? row2.coords?.longitude ?? NaN);
-                  if (!isNaN(latNum) && !isNaN(lngNum)) {
-                    this.Varos_Coords.push([latNum, lngNum]);
-                    this.Shop_Data.push(row2);
-                  }
-                });
-              });
-              this.updateMarkers();
-              // Center map on first result
-              if (this.Varos_Coords.length > 0 && this.map) {
-                this.map.setView(this.Varos_Coords[0] as [number, number], 13);
-              }
-              // Show all shops in sidebar as list by default
-              if (this.Shop_Data.length > 0) {
-                this.showShopList(this.Shop_Data);
-              }
+          // Show all shops in sidebar as list by default
+          if (this.Shop_Data.length > 0) {
+            this.showShopList(this.Shop_Data);
+          }
+        } else {
+          console.error('Search failed or invalid response format:', response);
+          this.Shop_Data = [];
+        }
 
-              // Only trigger other page after search completes
-              if (triggerOtherPage) {
-                this.searchService.triggerSearch('map', {
-                  searchText: this.searchText
-                });
-              }
-            },
-            error: (err) => console.error('Error loading shop data:', err)
+        // If this is a manual search, trigger the list page
+        if (triggerOtherPage) {
+          this.searchService.triggerSearch('map', {
+            searchText: this.searchText,
+            filterCigars: false,
+            maxDistance: 200
           });
         }
       },
-      error: (error) => console.error('Error:', error)
+      error: (error) => {
+        console.error('Map search error:', error);
+        this.Shop_Data = [];
+      }
     });
   }
   // #endregion
