@@ -15,19 +15,9 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
                ST_X(s.location)           AS longitude,
                ST_Y(s.location)           AS latitude,
                CASE
-                   WHEN COUNT(DISTINCT c.id) > 0 THEN true
+                   WHEN COUNT(DISTINCT ca.id) > 0 THEN true
                    ELSE false
                    END                    as hasCigars,
-            /* (
-                 ROUND(
-                         6371 * acos(
-                                 cos(radians($1)) * cos(radians(ST_Y(s.location))) *
-                                 cos(radians(ST_X(s.location)) - radians($2)) +
-                                 sin(radians($1)) * sin(radians(ST_Y(s.location)))
-                                ),
-                         2
-                 )
-                 )                      AS distance,*/
                ROUND(
                        (
                            6371 * acos(
@@ -41,14 +31,11 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
                COALESCE(AVG(r.rating), 0) AS rating,
                COUNT(DISTINCT r.id)       AS reviewCount
         FROM shops s
-                 LEFT JOIN shop_cigar_brands scb ON scb.shop_id = s.id
-                 LEFT JOIN cigars c ON c.id = scb.cigar_id
+                 LEFT JOIN cigar_availability ca ON ca.shop_id = s.id
                  LEFT JOIN reviews r ON r.shop_id = s.id
         WHERE
-          -- Távolság szűrés (előszűrés négyzet alapon - gyorsabb)
             ST_Y(s.location) BETWEEN $1 - ($3 / 111.0) AND $1 + ($3 / 111.0)
           AND ST_X(s.location) BETWEEN $2 - ($3 / (111.0 * cos(radians($1)))) AND $2 + ($3 / (111.0 * cos(radians($1))))
-          -- Keresés szűrés (opcionális)
           AND (
             $5::text IS NULL
                 OR s.name ILIKE '%' || $5 || '%'
@@ -57,7 +44,6 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
             )
         GROUP BY s.id, s.name, s.address, s.city, ST_Y(s.location), ST_X(s.location)
         HAVING
-           -- Pontos távolság szűrés
             (
                 6371 * acos(
                         cos(radians($1)) * cos(radians(ST_Y(s.location))) *
@@ -65,10 +51,9 @@ async function getShopPage(filter: ShopFilter): Promise<ShopFilterResult[]> {
                         sin(radians($1)) * sin(radians(ST_Y(s.location)))
                        )
                 ) <= $3
-           -- Szivar szűrés (opcionális) - csak azok a boltok, ahol van szivar hozzárendelve
            AND ($4::boolean IS NULL OR
-                ($4 = true AND COUNT(DISTINCT c.id) > 0) OR
-                ($4 = false AND COUNT(DISTINCT c.id) = 0))
+                ($4 = true AND COUNT(DISTINCT ca.id) > 0) OR
+                ($4 = false AND COUNT(DISTINCT ca.id) = 0))
         ORDER BY distance
         LIMIT $6 OFFSET $7;
     `;
@@ -96,13 +81,10 @@ async function countShopPages(filter: ShopFilter): Promise<number> {
         SELECT COUNT(*) AS totalCount
         FROM (SELECT s.id
               FROM shops s
-                       LEFT JOIN shop_cigar_brands scb ON scb.shop_id = s.id
-                       LEFT JOIN cigars c ON c.id = scb.cigar_id
+                       LEFT JOIN cigar_availability ca ON ca.shop_id = s.id
               WHERE
-                -- Bounding box pre-filter (fast)
                   ST_Y(s.location) BETWEEN $1 - ($3 / 111.0) AND $1 + ($3 / 111.0)
                 AND ST_X(s.location) BETWEEN $2 - ($3 / (111.0 * cos(radians($1)))) AND $2 + ($3 / (111.0 * cos(radians($1))))
-                -- Optional search filter
                 AND (
                   $5::text IS NULL
                       OR s.name ILIKE '%' || $5 || '%'
@@ -111,7 +93,6 @@ async function countShopPages(filter: ShopFilter): Promise<number> {
                   )
               GROUP BY s.id, s.location
               HAVING
-                 -- Exact distance filter
                   (
                       6371 * acos(
                               cos(radians($1)) * cos(radians(ST_Y(s.location))) *
@@ -119,10 +100,9 @@ async function countShopPages(filter: ShopFilter): Promise<number> {
                               sin(radians($1)) * sin(radians(ST_Y(s.location)))
                              )
                       ) <= $3
-                 -- Optional cigar filter
                  AND ($4::boolean IS NULL
-                  OR ($4 = true AND COUNT(DISTINCT c.id) > 0)
-                  OR ($4 = false AND COUNT(DISTINCT c.id) = 0)
+                  OR ($4 = true AND COUNT(DISTINCT ca.id) > 0)
+                  OR ($4 = false AND COUNT(DISTINCT ca.id) = 0)
                   )) AS filtered_shops;
     `;
 
@@ -327,3 +307,4 @@ export default {
     getShopDetails,
     getShopIdsInCity
 }
+

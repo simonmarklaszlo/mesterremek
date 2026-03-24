@@ -82,6 +82,15 @@ export interface ShopDetailsResponse {
   data: ShopDetails;
 }
 
+export interface ReceivedCigarResponse {
+  success: boolean;
+  data: {
+    userId: number;
+    shopId: number;
+    receivedAt: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -119,5 +128,9 @@ export class ShopService {
   getShopDetails(shopId: number): Observable<ShopDetailsResponse> {
     return this.http.get<ShopDetailsResponse>(`${this.apiUrl}/${shopId}`);
   }
-}
 
+  // "Kaptam szivart" esemény rögzítése
+  receivedCigar(shopId: number): Observable<ReceivedCigarResponse> {
+    return this.http.post<ReceivedCigarResponse>(`${this.apiUrl}/${shopId}/received-cigar`, {});
+  }
+}

@@ -18,7 +18,8 @@ import {
   IonCard,
   IonCardHeader,
   IonCardTitle,
-  IonCardContent
+  IonCardContent,
+  ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -71,13 +72,15 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
   shopDetails: ShopDetails | null = null;
   isLoading: boolean = false;
   errorMessage: string = '';
+  isReceivedCigarSubmitting = false;
 
   // Math objektum elérhetővé tétele a template számára
   Math = Math;
 
   constructor(
     private shopService: ShopService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private toastCtrl: ToastController
   ) {
     addIcons({
       closeOutline,
@@ -209,5 +212,34 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       return;
     }
     window.open(webUrl, '_blank');
+  }
+
+  async onReceivedCigarClick() {
+    if (!this.shopId || this.isReceivedCigarSubmitting) return;
+
+    this.isReceivedCigarSubmitting = true;
+    this.shopService.receivedCigar(this.shopId).subscribe({
+      next: async () => {
+        const toast = await this.toastCtrl.create({
+          message: 'Rögzítve: kaptam szivart',
+          duration: 2000,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+        this.isReceivedCigarSubmitting = false;
+      },
+      error: async (err) => {
+        console.error('receivedCigar error:', err);
+        const toast = await this.toastCtrl.create({
+          message: 'Nem sikerült rögzíteni',
+          duration: 2500,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+        this.isReceivedCigarSubmitting = false;
+      }
+    });
   }
 }

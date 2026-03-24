@@ -3,6 +3,7 @@ import {Request, Response} from "express";
 import {ShopFilter} from "../../model/shop";
 import jwt from "jsonwebtoken";
 import {config} from "../../config/config";
+import userActionsAccess from "../../db/userActionsAccess";
 
 export async function handleShopSearch(req: Request, res: Response): Promise<void> {
     if (!validateAuthToken(req.headers['authorization'])) {
@@ -87,6 +88,29 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
 
     const id = parseInt(reqId);
 
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Missing token"
+        });
+        return;
+    }
+
+    let payload: any;
+    try {
+        payload = jwt.verify(token, config.jwt.secret) as any;
+    } catch {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Invalid token"
+        });
+        return;
+    }
+
     const details = await shopAccess.getShopDetails(id);
 
     if (!details) {
@@ -98,9 +122,27 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
         return;
     }
 
+    const userId = payload.userId;
+    let hasReceivedCigar = false;
+    let lastReceivedAt: string | null = null;
+    try {
+        hasReceivedCigar = await userActionsAccess.hasReceivedCigar(userId, id);
+        if (hasReceivedCigar) {
+            lastReceivedAt = await userActionsAccess.getLastReceivedCigarAt(userId, id);
+        }
+    } catch (e) {
+        console.warn(`[SHOP_DETAILS] cigar_availability lookup failed userId=${userId} shopId=${id}:`, e);
+    }
+
     res.status(200).json({
         success: true,
-        data: details,
+        data: {
+            ...details,
+            userActions: {
+                hasReceivedCigar,
+                lastReceivedAt
+            }
+        },
     });
 }
 
@@ -131,6 +173,93 @@ export async function handleCityShops(req: Request, res: Response): Promise<void
         success: true,
         data: result,
     })
+}
+
+export async function handleReceivedCigar(req: Request, res: Response): Promise<void> {
+    if (!validateAuthToken(req.headers['authorization'])) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Invalid or missing token"
+        });
+        return;
+    }
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Missing token"
+        });
+        return;
+    }
+
+    let payload: any;
+    try {
+        payload = jwt.verify(token, config.jwt.secret) as any;
+    } catch {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized",
+            message: "Invalid token"
+        });
+        return;
+    }
+
+    const reqId = req.params.id as string | undefined;
+    if (!reqId) {
+        res.status(400).json({
+            success: false,
+            error: "Invalid parameters",
+            message: "Shop id missing"
+        });
+        return;
+    }
+
+    const shopId = parseInt(reqId, 10);
+    if (Number.isNaN(shopId)) {
+        res.status(400).json({
+            success: false,
+            error: "Invalid parameters",
+            message: "Shop id must be a number"
+        });
+        return;
+    }
+
+    // Validate shop exists
+    const details = await shopAccess.getShopDetails(shopId);
+    if (!details) {
+        res.status(404).json({
+            success: false,
+            error: "Not Found",
+            message: `Shop with id ${shopId} not found`
+        });
+        return;
+    }
+
+    const userId = payload.userId;
+
+    try {
+        const { id, createdAt } = await userActionsAccess.recordReceivedCigar(userId, shopId);
+        res.status(201).json({
+            success: true,
+            data: {
+                id,
+                userId,
+                shopId,
+                receivedAt: createdAt
+            }
+        });
+    } catch (err: any) {
+        console.error(`[RECEIVED_CIGAR] insert failed userId=${userId} shopId=${shopId}:`, err);
+        res.status(500).json({
+            success: false,
+            error: "Server Error",
+            message: "Failed to record received cigar"
+        });
+    }
 }
 
 function validateAuthToken(authHeader: string | undefined): boolean {

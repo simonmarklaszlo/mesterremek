@@ -2,7 +2,11 @@
 import { Component, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, ApplicationRef, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { IonInput, IonButton, IonIcon, IonHeader, IonToolbar, IonTitle,
-         IonLabel, IonChip, IonText, IonSpinner } from '@ionic/angular/standalone';
+         IonLabel, IonChip, IonText, IonSpinner,
+         IonCheckbox,
+         IonFab, IonFabButton,
+         IonList, IonItem,
+         IonCard, IonCardHeader, IonCardTitle, IonCardContent } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -20,6 +24,8 @@ import { SearchService } from '../../services/search.service';
 import { ShopService, ShopDetails } from '../../services/shop.service';
 import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { environment } from '../../../environments/environment';
+import { ToastController } from '@ionic/angular/standalone';
 
 // Fix Leaflet marker paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -40,7 +46,12 @@ L.Icon.Default.mergeOptions({
   imports: [
     CommonModule,
     IonInput, IonButton, IonIcon, IonHeader, IonToolbar, IonTitle,
-    IonLabel, IonChip, IonText, IonSpinner, FormsModule,
+    IonLabel, IonChip, IonText, IonSpinner,
+    IonCheckbox,
+    IonFab, IonFabButton,
+    IonList, IonItem,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+    FormsModule,
     ShopDetailsModalComponent
   ]
 })
@@ -55,6 +66,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   userLat = 0;
   userLong = 0;
   searchText: string = '';
+  filterCigars: boolean = false;
+  maxDistance: number = 10;
   private currentTheme = true;
 
   // Modal state for mobile
@@ -121,7 +134,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
     private searchService: SearchService,
-    private shopService: ShopService
+    private shopService: ShopService,
+    private toastCtrl: ToastController
   ) {
     addIcons({ radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
                timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline });
@@ -181,20 +195,23 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
         }
       });
 
-    // Subscribe to search service changes for text sync
+    // Subscribe to search service changes for state sync
     this.searchService.searchState$
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
         this.searchText = state.searchText;
+        this.filterCigars = state.filterCigars;
+        this.maxDistance = state.maxDistance;
       });
 
     // Subscribe to search triggers from list page
     this.searchService.searchTriggered$
       .pipe(takeUntil(this.destroy$))
       .subscribe((trigger) => {
-        // Only respond if the search was triggered from the list page
         if (trigger.source === 'list') {
           this.searchText = trigger.searchText;
+          this.filterCigars = trigger.filterCigars;
+          this.maxDistance = trigger.maxDistance;
           // Execute search without triggering back to prevent loops
           this.executeVarosKereses(false);
         }
@@ -261,6 +278,11 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     this.map.setView([this.userLat, this.userLong], Math.max(this.map.getZoom() || 13, 13), { animate: true });
   }
 
+  onFilterCigarsChanged() {
+    // keep shared state updated so list <-> map stays synced
+    this.searchService.updateFilterCigars(this.filterCigars);
+  }
+
   varos_kereses(event?: Event) {
     // Manual search - trigger other page
     this.executeVarosKereses(true, event);
@@ -283,14 +305,12 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   }
 
   private executeVarosKereses(triggerOtherPage: boolean = false, event?: Event) {
+    // Reset state
     this.Varos_Coords = [];
     this.Shop_Data = [];
     this.sidebar = null;
 
-    // Get user location if available, fallback to Budapest
-    let searchLat = this.userLat || 47.4979;
-    let searchLng = this.userLong || 19.0402;
-
+    // Best-effort search text (optional)
     let raw = this.searchText ?? '';
     if (!raw) {
       const el = document.getElementById('varos') as HTMLInputElement | null;
@@ -300,53 +320,64 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
       const tgt = event.target as any;
       raw = tgt?.value ?? '';
     }
+    const safeSearch = (raw ?? '').toString().trim();
 
-    // Use the same API as list page with large maxDistance to show everything
-    const searchParams = {
-      latitude: searchLat,
-      longitude: searchLng,
-      maxDistance: 200, // Very large distance to show all results
-      search: raw || undefined,
-      limit: 100,
+    // Use user location if available, else map center
+    const lat = (this.userLat && this.userLong)
+      ? this.userLat
+      : (this.map?.getCenter().lat ?? 47.4979);
+    const lng = (this.userLat && this.userLong)
+      ? this.userLong
+      : (this.map?.getCenter().lng ?? 19.0402);
+
+    // NOTE: map page uses the same search endpoint as list page so filters behave identically
+    const params = {
+      latitude: lat,
+      longitude: lng,
+      maxDistance: this.maxDistance,
+      hasCigars: this.filterCigars ? true : undefined,
+      search: safeSearch || undefined,
+      limit: 200,
       offset: 0
     };
 
-    this.shopService.searchShops(searchParams).subscribe({
+    this.shopService.searchShops(params).subscribe({
       next: (response) => {
-        console.log('Map search response:', response);
-
         if (response && response.success && Array.isArray(response.data)) {
-          this.Shop_Data = response.data;
-          console.log(`Found ${response.data.length} shops`);
+          this.Shop_Data = response.data as any[];
+          this.Varos_Coords = this.Shop_Data
+            .map((s) => [Number(s.latitude), Number(s.longitude)])
+            .filter((c) => !Number.isNaN(c[0]) && !Number.isNaN(c[1]));
+
           this.updateMarkers();
 
-          // Center map on first result if available
-          if (this.Shop_Data.length > 0 && this.map) {
-            const firstShop = this.Shop_Data[0];
-            this.map.setView([firstShop.latitude, firstShop.longitude], 13);
-          }
-
-          // Show all shops in sidebar as list by default
           if (this.Shop_Data.length > 0) {
             this.showShopList(this.Shop_Data);
           }
-        } else {
-          console.error('Search failed or invalid response format:', response);
-          this.Shop_Data = [];
-        }
 
-        // If this is a manual search, trigger the list page
-        if (triggerOtherPage) {
-          this.searchService.triggerSearch('map', {
-            searchText: this.searchText,
-            filterCigars: false,
-            maxDistance: 200
-          });
+          // Center map to first result if any
+          if (this.Shop_Data.length > 0 && this.map) {
+            const first = this.Shop_Data[0];
+            const fLat = Number(first.latitude);
+            const fLng = Number(first.longitude);
+            if (!Number.isNaN(fLat) && !Number.isNaN(fLng)) {
+              this.map.setView([fLat, fLng], Math.max(this.map.getZoom() || 13, 13));
+            }
+          }
+
+          if (triggerOtherPage) {
+            this.searchService.triggerSearch('map', {
+              searchText: this.searchText,
+              filterCigars: this.filterCigars,
+              maxDistance: this.maxDistance
+            });
+          }
+        } else {
+          console.error('Map search invalid response:', response);
         }
       },
-      error: (error) => {
-        console.error('Map search error:', error);
-        this.Shop_Data = [];
+      error: (err) => {
+        console.error('Map search error:', err);
       }
     });
   }
@@ -759,4 +790,38 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     window.removeEventListener('orientationchange', this.setMapHeightBound);
   }
   // #endregion
+
+  isReceivedCigarSubmittingDesktop = false;
+
+  async onReceivedCigarClickDesktop() {
+    const shopId = this.sidebarShopDetails?.id;
+    if (!shopId || this.isReceivedCigarSubmittingDesktop) return;
+
+    this.isReceivedCigarSubmittingDesktop = true;
+    this.shopService.receivedCigar(shopId).subscribe({
+      next: async () => {
+        const toast = await this.toastCtrl.create({
+          message: 'Rögzítve: kaptam szivart',
+          duration: 2000,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+        this.isReceivedCigarSubmittingDesktop = false;
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        console.error('receivedCigar (desktop) error:', err);
+        const toast = await this.toastCtrl.create({
+          message: 'Nem sikerült rögzíteni',
+          duration: 2500,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+        this.isReceivedCigarSubmittingDesktop = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }
