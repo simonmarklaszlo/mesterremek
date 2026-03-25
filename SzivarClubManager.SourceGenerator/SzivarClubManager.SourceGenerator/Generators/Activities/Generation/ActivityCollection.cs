@@ -9,13 +9,13 @@ public static class ActivityCollection
 {
     public const string FileName = "ActivityCollection.g.cs";
 
-    public static string GenerateSource(IEnumerable<Activity> activities)
+    public static string GenerateSource(IEnumerable<SimpleActivity> activities)
     {
-        const string activityVm = "global::SzivarClubManager.ViewModels.Activities.ActivityViewModel";
-        const string factoryProvider = "global::SzivarClubManager.Datasources.Factory.FactoryProvider";
+        const string activityVm = $"global::{StringReferences.ActivityViewModel}";
+        const string factoryProvider = $"global::{StringReferences.FactoryProvider}";
         const string readOnlyDict = $"global::System.Collections.Generic.IReadOnlyDictionary<string, {activityVm}>";
         const string dictionary = $"global::System.Collections.Generic.Dictionary<string, {activityVm}>";
-        const string popupservice = "SzivarClubManager.Services.PopupService";
+        const string popupservice = $"global::{StringReferences.PopupService}";
 
         const string factoryProviderVarName = "factoryProvider";
         const string popupServiceVarName = "popupService";

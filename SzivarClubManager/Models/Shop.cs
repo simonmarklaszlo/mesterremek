@@ -1,8 +1,10 @@
 using System;
 using SzivarClubManager.Models.Time;
+using SzivarClubManager.SourceGeneration.Model;
 
 namespace SzivarClubManager.Models;
 
+[Model]
 public class Shop : IModel
 {
     public int Id { get; }

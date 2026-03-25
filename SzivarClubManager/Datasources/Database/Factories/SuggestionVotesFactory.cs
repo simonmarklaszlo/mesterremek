@@ -1,14 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(SuggestionVotes))]
+[Factory(typeof(SuggestionVotes))]
 public class SuggestionVotesFactory : IFactory
 {
     private readonly DatabaseConnection _connection;

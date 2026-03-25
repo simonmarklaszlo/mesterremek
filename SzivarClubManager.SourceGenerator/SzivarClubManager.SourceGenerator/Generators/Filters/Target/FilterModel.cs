@@ -13,9 +13,6 @@ public class FilterModel
     public Dictionary<string, Property[]> PropertyGroups { get; }
     public IEnumerable<Property> Properties => field ??= PropertyGroups.Values.SelectMany(x => x).ToArray();
 
-    private const string FilterAttribute = "SzivarClubManager.SourceGeneration.ModelFilterAttribute";
-    private const string PropertyAttribute = "SzivarClubManager.SourceGeneration.ModelFilterPropertyAttribute";
-
     public FilterModel(INamedTypeSymbol filterType, INamedTypeSymbol modelType, Dictionary<string, Property[]> propertyGroups)
     {
         FilterType = filterType;
@@ -23,10 +20,9 @@ public class FilterModel
         PropertyGroups = propertyGroups;
     }
 
-    public static IncrementalValuesProvider<FilterModel> GetCandidates(IncrementalGeneratorInitializationContext context)
-    {
-        return context.SyntaxProvider.ForAttributeWithMetadataName(
-            FilterAttribute,
+    public static IncrementalValuesProvider<FilterModel> GetCandidates(IncrementalGeneratorInitializationContext context) =>
+        context.SyntaxProvider.ForAttributeWithMetadataName(
+            StringReferences.FilterAttribute,
             static (node, _) => node is ClassDeclarationSyntax,
             static (ctx, _) =>
             {
@@ -39,14 +35,13 @@ public class FilterModel
 
                 return CreateFilterModel(classSymbol, modelType);
             });
-    }
 
     private static FilterModel CreateFilterModel(INamedTypeSymbol filterType, INamedTypeSymbol modelType)
     {
         var properties = filterType
             .GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(p => p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == PropertyAttribute))
+            .Where(p => p.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == StringReferences.FilterPropertyAttribute))
             .Select(x =>
             {
                 var (dbCol, groupName) = GetPropertyGroupAndDatabaseColumn(x);
@@ -62,7 +57,7 @@ public class FilterModel
     {
         var attribute = propertySymbol
             .GetAttributes()
-            .First(a => a.AttributeClass?.ToDisplayString() == PropertyAttribute);
+            .First(a => a.AttributeClass?.ToDisplayString() == StringReferences.FilterPropertyAttribute);
 
         string dbCol = (string)attribute.ConstructorArguments[0].Value!;
 

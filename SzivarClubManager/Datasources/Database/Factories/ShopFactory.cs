@@ -7,11 +7,11 @@ using Npgsql;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Shop))]
+[Factory]
 public sealed class ShopFactory : IPageFactory<Shop>
 {
     private const string NamePlaceholder = "Traffik";

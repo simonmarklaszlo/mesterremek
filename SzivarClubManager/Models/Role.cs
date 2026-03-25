@@ -1,5 +1,8 @@
+using SzivarClubManager.SourceGeneration.Model;
+
 namespace SzivarClubManager.Models;
 
+[Model(ModelOptions.Unchangeable)]
 public class Role : IModel
 {
     public int Id { get; }

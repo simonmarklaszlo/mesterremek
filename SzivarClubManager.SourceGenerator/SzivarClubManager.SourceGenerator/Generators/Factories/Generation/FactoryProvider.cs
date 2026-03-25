@@ -1,7 +1,7 @@
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SzivarClubManager.SourceGenerator.Targets.Factory;
+using SzivarClubManager.SourceGenerator.Generators.Factories.Target;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Factories.Generation;
 
@@ -9,7 +9,7 @@ public static class FactoryProvider
 {
     public static string FileName => "FactoryProvider.g.cs";
 
-    public static string GenerateSource(ImmutableArray<Factory> factories)
+    public static string GenerateSource(IEnumerable<Factory> factories)
     {
         StringBuilder sb = new();
 
@@ -27,7 +27,7 @@ public static class FactoryProvider
         return sb.ToString();
     }
 
-    private static void GenerateFactoriesMap(StringBuilder sb, ImmutableArray<Factory> factories)
+    private static void GenerateFactoriesMap(StringBuilder sb, IEnumerable<Factory> factories)
     {
         const string type = "global::System.Type";
         const string factory = "global::SzivarClubManager.Datasources.Factory.IFactory";
@@ -44,7 +44,13 @@ public static class FactoryProvider
         sb.AppendLine($"    private static partial {dictionary} GetGeneratedFactoriesMap({databaseConnection} {dbConnVarName})");
         sb.AppendLine("    {");
 
-        if (factories.Length == 0)
+
+        var correctOrderedFactories = factories
+            .Where(x => x.IsValid && x.ModelSymbol is not null)
+            .OrderBy(x => x.Dependencies.Length).ThenBy(x => x.Name)
+            .ToArray();
+
+        if (correctOrderedFactories.Length == 0)
         {
             sb.AppendLine("        // No factories found");
             sb.AppendLine($"        return new {dictionary}();");
@@ -53,46 +59,39 @@ public static class FactoryProvider
         }
 
         sb.AppendLine("        // Unspecified factories");
-        foreach (var f in factories.Where(x => x.FactoryType == FactoryType.Unspecified).OrderBy(x => x.Name))
+        foreach (var f in correctOrderedFactories.Where(x => x.Type == FactoryType.Unspecified))
         {
-            sb.AppendLine($"        {f.VariableDeclaration(dbConnVarName)}");
+            sb.AppendLine($"        {f.InstanceCreation(dbConnVarName)}");
         }
 
         sb.AppendLine();
         sb.AppendLine("        // Helper factories");
-        foreach (var f in factories.Where(x => x.FactoryType == FactoryType.Helper).OrderBy(x => x.Name))
+        foreach (var f in correctOrderedFactories.Where(x => x.Type == FactoryType.Helper))
         {
-            sb.AppendLine($"        {f.VariableDeclaration(dbConnVarName)}");
+            sb.AppendLine($"        {f.InstanceCreation(dbConnVarName)}");
         }
 
         sb.AppendLine();
         sb.AppendLine("        // Page-Helper factories");
-        foreach (var f in factories.Where(x => (x.FactoryType & (FactoryType.Page | FactoryType.Helper)) == (FactoryType.Page | FactoryType.Helper)).OrderBy(x => x.Name))
+        foreach (var f in correctOrderedFactories.Where(x => (x.Type & (FactoryType.Page | FactoryType.Helper)) == (FactoryType.Page | FactoryType.Helper)))
         {
-            sb.AppendLine($"        {f.VariableDeclaration(dbConnVarName)}");
+            sb.AppendLine($"        {f.InstanceCreation(dbConnVarName)}");
         }
 
         sb.AppendLine();
         sb.AppendLine("        // Page factories");
-        foreach (var f in factories.Where(x => x.FactoryType == FactoryType.Page).OrderBy(x => x.Dependencies.Length).ThenBy(x => x.Name))
+        foreach (var f in correctOrderedFactories.Where(x => x.Type == FactoryType.Page))
         {
-            if (f.Dependencies.Length == 0)
-            {
-                sb.AppendLine($"        {f.VariableDeclaration(dbConnVarName)}");
-            }
-            else
-            {
-                sb.AppendLine($"        {f.VariableDeclaration(dbConnVarName, f.Dependencies.Select(x => x.PascalCaseName()))}");
-            }
+            sb.AppendLine($"        {f.InstanceCreation(dbConnVarName)}");
         }
 
 
         sb.AppendLine();
         sb.AppendLine($"        return new {dictionary}()");
         sb.AppendLine("        {");
-        foreach (var f in factories.OrderBy(x => x.Name))
+        foreach (var f in correctOrderedFactories.OrderBy(x => x.Name))
         {
-            sb.AppendLine($"            {{ typeof({f.ModelSymbol.GlobalName()}), {f.FactorySymbol.PascalCaseName()} }},");
+            sb.AppendLine($"            {{ typeof({f.ModelSymbol!.GlobalName()}), {f.VariableName} }},");
         }
 
         sb.Remove(sb.Length - 2, 1);

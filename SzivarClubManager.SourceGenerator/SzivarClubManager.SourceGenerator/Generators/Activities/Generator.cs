@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using SzivarClubManager.SourceGenerator.Generators.Activities.Generation;
 using SzivarClubManager.SourceGenerator.Generators.Activities.Target;
@@ -10,7 +11,7 @@ public class Generator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var activities = Activity.GetCandidates(context);
+        var activities = SimpleActivity.GetCandidates(context);
         var pageActivities = PageActivity.GetCandidates(context);
 
         var combined = activities.Collect()

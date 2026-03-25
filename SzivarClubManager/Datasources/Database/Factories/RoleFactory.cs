@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Npgsql;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Role))]
+[Factory]
 public sealed class RoleFactory : IHelperFactory<Role>
 {
     private const string TableName = "roles";

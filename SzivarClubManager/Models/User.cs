@@ -1,7 +1,9 @@
 using System;
+using SzivarClubManager.SourceGeneration.Model;
 
 namespace SzivarClubManager.Models;
 
+[Model]
 public class User : IModel
 {
     public int Id { get; }

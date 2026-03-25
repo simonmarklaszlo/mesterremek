@@ -1,6 +1,6 @@
 using System;
 
-namespace SzivarClubManager.SourceGeneration;
+namespace SzivarClubManager.SourceGeneration.Filter;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class PredicateOfPropertyAttribute : Attribute

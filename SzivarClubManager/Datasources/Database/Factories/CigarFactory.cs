@@ -6,11 +6,11 @@ using Npgsql;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Cigar), typeof(BrandFactory))]
+[Factory]
 public sealed class CigarFactory : IPageFactory<Cigar>
 {
     private const string TableName = "cigars";

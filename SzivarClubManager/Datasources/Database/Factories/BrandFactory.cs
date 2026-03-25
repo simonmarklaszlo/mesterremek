@@ -7,11 +7,11 @@ using Npgsql;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Brand))]
+[Factory]
 public sealed class BrandFactory : IPageFactory<Brand>, IHelperFactory<Brand>
 {
     private const string TableName = "cigar_brands";

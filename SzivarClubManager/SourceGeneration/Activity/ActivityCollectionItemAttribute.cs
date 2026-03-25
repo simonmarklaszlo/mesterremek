@@ -1,6 +1,6 @@
 using System;
 
-namespace SzivarClubManager.SourceGeneration;
+namespace SzivarClubManager.SourceGeneration.Activity;
 
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]

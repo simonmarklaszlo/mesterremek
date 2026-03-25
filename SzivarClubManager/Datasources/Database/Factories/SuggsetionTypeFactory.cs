@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(SuggestionType))]
+[Factory]
 public sealed class SuggsetionTypeFactory : IHelperFactory<SuggestionType>
 {
     private readonly DatabaseConnection _connection;

@@ -7,11 +7,11 @@ using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Suggestions;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(Suggestion), typeof(SuggestionStatusFactory), typeof(SuggsetionTypeFactory), typeof(UserFactory), typeof(ShopFactory), typeof(SuggestionVotesFactory))]
+[Factory]
 public sealed class SuggestionFactory : IPageFactory<Suggestion>
 {
     private const string TableName = "suggestions";

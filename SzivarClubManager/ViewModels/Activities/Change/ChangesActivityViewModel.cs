@@ -4,10 +4,11 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Activity;
 
 namespace SzivarClubManager.ViewModels.Activities.Change;
 
-[ActivityCollectionItem("Changes")]
+[ActivityCollectionItem("Changes", 2)]
 public sealed partial class ChangesActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<DataChangeRow> DataChangeRows { get; } = GetDataChangeRows();

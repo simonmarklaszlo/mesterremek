@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -30,30 +31,24 @@ public class FilterViewModel
         return null;
     }
 
-    public static IncrementalValuesProvider<FilterViewModel> GetCandidates(IncrementalGeneratorInitializationContext context)
-    {
-        const string viewModelAttribute = "SzivarClubManager.SourceGeneration.ModelFilterViewModelAttribute";
-
-        return context.SyntaxProvider.ForAttributeWithMetadataName(
-            viewModelAttribute,
+    public static IncrementalValuesProvider<FilterViewModel> GetCandidates(IncrementalGeneratorInitializationContext context) =>
+        context.SyntaxProvider.ForAttributeWithMetadataName(
+            StringReferences.FilterViewModelAttribute,
             static (node, _) => node is ClassDeclarationSyntax,
             static (ctx, _) => Transform(ctx));
-    }
 
     private static FilterViewModel Transform(GeneratorAttributeSyntaxContext context)
     {
-        if (context.TargetSymbol is not INamedTypeSymbol { BaseType: { } baseType } vmSymbol) return null;
-        if (baseType.TypeArguments.Length != 2) return null;
+        if (context.TargetSymbol is not INamedTypeSymbol { BaseType: { } baseType } vmSymbol) throw new Exception();
+        if (baseType.TypeArguments.Length != 2) throw new Exception();
 
         var filterSymbol = (INamedTypeSymbol)baseType.TypeArguments[0];
-
-        const string predicateAttribute = "SzivarClubManager.SourceGeneration.PredicateOfPropertyAttribute";
 
         var predicates = vmSymbol
             .GetMembers()
             .OfType<IMethodSymbol>()
             .SelectMany(m => m.GetAttributes()
-                .Where(a => a.AttributeClass?.ToDisplayString() == predicateAttribute)
+                .Where(a => a.AttributeClass?.ToDisplayString() == StringReferences.FilterPredicateOfProperty)
                 .Select(a => new
                 {
                     PropertyName = (string)a.ConstructorArguments[0].Value!,

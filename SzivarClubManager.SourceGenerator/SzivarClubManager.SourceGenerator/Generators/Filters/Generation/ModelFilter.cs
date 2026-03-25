@@ -5,7 +5,7 @@ namespace SzivarClubManager.SourceGenerator.Generators.Filters.Generation;
 
 public static class ModelFilter
 {
-    private const string FilterValueHandler = "global::SzivarClubManager.Datasources.Database.Filters.FilterValueHandler";
+    private const string FilterValueHandler = $"global::{StringReferences.FilterValueHandler}";
     public static string GetFileName(FilterModel model) => $"{model.FilterType.Name}.g.cs";
 
     public static string GenerateSource(FilterModel filter)

@@ -1,48 +1,36 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using SzivarClubManager.SourceGenerator.Targets;
 
 namespace SzivarClubManager.SourceGenerator.Generators.Activities.Target;
 
-public class PageActivity : Activity
+public class PageActivity : SimpleActivity
 {
-    private readonly INamedTypeSymbol _modelSymbol;
+    public INamedTypeSymbol ModelSymbol { get; private set; }
 
-    private PageActivity(INamedTypeSymbol pageActivitySymbol, INamedTypeSymbol modelSymbol, string displayName, byte? orderGroup) : base(pageActivitySymbol, displayName, orderGroup)
+    public PageActivity(INamedTypeSymbol symbol, string displayName, byte orderGroup, INamedTypeSymbol modelSymbol) : base(symbol, displayName, orderGroup)
     {
-        _modelSymbol = modelSymbol;
+        ModelSymbol = modelSymbol;
     }
 
-    public string InstanceCreation(string popupserviceVarName, string factoryProviderVarName) =>
-        $"new {ActivitySymbol.GlobalName()}({popupserviceVarName}, {factoryProviderVarName}.GetPageFactory<{_modelSymbol.GlobalName()}>())";
 
-    public new static IncrementalValuesProvider<PageActivity> GetCandidates(IncrementalGeneratorInitializationContext context) => Common.GetCandidates(context, IsTarget);
+    public string InstanceCreation(string popupService, string factoryProvider) => $"new {Symbol.GlobalName()}({popupService}, {factoryProvider}.GetPageFactory<{ModelSymbol.GlobalName()}>())";
 
-    private static PageActivity? IsTarget(GeneratorSyntaxContext context)
-    {
-        const string pageActivityCollectionItemAttribute = "SzivarClubManager.SourceGeneration.PageActivityCollectionItemAttribute";
-
-        if (context.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)context.Node) is not INamedTypeSymbol typeSymbol) return null;
-        var activityAttributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(pageActivityCollectionItemAttribute);
-        if (activityAttributeSymbol is null) return null;
-
-        foreach (var attribute in typeSymbol.GetAttributes())
+    public new static IncrementalValuesProvider<PageActivity> GetCandidates(IncrementalGeneratorInitializationContext context) => context.SyntaxProvider.ForAttributeWithMetadataName(
+        StringReferences.PageActivityCollectionItemAttribute,
+        static (node, _) => node is ClassDeclarationSyntax,
+        static (ctx, _) =>
         {
-            if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, activityAttributeSymbol)) continue;
+            var symbol = (INamedTypeSymbol)ctx.TargetSymbol;
+            var attribute = ctx.Attributes[0];
 
-            if (attribute.ConstructorArguments.Length >= 2 &&
-                attribute.ConstructorArguments[0] is { Value: INamedTypeSymbol modelTypeSymbol } &&
-                attribute.ConstructorArguments[1].Value is string displayName)
-            {
-                if (attribute.ConstructorArguments.Length == 3 && attribute.ConstructorArguments[2].Value is byte orderGroup)
-                {
-                    return new PageActivity(typeSymbol, modelTypeSymbol, displayName, orderGroup);
-                }
+            string? displayName = null;
+            byte? orderGroup = null;
+            INamedTypeSymbol? modelSymbol = null;
+            if (attribute.ConstructorArguments.Length >= 1 && attribute.ConstructorArguments[0].Value is string displayNameValue) displayName = displayNameValue;
+            if (attribute.ConstructorArguments.Length >= 2 && attribute.ConstructorArguments[1].Value is INamedTypeSymbol modelTypeSymbolValue) modelSymbol = modelTypeSymbolValue;
+            if (attribute.ConstructorArguments.Length >= 3 && attribute.ConstructorArguments[2].Value is byte orderGroupValue) orderGroup = orderGroupValue;
 
-                return new PageActivity(typeSymbol, modelTypeSymbol, displayName, null);
-            }
-        }
 
-        return null;
-    }
+            return new PageActivity(symbol, displayName ?? symbol.Name, orderGroup ?? byte.MaxValue, modelSymbol!);
+        });
 }

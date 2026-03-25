@@ -3,13 +3,14 @@ using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Activity;
 using SzivarClubManager.ViewModels.Activities.Page.Data;
 using SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem(typeof(Cigar), "Cigars", 1)]
+[PageActivityCollectionItem("Cigars", typeof(Cigar), 1)]
 public sealed class CigarActivityViewModel(
     PopupService popupService,
     IPageFactory<Cigar> factory

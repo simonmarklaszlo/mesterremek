@@ -1,5 +1,8 @@
+using SzivarClubManager.SourceGeneration.Model;
+
 namespace SzivarClubManager.Models;
 
+[Model]
 public class Cigar : IModel
 {
     public virtual int Id { get; }

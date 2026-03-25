@@ -6,7 +6,7 @@ using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
 using SzivarClubManager.Services;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Activity;
 
 namespace SzivarClubManager.ViewModels.Activities.Suggestions;
 

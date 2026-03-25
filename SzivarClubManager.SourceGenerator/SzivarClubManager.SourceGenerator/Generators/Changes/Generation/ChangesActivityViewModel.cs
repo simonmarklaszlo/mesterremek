@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 using SzivarClubManager.SourceGenerator.Generators.Changes.Target;
 
@@ -8,10 +9,9 @@ public static class ChangesActivityViewModel
 {
     public const string FileName = "ChangesActivityViewModel.g.cs";
 
-    public static string GenerateSource(IEnumerable<PageActivityViewModel> pageActivityViewModels)
+    public static string GenerateSource(ImmutableArray<Model> models)
     {
-        const string dataChangeRow = "global::SzivarClubManager.ViewModels.Activities.Change.DataChangeRow";
-        const string observableCollection = $"global::System.Collections.ObjectModel.ObservableCollection<{dataChangeRow}>";
+        const string observableCollection = $"global::System.Collections.ObjectModel.ObservableCollection<global::{StringReferences.DataChangeRow}>";
 
         StringBuilder sb = new();
 
@@ -23,9 +23,9 @@ public static class ChangesActivityViewModel
         sb.AppendLine("{");
         sb.AppendLine($"    private static {observableCollection} GetDataChangeRows() => new {observableCollection}");
         sb.AppendLine("    {");
-        foreach (var vm in pageActivityViewModels)
+        foreach (var model in models.Where(x => x.IsValid))
         {
-            sb.AppendLine($"        new {dataChangeRow}<{vm.ModelSymbol.GlobalName()}>(),");
+            sb.AppendLine($"        new global::{StringReferences.DataChangeRow}<{model.Symbol.GlobalName()}>(),");
         }
         sb.Remove(sb.Length - 2, 1);
 

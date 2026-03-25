@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Time;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 using DayOfWeek = SzivarClubManager.Models.Time.DayOfWeek;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(ShopOpeningHour))]
+[Factory(typeof(ShopOpeningHour))]
 public class OpeningHourFactory : IFactory
 {
     private readonly DatabaseConnection _connection;

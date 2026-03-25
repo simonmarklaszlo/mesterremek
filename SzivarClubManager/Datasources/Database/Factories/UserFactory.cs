@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
 
-[FactoryOf(typeof(User), typeof(RoleFactory))]
+[Factory]
 public sealed class UserFactory : IPageFactory<User>
 {
     private const string TableName = "users";

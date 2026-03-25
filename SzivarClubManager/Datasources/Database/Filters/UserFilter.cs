@@ -1,5 +1,6 @@
 using SzivarClubManager.Models;
 using SzivarClubManager.SourceGeneration;
+using SzivarClubManager.SourceGeneration.Filter;
 
 namespace SzivarClubManager.Datasources.Database.Filters;
 

@@ -1,5 +1,8 @@
+using SzivarClubManager.SourceGeneration.Model;
+
 namespace SzivarClubManager.Models;
 
+[Model]
 public class Brand : IModel
 {
     public int Id { get; }
