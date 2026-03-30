@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using SzivarClubManager.SourceGenerator.Generators.Activities.Generation;
 using SzivarClubManager.SourceGenerator.Generators.Activities.Target;
