@@ -5,20 +5,21 @@
              xmlns:model="clr-namespace:SzivarClubManager.Models.Time"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Components.ShopOpeningHourView"
-             x:DataType="model:ShopOpeningHour">
+             x:DataType="model:ShopOpeningHour"
+             x:Name="Root">
     <Grid ColumnDefinitions="*,*">
         <Border
             Margin="20 5 40 5"
             Grid.Column="0">
             <TextBlock
-                FontSize="21"
+                FontSize="{Binding TextFontSize, ElementName=Root}"
                 Text="{Binding DayOfWeekString}" />
         </Border>
         <Border
             Margin="40 5 20 5"
             Grid.Column="1">
             <TextBlock
-                FontSize="21"
+                FontSize="{Binding TextFontSize, ElementName=Root}"
                 Text="{Binding ScheduleString}" />
         </Border>
     </Grid>

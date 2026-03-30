@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Services;
-using SzivarClubManager.SourceGeneration;
 using SzivarClubManager.SourceGeneration.Activity;
 
 namespace SzivarClubManager.ViewModels.Activities.Change;

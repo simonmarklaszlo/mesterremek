@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suggestion="clr-namespace:SzivarClubManager.ViewModels.Components.Suggestions"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Components.Suggestions.SuggestionWrapperView"
+             x:DataType="suggestion:SuggestionWrapperViewModel">
+    <Border
+        CornerRadius="10"
+        BorderBrush="Black"
+        BorderThickness="2"
+        Margin="20 10"
+        Padding="20 10"
+        Background="{DynamicResource SystemListMediumColor}">
+        <Grid
+            RowDefinitions="Auto, Auto, *"
+            RowSpacing="5">
+
+            <Grid
+                Grid.Row="0"
+                RowDefinitions="Auto, Auto"
+                ColumnDefinitions="Auto, *, Auto">
+                <Grid
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    ColumnSpan="3"
+                    ColumnDefinitions="*,*, Auto"
+                    Margin="5 10 5 0">
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="{Binding Suggestion.Type.Name}"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        TextAlignment="Left"
+                        Margin="15 0 0 0" />
+
+                    <TextBlock
+                        Grid.Column="1"
+                        Text="{Binding Suggestion.Status.Name}"
+                        FontSize="18"
+                        TextAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="15 0 15 0" />
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding ApproveSuggestionCommand}"
+                        Background="ForestGreen"
+                        Content="Jóváhagy"
+                        FontSize="18"
+                        CornerRadius="50"
+                        Padding="10"
+                        Margin="0 0 15 0" />
+                </Grid>
+                <Grid
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    RowDefinitions="Auto,Auto,Auto"
+                    ColumnDefinitions="Auto,Auto"
+                    ColumnSpacing="40"
+                    RowSpacing="10"
+                    Margin="40 15 0 5">
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Létrehozva"
+                        FontSize="15" />
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Text="{Binding Suggestion.CreatedAtString}"
+                        FontSize="15" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="Frissítve"
+                        FontSize="15" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="{Binding Suggestion.UpdatedAtString}"
+                        FontSize="15" />
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Text="Ajánlotta"
+                        FontSize="15" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Text="{Binding Suggestion.User.Name}"
+                        FontSize="15" />
+                </Grid>
+                <Grid
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    ColumnSpacing="40"
+                    VerticalAlignment="Center"
+                    Margin="0 0 40 0" ColumnDefinitions="Auto,Auto">
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="Szavazatok összesítve"
+                        FontSize="16" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Text="{Binding Suggestion.Votes.TotalVotes}"
+                        FontSize="17"
+                        FontFeatures="tnum" />
+                </Grid>
+            </Grid>
+
+
+            <ToggleButton
+                IsVisible="{Binding IsToggleable}"
+                Grid.Row="1"
+                CornerRadius="10"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                HorizontalContentAlignment="Center"
+                IsChecked="{Binding IsExpanded}">
+
+                <Image
+                    MaxHeight="32"
+                    MaxWidth="32">
+
+                    <Image.Styles>
+                        <Style Selector="Image">
+                            <Setter Property="Source" Value="{DynamicResource OpenContentIcon}" />
+                        </Style>
+
+                        <Style Selector="ToggleButton:checked Image">
+                            <Setter Property="Source" Value="{DynamicResource CloseContentIcon}" />
+                        </Style>
+                    </Image.Styles>
+
+                </Image>
+            </ToggleButton>
+
+            <ContentControl
+                Grid.Row="2"
+                IsVisible="{Binding IsExpanded}"
+                Content="{Binding Content}" />
+
+            <ContentControl
+                Grid.Row="1"
+                Grid.RowSpan="2"
+                IsVisible="{Binding NotToggleable}"
+                Content="{Binding Content}"/>
+        </Grid>
+    </Border>
+</UserControl>

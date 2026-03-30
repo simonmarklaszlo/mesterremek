@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Models;
-using SzivarClubManager.SourceGeneration;
 using SzivarClubManager.SourceGeneration.Filter;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Filter;

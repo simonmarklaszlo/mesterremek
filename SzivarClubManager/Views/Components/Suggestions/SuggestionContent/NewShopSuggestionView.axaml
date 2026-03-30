@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Components.Suggestions.SuggestionContent"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Components.Suggestions.SuggestionContent.NewShopSuggestionView"
+             x:DataType="vm:NewShopSuggestionViewModel">
+    <Grid
+        ColumnDefinitions="*,*"
+        RowDefinitions="Auto, Auto, Auto"
+        ColumnSpacing="30"
+        RowSpacing="10">
+        <TextBlock
+            Grid.Column="0"
+            Grid.Row="0"
+            Text="Város"
+            HorizontalAlignment="Right"
+            FontSize="20" />
+        <TextBlock
+            Grid.Column="1"
+            Grid.Row="0"
+            HorizontalAlignment="Center"
+            Text="{Binding NewShopSuggestion.City}"
+            FontSize="20" />
+
+        <TextBlock
+            Grid.Column="0"
+            Grid.Row="1"
+            Text="Address"
+            HorizontalAlignment="Right"
+            FontSize="20" />
+        <TextBlock
+            Grid.Column="1"
+            Grid.Row="1"
+            Text="{Binding NewShopSuggestion.Address}"
+            HorizontalAlignment="Center"
+            FontSize="20" />
+
+        <TextBlock
+            Grid.Column="0"
+            Grid.Row="2"
+            Text="Opening hours"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            FontSize="20" />
+        <ContentControl
+            Grid.Column="1"
+            Grid.Row="2"
+            Content="{Binding ScheduleViewModel}" />
+    </Grid>
+</UserControl>

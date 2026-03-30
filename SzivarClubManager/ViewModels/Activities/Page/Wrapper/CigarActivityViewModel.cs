@@ -2,7 +2,6 @@ using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Services;
-using SzivarClubManager.SourceGeneration;
 using SzivarClubManager.SourceGeneration.Activity;
 using SzivarClubManager.ViewModels.Activities.Page.Data;
 using SzivarClubManager.ViewModels.Activities.Page.ItemAdd;

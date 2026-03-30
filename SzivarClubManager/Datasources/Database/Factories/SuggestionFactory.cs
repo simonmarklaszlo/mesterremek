@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
@@ -74,17 +73,18 @@ public sealed class SuggestionFactory : IPageFactory<Suggestion>
         User[] users = await _userFactory.GetModel(suggestions.Select(x => x.userId));
         SuggestionVotes[] votes = await _suggestionVotesFactory.GetVotes(suggestions.Select(x => x.id));
 
-        return suggestions.Select(x => new Suggestion(
+
+        return suggestions.Select(x => Suggestion.Create(
             x.id,
             types.First(y => y.Id == x.typeId),
-            shops.FirstOrDefault(y => y.Id == x.shopId),
-            x.proposedValue,
-            x.additionalData is null ? AdditionalSuggestionData.Empty : JsonSerializer.Deserialize<AdditionalSuggestionData>(x.additionalData),
-            users.First(y => y.Id == x.userId),
             statuses.First(y => y.Id == x.statusId),
+            users.First(y => y.Id == x.userId),
             x.createdAt,
             x.updatedAt,
-            votes.FirstOrDefault(y => y.Id == x.id)
+            votes.FirstOrDefault(y => y.SuggestionId == x.id) ?? new SuggestionVotes(x.id, 0, 0, DateTime.Now, DateTime.Now),
+            shops.FirstOrDefault(y => y.Id == x.shopId),
+            x.proposedValue,
+            x.additionalData
         )).ToArray();
     }
 
@@ -128,18 +128,23 @@ public sealed class SuggestionFactory : IPageFactory<Suggestion>
         User user = (await _userFactory.GetModel(suggestion.userId))!;
         SuggestionVotes? vote = await _suggestionVotesFactory.GetVotes(suggestion.id);
 
-        return new Suggestion(
+        return Suggestion.Create(
             suggestion.id,
             types.First(y => y.Id == suggestion.typeId),
-            shop,
-            suggestion.proposedValue,
-            suggestion.additionalData is null ? AdditionalSuggestionData.Empty : JsonSerializer.Deserialize<AdditionalSuggestionData>(suggestion.additionalData),
-            user,
             statuses.First(y => y.Id == suggestion.statusId),
+            user,
             suggestion.createdAt,
             suggestion.updatedAt,
-            vote
+            vote ?? new SuggestionVotes(suggestion.id, 0, 0, DateTime.Now, DateTime.Now),
+            shop,
+            suggestion.proposedValue,
+            suggestion.additionalData
         );
+    }
+
+    public async Task ApproveSuggestion(Suggestion suggestion)
+    {
+        throw new NotImplementedException();
     }
 
     public Task<Suggestion[]> GetModel(IEnumerable<int> ids)

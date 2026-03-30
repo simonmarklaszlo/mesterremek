@@ -7,13 +7,14 @@ using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
 using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration.Activity;
+using SuggestionWrapperViewModel = SzivarClubManager.ViewModels.Components.Suggestions.SuggestionWrapperViewModel;
 
 namespace SzivarClubManager.ViewModels.Activities.Suggestions;
 
 [ActivityCollectionItem("Suggestions", 3)]
 public sealed partial class SuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
-    public ObservableCollection<Suggestion> Suggestions { get; } = [];
+    public ObservableCollection<SuggestionWrapperViewModel> SuggestionsViewModels { get; } = [];
     private readonly IPageFactory<Suggestion> _suggestionsFactory = FactoryProvider.Instance.GetPageFactory<Suggestion>();
 
 
@@ -36,12 +37,18 @@ public sealed partial class SuggestionsActivityViewModel(PopupService popupServi
         }
         else
         {
-            foreach (var item in items)
-                Suggestions.Add(item);
+            foreach (var suggestion in items) SuggestionsViewModels.Add(new SuggestionWrapperViewModel(suggestion, OnSuggestionApproved));
 
             _currentPage++;
         }
 
         _isLoading = false;
+    }
+
+    private async Task OnSuggestionApproved()
+    {
+        SuggestionsViewModels.Clear();
+        _currentPage = 1;
+        await LoadNextPage();
     }
 }

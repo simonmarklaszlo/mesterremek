@@ -23,7 +23,9 @@
                 <ItemsControl ItemsSource="{Binding OpeningHours}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <components:ShopOpeningHourView ShopOpeningHour="{Binding}" />
+                            <components:ShopOpeningHourView
+                                ShopOpeningHour="{Binding}"
+                                TextFontSize="15" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

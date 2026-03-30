@@ -21,6 +21,13 @@ public sealed partial class ShopOpeningScheduleViewModel : ViewModelBase
         OpeningHours = [];
     }
 
+    public ShopOpeningScheduleViewModel(ShopOpeningSchedule schedule)
+    {
+        OpeningHours = schedule.OpeningHours;
+        ShowLoading = false;
+        ShowSchedule = true;
+    }
+
     public void SetShop(Shop shop)
     {
         if (shop.Schedule is null)

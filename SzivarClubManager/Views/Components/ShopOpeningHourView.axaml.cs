@@ -6,7 +6,14 @@ namespace SzivarClubManager.Views.Components;
 
 public partial class ShopOpeningHourView : UserControl
 {
+    public static readonly StyledProperty<string> TextFontSizeProperty = AvaloniaProperty.Register<ShopOpeningHourView, string>(nameof(TextFontSize));
     public static readonly StyledProperty<ShopOpeningHour> ShopOpeningHourProperty = AvaloniaProperty.Register<ShopOpeningHourView, ShopOpeningHour>(nameof(ShopOpeningHour));
+
+    public string TextFontSize
+    {
+        get => GetValue(TextFontSizeProperty);
+        set => SetValue(TextFontSizeProperty, value);
+    }
 
     public ShopOpeningHour ShopOpeningHour
     {

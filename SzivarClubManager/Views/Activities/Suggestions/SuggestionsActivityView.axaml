@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
              xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Suggestions"
-             xmlns:components="clr-namespace:SzivarClubManager.Views.Components"
+             xmlns:suggestions="clr-namespace:SzivarClubManager.Views.Components.Suggestions"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Suggestions.SuggestionsActivityView"
              x:DataType="vm:SuggestionsActivityViewModel">
@@ -13,10 +13,10 @@
             <behaviors:InfiniteScrollBehavior LoadMoreCommand="{Binding LoadNextPageCommand}" />
         </Interaction.Behaviors>
 
-        <ItemsControl ItemsSource="{Binding Suggestions}">
+        <ItemsControl ItemsSource="{Binding SuggestionsViewModels}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <components:SuggestionView />
+                    <suggestions:SuggestionWrapperView />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
 
