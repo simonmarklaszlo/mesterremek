@@ -43,9 +43,19 @@ export async function handleListSuggestions(req: Request, res: Response): Promis
     return;
   }
 
+  const normalizedFilter = filter === "own" ? "own" : "all";
+
+  // Default behavior:
+  // - public list (filter=all): only pending suggestions are shown unless client overrides via ?status=
+  // - own list (filter=own): show all statuses by default
+  // Desired behavior:
+  // - public list (filter=all): ALWAYS pending (ignore ?status=)
+  // - own list (filter=own): show all statuses by default, but allow ?status=
+  const effectiveStatus = normalizedFilter === "all" ? "pending" : status;
+
   const suggestions = await suggestionAccess.listSuggestions({
-    filter: filter === "own" ? "own" : "all",
-    ...(status ? { statusCode: status } : {}),
+    filter: normalizedFilter,
+    ...(effectiveStatus ? { statusCode: effectiveStatus } : {}),
     ...(type ? { typeCode: type } : {}),
     ...(typeof shopId === "number" ? { shopId } : {}),
     currentUserId: userId,
@@ -61,6 +71,7 @@ export async function handleListSuggestions(req: Request, res: Response): Promis
       shopAddress: s.shopAddress,
       shopCity: s.shopCity,
       proposedValue: s.proposedValue,
+      statusCode: s.statusCode,
     }));
     console.log("[handleListSuggestions] sample:", sample);
   } catch {

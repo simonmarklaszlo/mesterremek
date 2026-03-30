@@ -90,7 +90,9 @@ export class CommunityPage implements OnInit {
 
     const filters = {
       filter: this.selectedSegment === 'community' ? 'all' as const : 'own' as const,
-      status: 'pending' as const
+      // Közösség: backend default = csak pending
+      // Saját: status nincs megadva -> minden státusz jön
+      ...(this.selectedSegment === 'community' ? { status: 'pending' as const } : {})
     };
 
     this.suggestionService.getSuggestions(filters).subscribe({
@@ -175,6 +177,28 @@ export class CommunityPage implements OnInit {
       'edit_name': 'Név'
     };
     return labels[type] || type;
+  }
+
+  getStatusLabel(statusCode?: string): string {
+    const code = (statusCode ?? '').toLowerCase();
+    const labels: { [key: string]: string } = {
+      pending: 'Függőben',
+      approved: 'Jóváhagyva',
+      rejected: 'Elutasítva',
+      applied: 'Alkalmazva'
+    };
+    return labels[code] || (code ? code : '-');
+  }
+
+  getStatusColor(statusCode?: string): string {
+    const code = (statusCode ?? '').toLowerCase();
+    const colors: { [key: string]: string } = {
+      pending: 'warning',
+      approved: 'success',
+      rejected: 'danger',
+      applied: 'tertiary'
+    };
+    return colors[code] || 'medium';
   }
 
   formatDate(date: string | Date): string {

@@ -45,11 +45,10 @@
               </ion-chip>
 
               <ion-chip
-                *ngIf="suggestion.statusCode === 'approved'"
-                color="success"
+                [color]="getStatusColor(suggestion.statusCode)"
                 class="status-chip"
               >
-                ✓ Jóváhagyva
+                {{ getStatusLabel(suggestion.statusCode) }}
               </ion-chip>
             </div>
 
