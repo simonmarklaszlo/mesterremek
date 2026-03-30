@@ -1,14 +1,17 @@
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration.Filter;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Filter;
 
 [ModelFilterViewModel]
 public sealed partial class ShopFilterViewModel(
+    PopupService popupService,
+    ShopFilter filter,
     IRelayCommand afterApplyCommand
-) : FilterViewModel<ShopFilter, Shop>(afterApplyCommand)
+) : FilterViewModel<ShopFilter, Shop>(popupService, filter, afterApplyCommand)
 {
     [PredicateOfProperty(nameof(ShopFilter.MinId))]
     private static bool MinIdPredicate(int id) => id > 0;

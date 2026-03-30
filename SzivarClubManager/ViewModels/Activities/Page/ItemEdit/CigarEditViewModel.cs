@@ -8,10 +8,11 @@ using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
+public sealed partial class CigarEditViewModel(PageController<Cigar> controller) : ItemEditViewModel<Cigar>(controller)
 {
     public override Cigar SourceItem
     {
@@ -101,7 +102,7 @@ public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
             if (CanResetBrand) ResetBrand();
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -118,6 +119,6 @@ public sealed partial class CigarEditViewModel : ItemEditViewModel<Cigar>
             Changes.Edit<Cigar>(EditItem.Copy());
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 }

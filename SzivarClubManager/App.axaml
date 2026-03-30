@@ -111,6 +111,7 @@
                     <Bitmap x:Key="ClearIcon">/Assets/clear-white.png</Bitmap>
                     <Bitmap x:Key="OpenFilterIcon">/Assets/settings-white.png</Bitmap>
                     <Bitmap x:Key="SearchIcon">/Assets/search-white.png</Bitmap>
+                    <Bitmap x:Key="RefreshIcon">/Assets/refresh-white.png</Bitmap>
                     <Bitmap x:Key="OpenContentIcon">/Assets/down-arrow-white.png</Bitmap>
                     <Bitmap x:Key="CloseContentIcon">/Assets/up-arrow-white.png</Bitmap>
                 </ResourceDictionary>

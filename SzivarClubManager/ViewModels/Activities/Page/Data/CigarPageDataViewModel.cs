@@ -1,5 +1,7 @@
 using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Filter;
 using SzivarClubManager.ViewModels.Activities.Page.MinimalFilter;
 
@@ -27,13 +29,11 @@ public sealed class CigarPageDataViewModel : PageDataViewModel<Cigar, CigarFilte
     public override MinimalFilterViewModel<CigarFilter, Cigar> MinimalFilterViewModel { get; }
     public override FilterViewModel<CigarFilter, Cigar> FilterViewModel { get; }
 
-    public CigarPageDataViewModel()
+
+    public CigarPageDataViewModel(PopupService popupService, PageController<Cigar> controller, IPageFactory<Cigar> factory) : base(popupService, controller, factory)
     {
         Filter = new CigarFilter();
-        MinimalFilterViewModel = new CigarMinimalFilterViewModel(ShowFilterPopupCommand, TriggerSearchCommand, Filter);
-        FilterViewModel = new CigarFilterViewModel(TriggerSearchCommand)
-        {
-            Filter = Filter
-        };
+        MinimalFilterViewModel = new CigarMinimalFilterViewModel(Filter, ShowFilterPopupCommand, TriggerSearchCommand);
+        FilterViewModel = new CigarFilterViewModel(popupService, Filter, TriggerSearchCommand);
     }
 }

@@ -17,11 +17,11 @@ public abstract partial class MinimalFilterViewModel<TFilter, TModel> : ViewMode
 
     private readonly TFilter _filter;
 
-    protected MinimalFilterViewModel(IRelayCommand showFilterCommand, IRelayCommand triggerSearchCommand, TFilter filter)
+    protected MinimalFilterViewModel(TFilter filter, IRelayCommand showFilterCommand, IRelayCommand triggerSearchCommand)
     {
+        _filter = filter;
         ShowFilterCommand = showFilterCommand;
         TriggerSearchCommand = triggerSearchCommand;
-        _filter = filter;
     }
 
     [RelayCommand(CanExecute = nameof(CanClearFilter))]

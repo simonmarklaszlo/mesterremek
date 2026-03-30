@@ -4,11 +4,12 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
+using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Components;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
+public sealed partial class ShopEditViewModel(PageController<Shop> controller) : ItemEditViewModel<Shop>(controller)
 {
     public override Shop SourceItem
     {
@@ -111,7 +112,7 @@ public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
             if (CanResetLocation) ResetLocation();
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -130,6 +131,6 @@ public sealed partial class ShopEditViewModel : ItemEditViewModel<Shop>
             Changes.Edit<Shop>(EditItem.Copy());
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 }

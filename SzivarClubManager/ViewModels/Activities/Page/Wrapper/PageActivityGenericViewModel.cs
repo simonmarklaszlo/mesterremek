@@ -1,77 +1,63 @@
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Database.Filters;
-using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Data;
 using SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
 public abstract class PageActivityViewModel<TModel, TFilter, TDataViewModel, TAddViewModel, TEditViewModel> : PageActivityViewModel
     where TModel : class, IModel
-    where TFilter : IFilter<TModel>, new()
-    where TDataViewModel : PageDataViewModel<TModel, TFilter>, new()
-    where TAddViewModel : ItemAddViewModel<TModel>, new()
-    where TEditViewModel : ItemEditViewModel<TModel>, new()
+    where TFilter : IFilter<TModel>
+    where TDataViewModel : PageDataViewModel<TModel, TFilter>
+    where TAddViewModel : ItemAddViewModel
+    where TEditViewModel : ItemEditViewModel<TModel>
 {
-    private readonly TDataViewModel _pageDataViewModel;
-    private TEditViewModel? _itemEditViewModel;
-    private TAddViewModel? _itemAddViewModel;
+    protected abstract TDataViewModel DataViewModel { get; }
+    protected abstract TAddViewModel ItemAddViewModel { get; }
+    protected abstract TEditViewModel ItemEditViewModel { get; }
+    protected abstract TFilter Filter { get; }
 
-    private readonly PageController<TModel> _controller;
+    protected PageController<TModel> Controller { get; }
 
-
-    protected PageActivityViewModel(PopupService popupService, IPageFactory<TModel> factory, bool itemAddSupported = true, bool itemEditSupported = true) : base(popupService)
+    protected PageActivityViewModel(PopupService popupService) : base(popupService)
     {
-        _controller = new PageController<TModel>();
-        _controller.ItemSelected += ControllerOnItemSelected;
-        if (itemEditSupported) _controller.ItemEdited += ControllerOnItemEdited;
-        if (itemAddSupported) _controller.ItemAdded += ControllerOnItemAdded;
-        _controller.BackNavigated += ControllerOnBackNavigated;
-
-        _pageDataViewModel = new TDataViewModel
-        {
-            Factory = factory,
-            Controller = _controller,
-            PopupService = popupService
-        };
-
-        ViewModel = _pageDataViewModel;
+        Controller = new PageController<TModel>();
+        Controller.AddPopupRequested += ControllerOnAddPopupRequested;
+        Controller.ViewPopupRequested += ControllerOnViewPopupRequested;
+        Controller.EditPopupRequested += ControllerOnEditPopupRequested;
+        Controller.PopupCloseRequested += () => PopupService.ClosePopup();
     }
 
 
     public override async Task InitializeAsync()
     {
         if (IsInitialized) return;
-        if (ViewModel is TDataViewModel pdvm) await pdvm.InitializeAsync();
+
+        ViewModel ??= DataViewModel;
+        if (ViewModel is TDataViewModel dataVm) await dataVm.InitializeAsync();
+
+        await base.InitializeAsync();
     }
 
-    public override void OnOpening()
+    private void ControllerOnEditPopupRequested(TModel item)
     {
-        if (ViewModel is not TDataViewModel)
-        {
-            ViewModel = _pageDataViewModel;
-        }
+        ItemEditViewModel.SourceItem = item;
+        ItemEditViewModel.IsEdit = true;
+        PopupService.ShowPopup(ItemEditViewModel);
     }
 
-
-    private void ControllerOnBackNavigated() => ViewModel = _pageDataViewModel;
-
-    private void ControllerOnItemSelected(TModel item) => OpenItem(item, false);
-    private void ControllerOnItemEdited(TModel item) => OpenItem(item, true);
-
-    private void ControllerOnItemAdded() => ViewModel = _itemAddViewModel ??= new TAddViewModel { Controller = _controller };
-
-    private void OpenItem(TModel item, bool isEdit)
+    private void ControllerOnViewPopupRequested(TModel item)
     {
-        if (_itemEditViewModel is null) _itemEditViewModel = new TEditViewModel { Controller = _controller, SourceItem = item };
-        else _itemEditViewModel.SourceItem = item;
+        ItemEditViewModel.SourceItem = item;
+        ItemEditViewModel.IsEdit = false;
+        PopupService.ShowPopup(ItemEditViewModel);
+    }
 
-        _itemEditViewModel.IsEdit = isEdit;
-
-        ViewModel = _itemEditViewModel;
+    private void ControllerOnAddPopupRequested()
+    {
+        PopupService.ShowPopup(ItemAddViewModel);
     }
 }

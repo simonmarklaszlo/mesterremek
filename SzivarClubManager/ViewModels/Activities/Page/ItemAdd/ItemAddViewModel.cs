@@ -1,13 +1,17 @@
 using CommunityToolkit.Mvvm.Input;
-using SzivarClubManager.Models;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 
-public abstract partial class ItemAddViewModel<T> : ViewModelBase where T : class, IModel
+public abstract partial class ItemAddViewModel : ViewModelBase
 {
-    public PageController<T> Controller { get; init; } = null!;
+    protected PopupService PopupService { get; }
     protected abstract bool CanAdd { get; }
+
+    protected ItemAddViewModel(PopupService popupService)
+    {
+        PopupService = popupService;
+    }
 
     protected abstract void ResetFields();
     protected abstract void AddNewItemToChanges();
@@ -18,13 +22,13 @@ public abstract partial class ItemAddViewModel<T> : ViewModelBase where T : clas
     private void Cancel()
     {
         ResetFields();
-        Controller.NavigateBack();
+        PopupService.ClosePopup();
     }
 
     [RelayCommand(CanExecute = nameof(CanAdd))]
     private void Add()
     {
         AddNewItemToChanges();
-        Controller.NavigateBack();
+        PopupService.ClosePopup();
     }
 }

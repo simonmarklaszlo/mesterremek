@@ -9,8 +9,14 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem("Shops", typeof(Shop), 1)]
+[PageActivityCollectionItem("Boltok", typeof(Shop), 1)]
 public sealed class ShopActivityViewModel(
     PopupService popupService,
     IPageFactory<Shop> factory
-) : PageActivityViewModel<Shop, ShopFilter, ShopPageDataViewModel, ShopAddViewModel, ShopEditViewModel>(popupService, factory);
+) : PageActivityViewModel<Shop, ShopFilter, ShopPageDataViewModel, ShopAddViewModel, ShopEditViewModel>(popupService)
+{
+    protected override ShopPageDataViewModel DataViewModel => field ??= new ShopPageDataViewModel(PopupService, Controller, factory);
+    protected override ShopAddViewModel ItemAddViewModel => field ??= new ShopAddViewModel(PopupService);
+    protected override ShopEditViewModel ItemEditViewModel => field ??= new ShopEditViewModel(Controller);
+    protected override ShopFilter Filter => field ??= new ShopFilter();
+}

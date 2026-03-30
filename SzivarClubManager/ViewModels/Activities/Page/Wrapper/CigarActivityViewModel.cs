@@ -9,8 +9,14 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem("Cigars", typeof(Cigar), 1)]
+[PageActivityCollectionItem("Cigik", typeof(Cigar), 1)]
 public sealed class CigarActivityViewModel(
     PopupService popupService,
     IPageFactory<Cigar> factory
-) : PageActivityViewModel<Cigar, CigarFilter, CigarPageDataViewModel, CigarAddViewModel, CigarEditViewModel>(popupService, factory);
+) : PageActivityViewModel<Cigar, CigarFilter, CigarPageDataViewModel, CigarAddViewModel, CigarEditViewModel>(popupService)
+{
+    protected override CigarPageDataViewModel DataViewModel => field ??= new CigarPageDataViewModel(PopupService, Controller, factory);
+    protected override CigarAddViewModel ItemAddViewModel => field ??= new CigarAddViewModel(PopupService);
+    protected override CigarEditViewModel ItemEditViewModel => field ??= new CigarEditViewModel(Controller);
+    protected override CigarFilter Filter => field ??= new CigarFilter();
+}

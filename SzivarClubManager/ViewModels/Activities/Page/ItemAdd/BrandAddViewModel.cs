@@ -1,10 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 
-public sealed partial class BrandAddViewModel : ItemAddViewModel<Brand>
+public sealed partial class BrandAddViewModel(PopupService popupService) : ItemAddViewModel(popupService)
 {
     [ObservableProperty] private string _name = string.Empty;
     protected override bool CanAdd => !string.IsNullOrWhiteSpace(Name);

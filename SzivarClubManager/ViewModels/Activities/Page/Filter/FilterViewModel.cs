@@ -10,12 +10,14 @@ public abstract partial class FilterViewModel<TFilter, TModel> : ViewModelBase
     where TModel : class, IModel
     where TFilter : IFilter<TModel>
 {
-    public abstract TFilter Filter { get; init; }
-    public PopupService PopupService { get; set; } = null!;
+    public TFilter Filter { get; }
+    protected PopupService PopupService { get; }
     protected IRelayCommand AfterApplyCommand { get; }
 
-    protected FilterViewModel(IRelayCommand afterApplyCommand)
+    protected FilterViewModel(PopupService popupService, TFilter filter, IRelayCommand afterApplyCommand)
     {
+        PopupService = popupService;
+        Filter = filter;
         AfterApplyCommand = afterApplyCommand;
     }
 

@@ -1,5 +1,7 @@
 using SzivarClubManager.Datasources.Database.Filters;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Filter;
 using SzivarClubManager.ViewModels.Activities.Page.MinimalFilter;
 
@@ -27,13 +29,10 @@ public sealed class UserPageDataViewModel : PageDataViewModel<User, UserFilter>
     public override MinimalFilterViewModel<UserFilter, User> MinimalFilterViewModel { get; }
     public override FilterViewModel<UserFilter, User> FilterViewModel { get; }
 
-    public UserPageDataViewModel()
+    public UserPageDataViewModel(PopupService popupService, PageController<User> controller, IPageFactory<User> factory) : base(popupService, controller, factory)
     {
         Filter = new UserFilter();
-        MinimalFilterViewModel = new UserMinimalFilterViewModel(ShowFilterPopupCommand, TriggerSearchCommand, Filter);
-        FilterViewModel = new UserFilterViewModel(TriggerSearchCommand)
-        {
-            Filter = Filter
-        };
+        MinimalFilterViewModel = new UserMinimalFilterViewModel(Filter, ShowFilterPopupCommand, TriggerSearchCommand);
+        FilterViewModel = new UserFilterViewModel(popupService, Filter, TriggerSearchCommand);
     }
 }

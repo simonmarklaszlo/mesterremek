@@ -8,10 +8,11 @@ using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class UserEditViewModel : ItemEditViewModel<User>
+public sealed partial class UserEditViewModel(PageController<User> controller) : ItemEditViewModel<User>(controller)
 {
     public override User SourceItem
     {
@@ -107,7 +108,7 @@ public sealed partial class UserEditViewModel : ItemEditViewModel<User>
             if (CanResetRole) ResetRole();
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -124,6 +125,6 @@ public sealed partial class UserEditViewModel : ItemEditViewModel<User>
             Changes.Edit<User>(EditItem.Copy());
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 }

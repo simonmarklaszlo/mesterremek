@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,16 +15,17 @@ using SzivarClubManager.Models;
 using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Filter;
 using SzivarClubManager.ViewModels.Activities.Page.MinimalFilter;
-using SzivarClubManager.ViewModels.Activities.Page.Navigation;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Data;
 
 public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     where TModel : class, IModel
-    where TFilter : IFilter<TModel>, new()
+    where TFilter : IFilter<TModel>
 {
     public abstract TModel[] CurrentPageData { get; protected set; }
     [ObservableProperty] private int _currentPage = 1;
+
+    public DateTime LastGlobalChange => Changes.LastChange;
 
     public IList? SelectedItemsRaw
     {
@@ -51,31 +53,32 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     [ObservableProperty] private string _menuTextSingleDelete = DeleteTextSingle;
     [ObservableProperty] private string _menuTextMultipleDelete = DeleteTextMultiple;
 
-    public IPageFactory<TModel> Factory { get; init; } = null!;
-    public PageController<TModel> Controller { get; init; } = null!;
-    public PopupService PopupService
-    {
-        get;
-        init
-        {
-            field = value;
-            FilterViewModel.PopupService = value;
-        }
-    } = null!;
+    private readonly IPageFactory<TModel> _factory;
+    private readonly PopupService _popupService;
+    private readonly PageController<TModel> _controller;
+
     protected abstract TFilter Filter { get; }
     public abstract MinimalFilterViewModel<TFilter, TModel> MinimalFilterViewModel { get; }
     public abstract FilterViewModel<TFilter, TModel> FilterViewModel { get; }
 
+    protected PageDataViewModel(PopupService popupService, PageController<TModel> controller, IPageFactory<TModel> factory)
+    {
+        _popupService = popupService;
+        _controller = controller;
+        _factory = factory;
+
+        _controller.PopupCloseRequested += RefreshChangedData;
+    }
 
     public Task InitializeAsync() => LoadCurrentPage();
 
     private async Task LoadCurrentPage()
     {
-        CurrentPageData = await Factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize, Filter);
+        CurrentPageData = await _factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize, Filter);
 
         IsFirstPageButtonEnabled = CurrentPage > 1;
         IsPreviousPageButtonEnabled = CurrentPage > 1;
-        int lastPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
+        int lastPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
         IsNextPageButtonEnabled = lastPage > CurrentPage;
         IsLastPageButtonEnabled = lastPage > CurrentPage;
     }
@@ -93,7 +96,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     [RelayCommand]
     private async Task LoadNextPage()
     {
-        if (await Factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize, Filter))
+        if (await _factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize, Filter))
         {
             CurrentPage++;
             await LoadCurrentPage();
@@ -110,7 +113,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     [RelayCommand]
     private async Task LoadLastPage()
     {
-        CurrentPage = await Factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
+        CurrentPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
         await LoadCurrentPage();
     }
 
@@ -135,13 +138,13 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     private async Task CopyRecord() => await Clipboard.CopyText(SelectedItems[0].ToCopiableString());
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void ViewRecord() => Controller.SelectItem(SelectedItems[0]);
+    private void ViewRecord() => _controller.ViewModel(SelectedItems[0]);
 
     [RelayCommand(CanExecute = nameof(SingleCommandCanExecute))]
-    private void EditRecord() => Controller.EditItem(SelectedItems[0]);
+    private void EditRecord() => _controller.EditModel(SelectedItems[0]);
 
     [RelayCommand]
-    private void AddRecord() => Controller.AddItem();
+    private void AddRecord() => _controller.AddModel();
 
     [RelayCommand(CanExecute = nameof(SingleDeleteCanExecute))]
     private void DeleteRecord()
@@ -155,7 +158,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
             Changes.Delete(SelectedItems[0]);
         }
 
-        CurrentPageData = CurrentPageData.ToArray();
+        RefreshChangedData();
     }
 
     [RelayCommand(CanExecute = nameof(MultipleDeleteCanExecute))]
@@ -170,7 +173,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
             Changes.Delete(SelectedItems);
         }
 
-        CurrentPageData = CurrentPageData.ToArray();
+        RefreshChangedData();
     }
 
     private bool SingleCommandCanExecute() => SelectedItems.Length == 1;
@@ -238,7 +241,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     private void ShowFilterPopup()
     {
         FilterViewModel.RefreshFilterFields();
-        PopupService.ShowPopup(FilterViewModel);
+        _popupService.ShowPopup(FilterViewModel);
     }
 
     [RelayCommand]
@@ -247,5 +250,10 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
         MinimalFilterViewModel.SearchText = Filter.ToString();
         CurrentPage = 1;
         await LoadCurrentPage();
+    }
+
+    private void RefreshChangedData()
+    {
+        CurrentPageData = [.. CurrentPageData];
     }
 }

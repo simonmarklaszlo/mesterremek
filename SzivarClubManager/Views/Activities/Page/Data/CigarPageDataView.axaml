@@ -42,7 +42,14 @@
                 </DataGrid.ContextMenu>
                 <DataGrid.Styles>
                     <Style Selector="DataGridRow">
-                        <Setter Property="Background" Value="{Binding ., Converter={StaticResource RowBgConverter}}" />
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <MultiBinding Converter="{StaticResource RowBgConverter}">
+                                    <Binding />
+                                    <Binding Path="LastGlobalChange" />
+                                </MultiBinding>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </DataGrid.Styles>
                 <Interaction.Behaviors>

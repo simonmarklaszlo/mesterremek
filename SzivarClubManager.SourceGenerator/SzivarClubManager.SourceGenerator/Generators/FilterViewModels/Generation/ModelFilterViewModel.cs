@@ -19,9 +19,9 @@ public static class ModelFilterViewModel
         sb.AppendLine();
         sb.AppendLine($"public {(vm.ViewModelSymbol.IsSealed ? "sealed " : "")}partial class {vm.ViewModelSymbol.Name}");
         sb.AppendLine("{");
-        GenerateFilterProperty(sb, filter);
-        sb.AppendLine();
-        sb.AppendLine();
+        // GenerateFilterProperty(sb, filter);
+        // sb.AppendLine();
+        // sb.AppendLine();
         GenerateTextProperties(sb, filter);
         sb.AppendLine();
         sb.AppendLine();

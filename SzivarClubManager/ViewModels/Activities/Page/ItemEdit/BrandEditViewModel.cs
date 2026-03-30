@@ -4,10 +4,11 @@ using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Editable;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
-public sealed partial class BrandEditViewModel : ItemEditViewModel<Brand>
+public sealed partial class BrandEditViewModel(PageController<Brand> controller) : ItemEditViewModel<Brand>(controller)
 {
     public override Brand SourceItem
     {
@@ -62,7 +63,7 @@ public sealed partial class BrandEditViewModel : ItemEditViewModel<Brand>
             if (CanResetName) ResetName();
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveChanges))]
@@ -79,6 +80,6 @@ public sealed partial class BrandEditViewModel : ItemEditViewModel<Brand>
             Changes.Edit<Brand>(EditItem.Copy());
         }
 
-        Controller.NavigateBack();
+        Controller.ClosePopup();
     }
 }

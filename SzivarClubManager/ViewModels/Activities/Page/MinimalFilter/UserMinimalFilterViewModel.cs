@@ -5,7 +5,7 @@ using SzivarClubManager.Models;
 namespace SzivarClubManager.ViewModels.Activities.Page.MinimalFilter;
 
 public sealed class UserMinimalFilterViewModel(
+    UserFilter filter,
     IRelayCommand showFilterCommand,
-    IRelayCommand triggerSearchCommand,
-    UserFilter filter
-) : MinimalFilterViewModel<UserFilter, User>(showFilterCommand, triggerSearchCommand, filter);
+    IRelayCommand triggerSearchCommand
+) : MinimalFilterViewModel<UserFilter, User>(filter, showFilterCommand, triggerSearchCommand);

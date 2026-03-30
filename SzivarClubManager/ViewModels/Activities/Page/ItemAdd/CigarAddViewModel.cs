@@ -5,10 +5,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
+using SzivarClubManager.Services;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.ItemAdd;
 
-public sealed partial class CigarAddViewModel : ItemAddViewModel<Cigar>
+public sealed partial class CigarAddViewModel : ItemAddViewModel
 {
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private Brand? _brand;
@@ -19,7 +20,7 @@ public sealed partial class CigarAddViewModel : ItemAddViewModel<Cigar>
 
     protected override bool CanAdd => !string.IsNullOrWhiteSpace(Name) && Brand is not null;
 
-    public CigarAddViewModel() => _ = ChangeBrand();
+    public CigarAddViewModel(PopupService popupService) : base(popupService) => _ = ChangeBrand();
 
     public override void OnOpening() => _ = ChangeBrand();
 
