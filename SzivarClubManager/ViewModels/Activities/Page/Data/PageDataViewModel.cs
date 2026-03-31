@@ -10,7 +10,6 @@ using SzivarClubManager.Configs;
 using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
-using SzivarClubManager.Helper;
 using SzivarClubManager.Models;
 using SzivarClubManager.Services;
 using SzivarClubManager.ViewModels.Activities.Page.Filter;

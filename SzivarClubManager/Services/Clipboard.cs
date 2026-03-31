@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 
-namespace SzivarClubManager.Helper;
+namespace SzivarClubManager.Services;
 
 public static class Clipboard
 {
