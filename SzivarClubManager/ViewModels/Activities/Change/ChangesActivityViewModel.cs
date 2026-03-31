@@ -7,7 +7,7 @@ using SzivarClubManager.SourceGeneration.Activity;
 
 namespace SzivarClubManager.ViewModels.Activities.Change;
 
-[ActivityCollectionItem("Changes", 2)]
+[ActivityCollectionItem("Módosítások", 2)]
 public sealed partial class ChangesActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<DataChangeRow> DataChangeRows { get; } = GetDataChangeRows();

@@ -82,12 +82,12 @@
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="0"
-            Text="Cancel"
+            Text="Mégse"
             Command="{Binding DropChangesCommand}" />
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="1"
-            Text="Save"
+            Text="Mentés"
             Command="{Binding SaveChangesCommand}" />
     </Grid>
 </UserControl>

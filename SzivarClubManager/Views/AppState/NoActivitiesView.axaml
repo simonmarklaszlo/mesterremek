@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.Suggestions.SuggestionsPlaceholderView">
+             x:Class="SzivarClubManager.Views.AppState.NoActivitiesView">
     <Grid
-        RowDefinitions="Auto,Auto"
+        RowDefinitions="Auto,Auto, Auto"
         VerticalAlignment="Center"
         HorizontalAlignment="Center"
         RowSpacing="50"
@@ -19,6 +19,11 @@
             Grid.Row="1"
             FontSize="25"
             TextAlignment="Center"
-            Text="Nincsnek ajánlatok" />
+            Text="Hiba történt" />
+        <TextBlock
+            Grid.Row="2"
+            FontSize="20"
+            TextAlignment="Center"
+            Text="Hiányoznak az tevékenységek" />
     </Grid>
 </UserControl>

@@ -40,16 +40,16 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     public object? SelectedItem { get; set; }
     public DataGridColumn? CurrentColumn { get; set; }
 
-    [ObservableProperty] private bool _isFirstPageButtonEnabled;
-    [ObservableProperty] private bool _isPreviousPageButtonEnabled;
-    [ObservableProperty] private bool _isNextPageButtonEnabled;
-    [ObservableProperty] private bool _isLastPageButtonEnabled;
+    private bool CanGoToFirstPage { get; set; }
+    private bool CanGoToPreviousPage { get; set; }
+    private bool CanGoToNextPage { get; set; }
+    private bool CanGoToLastPage { get; set; }
 
 
-    private const string DeleteTextSingle = "Delete";
-    private const string DeleteTextMultiple = "Delete selected";
-    private const string UndeleteTextSingle = "Undelete";
-    private const string UndeleteTextMultiple = "Undelete selected";
+    private const string DeleteTextSingle = "Törlés";
+    private const string DeleteTextMultiple = "Kijelöltek törlése";
+    private const string UndoDeleteTextSingle = "Törlés visszavonása";
+    private const string UndoDeleteTextMultiple = "Kijelöltek törlésének visszavonása";
     [ObservableProperty] private string _menuTextSingleDelete = DeleteTextSingle;
     [ObservableProperty] private string _menuTextMultipleDelete = DeleteTextMultiple;
 
@@ -76,14 +76,24 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     {
         CurrentPageData = await _factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize, Filter);
 
-        IsFirstPageButtonEnabled = CurrentPage > 1;
-        IsPreviousPageButtonEnabled = CurrentPage > 1;
-        int lastPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
-        IsNextPageButtonEnabled = lastPage > CurrentPage;
-        IsLastPageButtonEnabled = lastPage > CurrentPage;
+        await SetButtonStates();
     }
 
-    [RelayCommand]
+    private async Task SetButtonStates()
+    {
+        CanGoToFirstPage = CurrentPage > 1;
+        CanGoToPreviousPage = CurrentPage > 1;
+        int lastPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
+        CanGoToNextPage = lastPage > CurrentPage;
+        CanGoToLastPage = lastPage > CurrentPage;
+
+        LoadFirstPageCommand.NotifyCanExecuteChanged();
+        LoadPreviousPageCommand.NotifyCanExecuteChanged();
+        LoadNextPageCommand.NotifyCanExecuteChanged();
+        LoadLastPageCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
     private async Task LoadPreviousPage()
     {
         if (CurrentPage > 1)
@@ -93,7 +103,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
     private async Task LoadNextPage()
     {
         if (await _factory.PageExists(CurrentPage + 1, GlobalConfig.Instance.UserPreferences.PageSize, Filter))
@@ -103,14 +113,14 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoToFirstPage))]
     private async Task LoadFirstPage()
     {
         CurrentPage = 1;
         await LoadCurrentPage();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoToLastPage))]
     private async Task LoadLastPage()
     {
         CurrentPage = await _factory.GetLastPage(GlobalConfig.Instance.UserPreferences.PageSize, Filter);
@@ -195,7 +205,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
 
         if (Changes.IsDeleted(item))
         {
-            MenuTextSingleDelete = UndeleteTextSingle;
+            MenuTextSingleDelete = UndoDeleteTextSingle;
             return true;
         }
 
@@ -219,7 +229,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
                 return false;
             }
 
-            MenuTextMultipleDelete = UndeleteTextMultiple;
+            MenuTextMultipleDelete = UndoDeleteTextMultiple;
             return true;
         }
 

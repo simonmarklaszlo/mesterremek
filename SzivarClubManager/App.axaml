@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="SzivarClubManager.App"
              xmlns:viewLocators="clr-namespace:SzivarClubManager.ViewLocators"
+             xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
              RequestedThemeVariant="Default">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -98,32 +99,49 @@
 
                 <!-- Region colors -->
                 <ResourceDictionary x:Key="Light">
+                    <!-- Brushes -->
                     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FFF7FFFF" />
                     <SolidColorBrush x:Key="RedBrush" Color="OrangeRed" />
                     <SolidColorBrush x:Key="GreenBrush" Color="#57965C" />
-                    <Bitmap x:Key="ClearIcon">/Assets/clear-black.png</Bitmap>
-                    <Bitmap x:Key="OpenFilterIcon">/Assets/settings-black.png</Bitmap>
-                    <Bitmap x:Key="SearchIcon">/Assets/search-black.png</Bitmap>
-                    <Bitmap x:Key="RefreshIcon">/Assets/refresh-black.png</Bitmap>
-                    <Bitmap x:Key="OpenContentIcon">/Assets/down-arrow-black.png</Bitmap>
-                    <Bitmap x:Key="CloseContentIcon">/Assets/up-arrow-black.png</Bitmap>
-                    <Bitmap x:Key="SadFaceImage">/Assets/sad-face-black.png</Bitmap>
-                    <Bitmap x:Key="HappyFaceImage">/Assets/happy-face-black.png</Bitmap>
+                    <!-- Icons -->
+                    <Bitmap x:Key="ClearIcon">/Assets/Icons/clear-black.png</Bitmap>
+                    <Bitmap x:Key="DisabledClearIcon">/Assets/Icons/clear-gray.png</Bitmap>
+                    <Bitmap x:Key="OpenFilterIcon">/Assets/Icons/settings-black.png</Bitmap>
+                    <Bitmap x:Key="SearchIcon">/Assets/Icons/search-black.png</Bitmap>
+                    <Bitmap x:Key="RefreshIcon">/Assets/Icons/refresh-black.png</Bitmap>
+                    <Bitmap x:Key="OpenContentIcon">/Assets/Icons/down-arrow-black.png</Bitmap>
+                    <Bitmap x:Key="CloseContentIcon">/Assets/Icons/up-arrow-black.png</Bitmap>
+                    <!-- Images -->
+                    <Bitmap x:Key="SadFaceImage">/Assets/Images/sad-face-black.png</Bitmap>
+                    <Bitmap x:Key="HappyFaceImage">/Assets/Images/happy-face-black.png</Bitmap>
+                    <Bitmap x:Key="ErrorImage">/Assets/Images/error.png</Bitmap>
+                    <anim:AnimatedImageSource x:Key="LoadingImage">
+                        <!-- Full path required for AnimatedImageSource source -->
+                        avares://SzivarClubManager/Assets/Images/loading.gif
+                    </anim:AnimatedImageSource>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
+                    <!-- Brushes -->
                     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FF353819" />
                     <SolidColorBrush x:Key="RedBrush" Color="#DE433F" />
                     <SolidColorBrush x:Key="GreenBrush" Color="ForestGreen" />
-                    <Bitmap x:Key="ClearIcon">/Assets/clear-white.png</Bitmap>
-                    <Bitmap x:Key="OpenFilterIcon">/Assets/settings-white.png</Bitmap>
-                    <Bitmap x:Key="SearchIcon">/Assets/search-white.png</Bitmap>
-                    <Bitmap x:Key="RefreshIcon">/Assets/refresh-white.png</Bitmap>
-                    <Bitmap x:Key="OpenContentIcon">/Assets/down-arrow-white.png</Bitmap>
-                    <Bitmap x:Key="CloseContentIcon">/Assets/up-arrow-white.png</Bitmap>
-                    <Bitmap x:Key="SadFaceImage">/Assets/sad-face-white.png</Bitmap>
-                    <Bitmap x:Key="HappyFaceImage">/Assets/happy-face-white.png</Bitmap>
+                    <!-- Icons -->
+                    <Bitmap x:Key="ClearIcon">/Assets/Icons/clear-white.png</Bitmap>
+                    <Bitmap x:Key="DisabledClearIcon">/Assets/Icons/clear-gray.png</Bitmap>
+                    <Bitmap x:Key="OpenFilterIcon">/Assets/Icons/settings-white.png</Bitmap>
+                    <Bitmap x:Key="SearchIcon">/Assets/Icons/search-white.png</Bitmap>
+                    <Bitmap x:Key="RefreshIcon">/Assets/Icons/refresh-white.png</Bitmap>
+                    <Bitmap x:Key="OpenContentIcon">/Assets/Icons/down-arrow-white.png</Bitmap>
+                    <Bitmap x:Key="CloseContentIcon">/Assets/Icons/up-arrow-white.png</Bitmap>
+                    <!-- Images -->
+                    <Bitmap x:Key="SadFaceImage">/Assets/Images/sad-face-white.png</Bitmap>
+                    <Bitmap x:Key="HappyFaceImage">/Assets/Images/happy-face-white.png</Bitmap>
+                    <Bitmap x:Key="ErrorImage">/Assets/Images/error.png</Bitmap>
+                    <anim:AnimatedImageSource x:Key="LoadingImage">
+                        <!-- Full path required for AnimatedImageSource source -->
+                        avares://SzivarClubManager/Assets/Images/loading.gif
+                    </anim:AnimatedImageSource>
                 </ResourceDictionary>
-
 
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

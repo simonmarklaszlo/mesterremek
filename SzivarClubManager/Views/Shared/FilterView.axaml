@@ -29,14 +29,14 @@
         <shared:BottomActionButton
             Grid.Row="1"
             Grid.Column="0"
-            Text="Cancel"
+            Text="Mégse"
             Command="{Binding CancelCommand, ElementName=Root}" />
 
 
         <shared:BottomActionButton
             Grid.Row="1"
             Grid.Column="1"
-            Text="Apply"
+            Text="Alkalmaz"
             Command="{Binding ApplyCommand, ElementName=Root}" />
     </Grid>
 </UserControl>

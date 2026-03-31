@@ -37,19 +37,19 @@
             </DataGrid.Styles>
             <DataGrid.Columns>
 
-                <DataGridTextColumn Header="Data Type"
+                <DataGridTextColumn Header="Típus"
                                     Binding="{Binding TypeName}"
                                     Width="*" />
 
-                <DataGridTextColumn Header="Add"
+                <DataGridTextColumn Header="Hozzáadott"
                                     Binding="{Binding AddCount}"
                                     Width="*" />
 
-                <DataGridTextColumn Header="Edit"
+                <DataGridTextColumn Header="Változtatott"
                                     Binding="{Binding EditCount}"
                                     Width="*" />
 
-                <DataGridTextColumn Header="Delete"
+                <DataGridTextColumn Header="Törölt"
                                     Binding="{Binding DeleteCount}"
                                     Width="*" />
 
@@ -62,12 +62,12 @@
 
             <shared:BottomActionButton
                 Grid.Column="0"
-                Text="Drop Changes"
+                Text="Módosítások eldobása"
                 Command="{Binding DropAllCommand}" />
 
             <shared:BottomActionButton
                 Grid.Column="1"
-                Text="Apply Changes"
+                Text="Módosítások alkalmazása"
                 Command="{Binding ApplyAllCommand}" />
         </Grid>
 

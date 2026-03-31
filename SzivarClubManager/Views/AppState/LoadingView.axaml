@@ -2,23 +2,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.Suggestions.SuggestionsPlaceholderView">
+             x:Class="SzivarClubManager.Views.AppState.LoadingView">
     <Grid
         RowDefinitions="Auto,Auto"
         VerticalAlignment="Center"
         HorizontalAlignment="Center"
         RowSpacing="50"
         Margin="100">
+
         <Image
             Grid.Row="0"
-            Source="{DynamicResource SadFaceImage}"
             MaxHeight="256"
-            MaxWidth="256" />
+            MaxWidth="256"
+            anim:ImageBehavior.AnimatedSource="{DynamicResource LoadingImage}" />
         <TextBlock
             Grid.Row="1"
             FontSize="25"
             TextAlignment="Center"
-            Text="Nincsnek ajánlatok" />
+            Text="Betöltés..." />
     </Grid>
 </UserControl>

@@ -18,6 +18,7 @@
         <TextBlock
             Grid.Row="1"
             FontSize="25"
-            Text="Nincsnek csúnya szavat tartralmazó ajánlatok"/>
+            TextAlignment="Center"
+            Text="Nincsnek problémás ajánlatok"/>
     </Grid>
 </UserControl>

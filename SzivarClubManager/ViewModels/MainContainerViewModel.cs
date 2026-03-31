@@ -7,13 +7,14 @@ using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration.Generated;
 using SzivarClubManager.ViewModels.Activities;
+using SzivarClubManager.ViewModels.AppState;
 
 namespace SzivarClubManager.ViewModels;
 
 public partial class MainContainerViewModel : ViewModelBase
 {
     private readonly IReadOnlyDictionary<string, ActivityViewModel> _activities;
-    [ObservableProperty] private ActivityViewModel _currentActivity;
+    [ObservableProperty] private ViewModelBase _currentActivity;
     [ObservableProperty] private string? _selectedActivityName;
     public string[] ActivityNames { get; }
 
@@ -21,11 +22,15 @@ public partial class MainContainerViewModel : ViewModelBase
     {
         _activities = ActivityCollection.GetActivities(provider, popupService);
 
-        _currentActivity = new NoActivityViewModel(popupService);
+        _currentActivity = new LoadingViewModel();
         ActivityNames = _activities.Keys.ToArray();
         if (ActivityNames.Length > 0)
         {
             SelectedActivityName = ActivityNames[0];
+        }
+        else
+        {
+            _currentActivity = new NoActivitiesViewModel();
         }
     }
 

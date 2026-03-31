@@ -12,7 +12,7 @@ using SuggestionWrapperViewModel = SzivarClubManager.ViewModels.Components.Sugge
 
 namespace SzivarClubManager.ViewModels.Activities.Suggestions;
 
-[ActivityCollectionItem("Suggestions", 3)]
+[ActivityCollectionItem("Javaslatok", 3)]
 public sealed partial class SuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<SuggestionWrapperViewModel> SuggestionsViewModels { get; } = [];

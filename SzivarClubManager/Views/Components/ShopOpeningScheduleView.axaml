@@ -17,7 +17,7 @@
         <Grid>
             <TextBlock
                 IsVisible="{Binding ShowLoading}"
-                Text="Loading ... " />
+                Text="Betőltés... " />
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowSchedule}">
                 <ItemsControl ItemsSource="{Binding OpeningHours}">

@@ -6,6 +6,7 @@ using SzivarClubManager.Datasources.Change;
 using SzivarClubManager.Datasources.Database;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Services;
+using SzivarClubManager.ViewModels.AppState;
 
 namespace SzivarClubManager.ViewModels;
 
@@ -21,7 +22,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        _currentViewModel = ConnectionStateViewModel.Loading;
+        _currentViewModel = new LoadingViewModel();
         _popupService = new PopupService(this);
         ClosePopupCommand = new RelayCommand(_popupService.ClosePopup);
         _ = InitAsync();
@@ -38,9 +39,8 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             DatabaseConnection? connection = await DatabaseConnection.ConnectAsync();
-            Console.WriteLine("Connection to database : " + (connection is null ? "failure" : "succeess"));
 
-            if (connection is null) CurrentViewModel = ConnectionStateViewModel.Error;
+            if (connection is null) CurrentViewModel = new ErrorViewModel("Sikertelen kapcsolódás adatbázishoz");
             else
             {
                 FactoryProvider.CreateDatabase(connection);
@@ -52,7 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            CurrentViewModel = ConnectionStateViewModel.Error;
+            CurrentViewModel = new ErrorViewModel(e.Message);
             Console.WriteLine(e);
 
             await Task.Delay(2000);

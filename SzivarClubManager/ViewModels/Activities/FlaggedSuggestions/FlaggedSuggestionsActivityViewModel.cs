@@ -13,7 +13,7 @@ using SuggestionWrapperViewModel = SzivarClubManager.ViewModels.Components.Sugge
 
 namespace SzivarClubManager.ViewModels.Activities.FlaggedSuggestions;
 
-[ActivityCollectionItem("Flagged Suggestions", 3)]
+[ActivityCollectionItem("Problémás javaslatok", 3)]
 public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<SuggestionWrapperViewModel> SuggestionsViewModels { get; } = [];

@@ -58,6 +58,7 @@
             MaxHeight="48"
             MaxWidth="48"
             Command="{Binding ClearCommand, ElementName=Root}">
+            <ToolTip.Tip>Mező kiürítése</ToolTip.Tip>
             <Image>
                 <Image.Styles>
                     <Style Selector="Image">

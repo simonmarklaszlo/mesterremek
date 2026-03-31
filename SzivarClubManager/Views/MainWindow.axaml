@@ -7,8 +7,8 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SzivarClubManager.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="SzivarClubManager">
+        Icon="/Assets/Icons/cigar.ico"
+        Title="SzivarClub Manager">
     <Grid>
         <ContentControl
             ZIndex="0"

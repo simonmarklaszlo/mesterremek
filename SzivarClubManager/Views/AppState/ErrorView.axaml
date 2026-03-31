@@ -2,23 +2,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.AppState"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.Suggestions.SuggestionsPlaceholderView">
+             x:Class="SzivarClubManager.Views.AppState.ErrorView"
+             x:DataType="vm:ErrorViewModel">
     <Grid
-        RowDefinitions="Auto,Auto"
+        RowDefinitions="Auto,Auto, Auto"
         VerticalAlignment="Center"
         HorizontalAlignment="Center"
         RowSpacing="50"
         Margin="100">
         <Image
             Grid.Row="0"
-            Source="{DynamicResource SadFaceImage}"
+            Source="{DynamicResource ErrorImage}"
             MaxHeight="256"
             MaxWidth="256" />
         <TextBlock
             Grid.Row="1"
             FontSize="25"
             TextAlignment="Center"
-            Text="Nincsnek ajánlatok" />
+            Text="Hiba történt" />
+        <TextBlock
+            Grid.Row="2"
+            FontSize="20"
+            TextAlignment="Center"
+            Text="{Binding ErrorText}" />
     </Grid>
 </UserControl>

@@ -27,7 +27,7 @@
         <TextBlock
             Grid.Column="0"
             Grid.Row="1"
-            Text="Address"
+            Text="Cím"
             HorizontalAlignment="Center"
             FontSize="20" />
         <TextBlock

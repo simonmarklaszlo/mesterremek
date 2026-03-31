@@ -43,6 +43,7 @@
                                 HorizontalContentAlignment="Center"
                                 MaxHeight="48"
                                 MaxWidth="48">
+                                <ToolTip.Tip>Mező kiürítése</ToolTip.Tip>
                                 <Image>
                                     <Image.Styles>
                                         <Style Selector="Image">

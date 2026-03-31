@@ -6,6 +6,7 @@
              xmlns:converters="clr-namespace:SzivarClubManager.Converters"
              xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
              xmlns:models="clr-namespace:SzivarClubManager.Models"
+             xmlns:shared="clr-namespace:SzivarClubManager.Views.Shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.Data.UserPageDataView"
              x:DataType="vm:UserPageDataViewModel">
@@ -31,12 +32,11 @@
                 GridLinesVisibility="All">
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Copy Value" Command="{Binding CopyCellCommand}" />
-                        <MenuItem Header="Copy Row" Command="{Binding CopyRecordCommand}" />
-                        <MenuItem Header="View" Command="{Binding ViewRecordCommand}" />
-                        <MenuItem Header="Edit" Command="{Binding EditRecordCommand}" />
+                        <MenuItem Header="Érték másolása" Command="{Binding CopyCellCommand}" />
+                        <MenuItem Header="Sor másolása" Command="{Binding CopyRecordCommand}" />
+                        <MenuItem Header="Részletek" Command="{Binding ViewRecordCommand}" />
+                        <MenuItem Header="Módosítás" Command="{Binding EditRecordCommand}" />
                         <MenuItem Header="{Binding MenuTextSingleDelete}" Command="{Binding DeleteRecordCommand}" />
-
                         <MenuItem Header="{Binding MenuTextMultipleDelete}" Command="{Binding DeleteSelectedCommand}" />
                     </ContextMenu>
                 </DataGrid.ContextMenu>
@@ -45,7 +45,7 @@
                         <Setter Property="Background">
                             <Setter.Value>
                                 <MultiBinding Converter="{StaticResource RowBgConverter}">
-                                    <Binding/>
+                                    <Binding />
                                     <Binding Path="LastGlobalChange" />
                                 </MultiBinding>
                             </Setter.Value>
@@ -64,48 +64,13 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <Grid
+            <shared:PageControls
                 Grid.Row="1"
-                ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
-                HorizontalAlignment="Center"
-                Margin="0 20">
-
-                <Button
-                    Grid.Column="0"
-                    IsEnabled="{Binding IsFirstPageButtonEnabled}"
-                    Command="{Binding LoadFirstPageCommand}"
-                    Content="&lt;&lt;"
-                    Margin="10 0" />
-
-                <Button
-                    Grid.Column="1"
-                    IsEnabled="{Binding IsPreviousPageButtonEnabled}"
-                    Command="{Binding LoadPreviousPageCommand}"
-                    Content="&lt;"
-                    Margin="10 0" />
-
-                <TextBlock
-                    Grid.Column="2"
-                    Text="{Binding CurrentPage}"
-                    FontWeight="Bold"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Margin="20 0" />
-
-                <Button
-                    Grid.Column="3"
-                    IsEnabled="{Binding IsNextPageButtonEnabled}"
-                    Command="{Binding LoadNextPageCommand}"
-                    Content="&gt;"
-                    Margin="10 0" />
-
-                <Button
-                    Grid.Column="4"
-                    IsEnabled="{Binding IsLastPageButtonEnabled}"
-                    Command="{Binding LoadLastPageCommand}"
-                    Content="&gt;&gt;"
-                    Margin="10 0" />
-            </Grid>
+                LoadFirstPageCommand="{Binding LoadFirstPageCommand}"
+                LoadPreviousPageCommand="{Binding LoadPreviousPageCommand}"
+                CurrentPageNumber="{Binding CurrentPage}"
+                LoadNextPageCommand="{Binding LoadNextPageCommand}"
+                LoadLastPageCommand="{Binding LoadLastPageCommand}" />
         </Grid>
     </Grid>
 </UserControl>

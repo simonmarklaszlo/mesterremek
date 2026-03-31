@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SzivarClubManager.Views.Shared.PageControls"
+             x:Name="Root">
+    <Grid
+        ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
+        HorizontalAlignment="Center"
+        Margin="0 20">
+
+        <Button
+            Grid.Column="0"
+            Command="{Binding LoadFirstPageCommand, ElementName=Root}"
+            Content="&lt;&lt;"
+            Margin="10 0">
+            <ToolTip.Tip>Ugrás az első oldalra</ToolTip.Tip>
+        </Button>
+
+        <Button
+            Grid.Column="1"
+            Command="{Binding LoadPreviousPageCommand, ElementName=Root}"
+            Content="&lt;"
+            Margin="10 0">
+            <ToolTip.Tip>Ugrás az előző oldalra</ToolTip.Tip>
+        </Button>
+
+        <TextBlock
+            Grid.Column="2"
+            Text="{Binding CurrentPageNumber, ElementName=Root}"
+            FontWeight="Bold"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Margin="20 0" />
+
+        <Button
+            Grid.Column="3"
+            Command="{Binding LoadNextPageCommand, ElementName=Root}"
+            Content="&gt;"
+            Margin="10 0">
+            <ToolTip.Tip>Ugrás a következő oldalra</ToolTip.Tip>
+        </Button>
+
+        <Button
+            Grid.Column="4"
+            Command="{Binding LoadLastPageCommand, ElementName=Root}"
+            Content="&gt;&gt;"
+            Margin="10 0">
+            <ToolTip.Tip>Ugrás az utolsó oldalra</ToolTip.Tip>
+        </Button>
+    </Grid>
+</UserControl>

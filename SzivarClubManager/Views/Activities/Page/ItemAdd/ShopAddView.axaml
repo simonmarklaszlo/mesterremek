@@ -52,12 +52,12 @@
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="0"
-            Text="Cancel"
+            Text="Mégse"
             Command="{Binding CancelCommand}" />
 
         <shared:BottomActionButton
             Grid.Row="1" Grid.Column="1"
-            Text="Add"
+            Text="Hozzáad"
             Command="{Binding AddCommand}" />
     </Grid>
 </UserControl>

@@ -7,48 +7,25 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SzivarClubManager.Views.Activities.Page.Filter.BrandFilterView"
              x:DataType="vm:BrandFilterViewModel">
-    <Grid
-        ColumnDefinitions="*,*"
-        RowDefinitions="*, Auto"
-        Margin="0 10 0 0">
-        <ScrollViewer
-            Grid.Row="0"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Margin="20">
-            <Grid
-                IsSharedSizeScope="True"
-                RowDefinitions="Auto, Auto">
-                <shared:FilterRangeField
-                    Grid.Row="0"
-                    Label="Id"
-                    MinText="{Binding MinIdText}"
-                    MinState="{Binding MinIdState}"
-                    MaxText="{Binding MaxIdText}"
-                    MaxState="{Binding MaxIdState}"
-                    ClearCommand="{Binding ClearIdTextCommand}" />
+    <shared:FilterView
+        CancelCommand="{Binding CancelCommand}"
+        ApplyCommand="{Binding ApplyCommand}">
+        <shared:FilterView.FilterItems>
+            <shared:FilterRangeField
+                Grid.Row="0"
+                Label="Id"
+                MinText="{Binding MinIdText}"
+                MinState="{Binding MinIdState}"
+                MaxText="{Binding MaxIdText}"
+                MaxState="{Binding MaxIdState}"
+                ClearCommand="{Binding ClearIdTextCommand}" />
 
-                <shared:FilterField
-                    Grid.Row="1"
-                    Label="Name"
-                    Text="{Binding NameText}"
-                    State="{Binding NameState}"
-                    ClearCommand="{Binding ClearNameTextCommand}" />
-            </Grid>
-        </ScrollViewer>
-
-        <shared:BottomActionButton
-            Grid.Row="1"
-            Grid.Column="0"
-            Text="Cancel"
-            HorizontalAlignment="Stretch"
-            Command="{Binding CancelCommand}" />
-
-        <shared:BottomActionButton
-            Grid.Row="1"
-            Grid.Column="1"
-            Text="Apply"
-            HorizontalAlignment="Stretch"
-            Command="{Binding ApplyCommand}" />
-    </Grid>
+            <shared:FilterField
+                Grid.Row="1"
+                Label="Name"
+                Text="{Binding NameText}"
+                State="{Binding NameState}"
+                ClearCommand="{Binding ClearNameTextCommand}" />
+        </shared:FilterView.FilterItems>
+    </shared:FilterView>
 </UserControl>
