@@ -52,7 +52,7 @@
                                         </Style>
 
                                         <Style Selector="Button:disabled Image">
-                                            <Setter Property="Source" Value="../../Assets/refresh-gray.png" />
+                                            <Setter Property="Source" Value="{DynamicResource DisabledClearIcon}" />
                                             <Setter Property="Opacity" Value="0.5" />
                                         </Style>
                                     </Image.Styles>
