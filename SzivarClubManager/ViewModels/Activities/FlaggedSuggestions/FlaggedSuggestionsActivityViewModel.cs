@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Configs;
+using SzivarClubManager.Datasources.Database.Factories;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
@@ -10,13 +11,13 @@ using SzivarClubManager.Services;
 using SzivarClubManager.SourceGeneration.Activity;
 using SuggestionWrapperViewModel = SzivarClubManager.ViewModels.Components.Suggestions.SuggestionWrapperViewModel;
 
-namespace SzivarClubManager.ViewModels.Activities.Suggestions;
+namespace SzivarClubManager.ViewModels.Activities.FlaggedSuggestions;
 
-[ActivityCollectionItem("Suggestions", 3)]
-public sealed partial class SuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
+[ActivityCollectionItem("Flagged Suggestions", 3)]
+public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<SuggestionWrapperViewModel> SuggestionsViewModels { get; } = [];
-    private readonly IPageFactory<Suggestion> _suggestionsFactory = FactoryProvider.Instance.GetPageFactory<Suggestion>();
+    private readonly SuggestionFactory _suggestionsFactory = (SuggestionFactory)FactoryProvider.Instance.GetPageFactory<Suggestion>();
 
     [ObservableProperty] private bool _showData = true;
     [ObservableProperty] private bool _showPlaceholder;
@@ -38,7 +39,7 @@ public sealed partial class SuggestionsActivityViewModel(PopupService popupServi
 
         _isLoading = true;
 
-        var items = await _suggestionsFactory.GetPage(_currentPage, GlobalConfig.Instance.UserPreferences.PageSize, SuggestionFilter.Empty);
+        var items = await _suggestionsFactory.GetPageOnFlagged(_currentPage, GlobalConfig.Instance.UserPreferences.PageSize, SuggestionFilter.Empty);
 
         if (items.Length == 0)
         {
@@ -46,7 +47,7 @@ public sealed partial class SuggestionsActivityViewModel(PopupService popupServi
         }
         else
         {
-            foreach (var suggestion in items) SuggestionsViewModels.Add(new SuggestionWrapperViewModel(suggestion, OnSuggestionApproved));
+            foreach (var suggestion in items) SuggestionsViewModels.Add(new SuggestionWrapperViewModel(suggestion, OnSuggestionEdited));
 
             _currentPage++;
         }
@@ -65,7 +66,7 @@ public sealed partial class SuggestionsActivityViewModel(PopupService popupServi
         _isLoading = false;
     }
 
-    private async Task OnSuggestionApproved()
+    private async Task OnSuggestionEdited()
     {
         SuggestionsViewModels.Clear();
         _currentPage = 1;

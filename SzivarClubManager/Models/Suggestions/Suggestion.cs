@@ -31,12 +31,6 @@ public abstract class Suggestion : IModel
         Votes = votes;
     }
 
-    public async Task Approve()
-    {
-        SuggestionFactory factory = (SuggestionFactory)FactoryProvider.Instance.GetFactory<Suggestion>();
-        await factory.ApproveSuggestion(this);
-    }
-
     public string ToCopiableString() => throw new NotSupportedException();
 
     public static Suggestion Create(

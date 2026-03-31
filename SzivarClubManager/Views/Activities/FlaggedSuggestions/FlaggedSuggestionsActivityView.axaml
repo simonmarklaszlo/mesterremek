@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Suggestions"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.FlaggedSuggestions"
              xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
-             xmlns:compSuggestions="clr-namespace:SzivarClubManager.Views.Components.Suggestions"
-             xmlns:suggestions="clr-namespace:SzivarClubManager.Views.Activities.Suggestions"
+             xmlns:suggestions="clr-namespace:SzivarClubManager.Views.Components.Suggestions"
+             xmlns:flaggedSuggestions="clr-namespace:SzivarClubManager.Views.Activities.FlaggedSuggestions"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.Suggestions.SuggestionsActivityView"
-             x:DataType="vm:SuggestionsActivityViewModel">
+             x:Class="SzivarClubManager.Views.Activities.FlaggedSuggestions.FlaggedSuggestionsActivityView"
+             x:DataType="vm:FlaggedSuggestionsActivityViewModel">
     <Grid>
         <ScrollViewer IsVisible="{Binding ShowData}">
             <Interaction.Behaviors>
@@ -18,7 +18,7 @@
             <ItemsControl ItemsSource="{Binding SuggestionsViewModels}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <compSuggestions:SuggestionWrapperView />
+                        <suggestions:SuggestionWrapperView />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 
@@ -30,6 +30,6 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <suggestions:SuggestionsPlaceholderView IsVisible="{Binding ShowPlaceholder}" />
+        <flaggedSuggestions:FlaggedSuggestionsPlaceholderView IsVisible="{Binding ShowPlaceholder}" />
     </Grid>
 </UserControl>

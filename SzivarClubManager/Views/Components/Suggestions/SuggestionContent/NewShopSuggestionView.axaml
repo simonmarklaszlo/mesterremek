@@ -15,7 +15,7 @@
             Grid.Column="0"
             Grid.Row="0"
             Text="Város"
-            HorizontalAlignment="Right"
+            HorizontalAlignment="Center"
             FontSize="20" />
         <TextBlock
             Grid.Column="1"
@@ -28,7 +28,7 @@
             Grid.Column="0"
             Grid.Row="1"
             Text="Address"
-            HorizontalAlignment="Right"
+            HorizontalAlignment="Center"
             FontSize="20" />
         <TextBlock
             Grid.Column="1"
@@ -40,8 +40,8 @@
         <TextBlock
             Grid.Column="0"
             Grid.Row="2"
-            Text="Opening hours"
-            HorizontalAlignment="Right"
+            Text="Nyitvatartás"
+            HorizontalAlignment="Center"
             VerticalAlignment="Center"
             FontSize="20" />
         <ContentControl

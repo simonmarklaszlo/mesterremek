@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SzivarClubManager.Datasources.Database.Factories;
+using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
 using SzivarClubManager.ViewModels.Components.Suggestions.SuggestionContent;
 
@@ -18,10 +20,10 @@ public sealed partial class SuggestionWrapperViewModel : ViewModelBase
     public bool CanBeApproved => Suggestion.CanBeApproved;
 
 
-    private readonly Func<Task> _suggestionApprovedCallback;
+    private readonly Func<Task> _suggestionEditedCallback;
 
 
-    public SuggestionWrapperViewModel(Suggestion suggestion, Func<Task> suggestionApprovedCallback)
+    public SuggestionWrapperViewModel(Suggestion suggestion, Func<Task> suggestionEditedCallback)
     {
         Suggestion = suggestion;
         Content = GetSuggestionContent(suggestion);
@@ -33,15 +35,24 @@ public sealed partial class SuggestionWrapperViewModel : ViewModelBase
             _ => true
         };
 
-        _suggestionApprovedCallback = suggestionApprovedCallback;
+        _suggestionEditedCallback = suggestionEditedCallback;
     }
 
     [RelayCommand(CanExecute = nameof(CanBeApproved))]
     private Task ApproveSuggestion()
     {
-        _suggestionApprovedCallback.Invoke();
-        return Suggestion.Approve();
+        _suggestionEditedCallback.Invoke();
+        return SuggestionFactory.ApproveSuggestion(Suggestion);
     }
+
+    [RelayCommand]
+    private Task DenySuggestion()
+    {
+        _suggestionEditedCallback.Invoke();
+        return SuggestionFactory.DenySuggestion(Suggestion);
+    }
+
+    private static SuggestionFactory SuggestionFactory => field ??= (SuggestionFactory)FactoryProvider.Instance.GetFactory<Suggestion>();
 
     private static ViewModelBase GetSuggestionContent(Suggestion suggestion) => suggestion switch
     {

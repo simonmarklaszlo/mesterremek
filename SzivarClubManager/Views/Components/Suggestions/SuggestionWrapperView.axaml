@@ -25,7 +25,7 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     ColumnSpan="3"
-                    ColumnDefinitions="*,*, Auto"
+                    ColumnDefinitions="*,*, Auto, Auto"
                     Margin="5 10 5 0">
                     <TextBlock
                         Grid.Column="0"
@@ -45,8 +45,17 @@
                     <Button
                         Grid.Column="2"
                         Command="{Binding ApproveSuggestionCommand}"
-                        Background="ForestGreen"
+                        Background="{DynamicResource GreenBrush}"
                         Content="Jóváhagy"
+                        FontSize="18"
+                        CornerRadius="50"
+                        Padding="10"
+                        Margin="0 0 15 0" />
+                    <Button
+                        Grid.Column="3"
+                        Command="{Binding DenySuggestionCommand}"
+                        Background="{DynamicResource RedBrush}"
+                        Content="Elutasít"
                         FontSize="18"
                         CornerRadius="50"
                         Padding="10"
