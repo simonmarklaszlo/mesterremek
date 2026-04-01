@@ -199,12 +199,12 @@ public sealed class SuggestionFactory : IPageFactory<Suggestion>
 
     public async Task ApproveSuggestion(Suggestion suggestion)
     {
-        throw new NotImplementedException();
+        // TODO : Implement
     }
 
     public async Task DenySuggestion(Suggestion suggestion)
     {
-        throw new NotImplementedException();
+        // TODO : Implement
     }
 
     public Task<Suggestion[]> GetModel(IEnumerable<int> ids)

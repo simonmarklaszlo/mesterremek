@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Data;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Configs;
@@ -131,9 +131,10 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     {
         if (SelectedItem == null || CurrentColumn == null) return;
 
-        if (CurrentColumn is DataGridBoundColumn { Binding: Binding binding })
+        if (CurrentColumn is DataGridTextColumn { Binding: CompiledBindingExtension binding })
         {
-            var prop = SelectedItem.GetType().GetProperty(binding.Path);
+            var s = binding.Path.ToString();
+            var prop = SelectedItem.GetType().GetProperty(s);
             var value = prop?.GetValue(SelectedItem);
 
             if (value is not null)

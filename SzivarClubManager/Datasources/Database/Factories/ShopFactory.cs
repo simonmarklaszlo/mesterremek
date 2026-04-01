@@ -194,6 +194,11 @@ public sealed class ShopFactory : IPageFactory<Shop>
     /// <returns>New filter with name replaced.</returns>
     private static IFilter<Shop> OverrideFilter(IFilter<Shop> filter)
     {
+        /*
+         Mostly fixes it, but searching for "a" is name still replaced with NULL
+         and will hide all not NULL entries.
+         E.g.: Hom-Tabak Bt.
+        */
         var shopFilter = (ShopFilter)filter;
 
         if (shopFilter.Name is null || !"Traffik".Contains(shopFilter.Name)) return filter;
