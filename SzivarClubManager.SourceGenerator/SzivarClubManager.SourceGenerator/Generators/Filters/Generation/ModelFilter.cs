@@ -71,10 +71,10 @@ public static class ModelFilter
         sb.AppendLine();
         foreach (var pair in filter.PropertyGroups)
         {
-            sb.AppendLine($"        if ({pair.Value[0].Name} is not null)");
-            sb.AppendLine("        {");
             if (pair.Value.Length == 1)
             {
+                sb.AppendLine($"        if ({pair.Value[0].Name} is not null)");
+                sb.AppendLine("        {");
                 sb.AppendLine("            if (valueBefore) sb.Append(' ');");
                 sb.AppendLine("            else valueBefore = true;");
                 if (pair.Value[0].Type is PropertyTypes.String)
@@ -85,9 +85,14 @@ public static class ModelFilter
                 {
                     sb.AppendLine($"            sb.Append(\"{pair.Value[0].Name}=\").Append({pair.Value[0].Name}.ToString());");
                 }
+
+                sb.AppendLine("        }");
+                sb.AppendLine();
             }
             else
             {
+                sb.AppendLine($"        if ({pair.Value[0].Name} is not null || {pair.Value[1].Name} is not null)");
+                sb.AppendLine("        {");
                 sb.AppendLine("            if (valueBefore) sb.Append(' ');");
                 sb.AppendLine("            else valueBefore = true;");
                 sb.AppendLine();
@@ -97,12 +102,11 @@ public static class ModelFilter
                 sb.AppendLine("            }");
                 sb.AppendLine($"            else");
                 sb.AppendLine("            {");
-                sb.AppendLine($"                sb.Append(\"{pair.Key}=[\").Append({pair.Value[0].Name}.ToString()).Append(\"..\").Append({pair.Value[1].Name}.ToString()).Append(']');");
+                sb.AppendLine($"                sb.Append(\"{pair.Key}=[\").Append({pair.Value[0].Name}?.ToString()).Append(\"..\").Append({pair.Value[1].Name}?.ToString()).Append(']');");
                 sb.AppendLine("            }");
+                sb.AppendLine("        }");
+                sb.AppendLine();
             }
-
-            sb.AppendLine("        }");
-            sb.AppendLine();
         }
 
         sb.AppendLine("        return sb.ToString();");
@@ -137,10 +141,10 @@ public static class ModelFilter
         sb.AppendLine();
         foreach (var pair in filter.PropertyGroups)
         {
-            sb.AppendLine($"        if ({pair.Value[0].Name} is not null)");
-            sb.AppendLine("        {");
             if (pair.Value.Length == 1)
             {
+                sb.AppendLine($"        if ({pair.Value[0].Name} is not null)");
+                sb.AppendLine("        {");
                 sb.AppendLine("            if (valueBefore) sb.Append(\" AND \");");
                 sb.AppendLine("            else valueBefore = true;");
                 if (pair.Value[0].Type is PropertyTypes.String)
@@ -151,24 +155,39 @@ public static class ModelFilter
                 {
                     sb.AppendLine($"            sb.Append(\"{pair.Value[0].DbColumnName} = @{pair.Value[0].Name}\");");
                 }
+
+                sb.AppendLine("        }");
+                sb.AppendLine();
             }
             else
             {
+                sb.AppendLine($"        if ({pair.Value[0].Name} is not null || {pair.Value[1].Name} is not null)");
+                sb.AppendLine("        {");
                 sb.AppendLine("            if (valueBefore) sb.Append(\" AND \");");
                 sb.AppendLine("            else valueBefore = true;");
                 sb.AppendLine();
-                sb.AppendLine($"            if ({pair.Value[0].Name} == {pair.Value[1].Name} || {pair.Value[1].Name} is null)");
+                sb.AppendLine($"            if ({pair.Value[0].Name} == {pair.Value[1].Name})");
                 sb.AppendLine("            {");
                 sb.AppendLine($"                sb.Append(\"{pair.Value[0].DbColumnName} = @{pair.Key}\");");
                 sb.AppendLine("            }");
+                sb.AppendLine($"            else if ({pair.Value[0].Name} is not null)");
+                sb.AppendLine("            {");
+                sb.AppendLine($"                if ({pair.Value[1].Name} is not null)");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    sb.Append(\"{pair.Value[0].DbColumnName} BETWEEN @{pair.Value[0].Name} AND @{pair.Value[1].Name}\");");
+                sb.AppendLine("                }");
+                sb.AppendLine($"                else");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    sb.Append(\"{pair.Value[0].DbColumnName} > @{pair.Value[0].Name}\");");
+                sb.AppendLine("                }");
+                sb.AppendLine("            }");
                 sb.AppendLine($"            else");
                 sb.AppendLine("            {");
-                sb.AppendLine($"                sb.Append(\"{pair.Value[0].DbColumnName} BETWEEN @{pair.Value[0].Name} AND @{pair.Value[1].Name}\");");
+                sb.AppendLine($"                sb.Append(\"{pair.Value[1].DbColumnName} < @{pair.Value[1].Name}\");");
                 sb.AppendLine("            }");
+                sb.AppendLine("        }");
+                sb.AppendLine();
             }
-
-            sb.AppendLine("        }");
-            sb.AppendLine();
         }
 
         sb.AppendLine("        return sb.ToString();");
@@ -187,9 +206,9 @@ public static class ModelFilter
             }
             else
             {
-                sb.AppendLine($"        if ({pair.Value[0].Name} is not null)");
+                sb.AppendLine($"        if ({pair.Value[0].Name} is not null || {pair.Value[1].Name} is not null)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            if ({pair.Value[0].Name} == {pair.Value[1].Name} || {pair.Value[1].Name} is null)");
+                sb.AppendLine($"            if ({pair.Value[0].Name} == {pair.Value[1].Name})");
                 sb.AppendLine("            {");
                 sb.AppendLine($"                if ({pair.Value[0].Name} is not null) parameters.AddWithValue(\"{pair.Key}\", {pair.Value[0].Name});");
                 sb.AppendLine("            }");
@@ -213,6 +232,7 @@ public static class ModelFilter
         string filterIFace = $"global::SzivarClubManager.Datasources.Database.Filters.IFilter<{filter.ModelType.GlobalName()}>";
         sb.AppendLine($"    public static {filterIFace} Empty => field ??= new {filter.FilterType.GlobalName()}();");
     }
+
     private static void GenerateParse(StringBuilder sb, FilterModel filter)
     {
         string filterIFace = $"global::SzivarClubManager.Datasources.Database.Filters.IFilter<{filter.ModelType.GlobalName()}>";

@@ -181,18 +181,18 @@ public class ShopFilterTests : FilterTests<ShopFilter, Shop>
 
         Assert.Equal(6, command.Parameters.Count);
 
-        Assert.Equal("Id", command.Parameters[0].ParameterName);
+        Assert.Equal("MinId", command.Parameters[0].ParameterName);
         Assert.Equal("Name", command.Parameters[1].ParameterName);
         Assert.Equal("Address", command.Parameters[2].ParameterName);
         Assert.Equal("City", command.Parameters[3].ParameterName);
-        Assert.Equal("Latitude", command.Parameters[4].ParameterName);
-        Assert.Equal("Longitude", command.Parameters[5].ParameterName);
+        Assert.Equal("MinLatitude", command.Parameters[4].ParameterName);
+        Assert.Equal("MinLongitude", command.Parameters[5].ParameterName);
 
-        Assert.Equal(command.Parameters["Id"].Value, filter.MinId);
+        Assert.Equal(command.Parameters["MinId"].Value, filter.MinId);
         Assert.Equal(command.Parameters["Name"].Value, filter.Name);
         Assert.Equal(command.Parameters["Address"].Value, filter.Address);
         Assert.Equal(command.Parameters["City"].Value, filter.City);
-        Assert.Equal(command.Parameters["Latitude"].Value, filter.MinLatitude);
-        Assert.Equal(command.Parameters["Longitude"].Value, filter.MinLongitude);
+        Assert.Equal(command.Parameters["MinLatitude"].Value, filter.MinLatitude);
+        Assert.Equal(command.Parameters["MinLongitude"].Value, filter.MinLongitude);
     }
 }

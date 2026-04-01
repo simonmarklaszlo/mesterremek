@@ -129,10 +129,10 @@ public class CigarFilterTests : FilterTests<CigarFilter, Cigar>
 
         Assert.Equal(2, command.Parameters.Count);
 
-        Assert.Equal("Id", command.Parameters[0].ParameterName);
+        Assert.Equal("MinId", command.Parameters[0].ParameterName);
         Assert.Equal("Name", command.Parameters[1].ParameterName);
 
-        Assert.Equal(command.Parameters["Id"].Value, filter.MinId);
+        Assert.Equal(command.Parameters["MinId"].Value, filter.MinId);
         Assert.Equal(command.Parameters["Name"].Value, filter.Name);
     }
 }

@@ -69,9 +69,9 @@ public class FilterValueHandlerTests
     {
         const string value = "5";
 
-        (int, int) actual = FilterValueHandler.ParseIntValues(value);
+        (int?, int?) actual = FilterValueHandler.ParseIntValues(value);
 
-        (int, int) expected = (5, 5);
+        (int?, int?) expected = (5, 5);
 
         Assert.Equal(expected, actual);
     }
@@ -81,9 +81,33 @@ public class FilterValueHandlerTests
     {
         const string value = "[5..99]";
 
-        (int, int) actual = FilterValueHandler.ParseIntValues(value);
+        (int?, int?) actual = FilterValueHandler.ParseIntValues(value);
 
-        (int, int) expected = (5, 99);
+        (int?, int?) expected = (5, 99);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ParseIntValues_Range_LeftSideOnly_ShouldParse()
+    {
+        const string value = "[5..]";
+
+        (int?, int?) actual = FilterValueHandler.ParseIntValues(value);
+
+        (int?, int?) expected = (5, null);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ParseIntValues_Range_RightSideOnly_ShouldParse()
+    {
+        const string value = "[..99]";
+
+        (int?, int?) actual = FilterValueHandler.ParseIntValues(value);
+
+        (int?, int?) expected = (null, 99);
 
         Assert.Equal(expected, actual);
     }
@@ -109,9 +133,9 @@ public class FilterValueHandlerTests
     {
         const string value = "5.2";
 
-        (double, double) actual = FilterValueHandler.ParseDoubleValues(value);
+        (double?, double?) actual = FilterValueHandler.ParseDoubleValues(value);
 
-        (double, double) expected = (5.2d, 5.2d);
+        (double?, double?) expected = (5.2d, 5.2d);
 
         Assert.Equal(expected, actual);
     }
@@ -121,9 +145,33 @@ public class FilterValueHandlerTests
     {
         const string value = "[5.2..99.73]";
 
-        (double, double) actual = FilterValueHandler.ParseDoubleValues(value);
+        (double?, double?) actual = FilterValueHandler.ParseDoubleValues(value);
 
-        (double, double) expected = (5.2d, 99.73d);
+        (double?, double?) expected = (5.2d, 99.73d);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ParseDoubleValues_Range_LeftSideOnly_ShouldParse()
+    {
+        const string value = "[5.2..]";
+
+        (double?, double?) actual = FilterValueHandler.ParseDoubleValues(value);
+
+        (double?, double?) expected = (5.2d, null);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ParseDoubleValues_Range_RightSideOnly_ShouldParse()
+    {
+        const string value = "[..99.73]";
+
+        (double?, double?) actual = FilterValueHandler.ParseDoubleValues(value);
+
+        (double?, double?) expected = (null, 99.73d);
 
         Assert.Equal(expected, actual);
     }
