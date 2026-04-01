@@ -71,7 +71,11 @@
             </DataGrid>
 
             <Grid Grid.Row="1" ColumnDefinitions="*,2*,*">
-                <Button Grid.Column="0" Content="Hozzáadás" Command="{Binding AddRecordCommand}" />
+                <Button
+                    Grid.Column="0"
+                    Margin="10 0 0 0"
+                    Content="Hozzáadás"
+                    Command="{Binding AddRecordCommand}" />
                 <shared:PageControls
                     Grid.Column="1"
                     LoadFirstPageCommand="{Binding LoadFirstPageCommand}"

@@ -19,6 +19,6 @@
             Grid.Row="1"
             FontSize="25"
             TextAlignment="Center"
-            Text="Nincsnek problémás ajánlatok"/>
+            Text="Nincsnek problémás javaslatok"/>
     </Grid>
 </UserControl>
