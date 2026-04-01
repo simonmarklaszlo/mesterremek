@@ -24,12 +24,14 @@ public sealed class ShopFactory : IPageFactory<Shop>
         _connection = connection;
     }
 
-    public Task<bool> PageExists(int page, int pageSize, IFilter<Shop> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, filter);
+    public Task<bool> PageExists(int page, int pageSize, IFilter<Shop> filter) => CommonQueries.PageExitstOnTable(_connection, TableName, page, pageSize, OverrideFilter(filter));
 
-    public Task<int> GetLastPage(int pageSize, IFilter<Shop> filter) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize, filter);
+    public Task<int> GetLastPage(int pageSize, IFilter<Shop> filter) => CommonQueries.GetLastPageOnTable(_connection, TableName, pageSize, OverrideFilter(filter));
 
     public async Task<Shop[]> GetPage(int page, int pageSize, IFilter<Shop> filter)
     {
+        filter = OverrideFilter(filter);
+
         string query = $"""
                         SELECT id, name, address, city, created_at, updated_at, location
                         FROM shops
@@ -180,5 +182,25 @@ public sealed class ShopFactory : IPageFactory<Shop>
         }
 
         return shops.ToArray();
+    }
+
+    private static ShopFilter CachedFilter => field ??= new ShopFilter();
+
+    /// <summary>
+    /// Unnamed shops are stored as NULL in DB, but displayed as "Traffik" in the UI.
+    /// Creates a new <see cref="ShopFilter"/> with the same parameters, but with name replaced.
+    /// </summary>
+    /// <param name="filter">Original filter.</param>
+    /// <returns>New filter with name replaced.</returns>
+    private static IFilter<Shop> OverrideFilter(IFilter<Shop> filter)
+    {
+        var shopFilter = (ShopFilter)filter;
+
+        if (shopFilter.Name is null || !"Traffik".Contains(shopFilter.Name)) return filter;
+
+        var cached = CachedFilter;
+        shopFilter.CopyTo(cached);
+        cached.Name = "NULL";
+        return cached;
     }
 }
