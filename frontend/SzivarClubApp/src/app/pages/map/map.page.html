@@ -42,7 +42,12 @@
             <ion-label>Szivar</ion-label>
           </ion-item>
 
-          <ion-item lines="none" class="distance-filter">
+          <ion-item lines="none">
+            <ion-toggle slot="start" [(ngModel)]="useDistance"></ion-toggle>
+            <ion-label>Távolság szűrés</ion-label>
+          </ion-item>
+
+          <ion-item lines="none" class="distance-filter" *ngIf="useDistance">
             <ion-icon name="location-outline" slot="start"></ion-icon>
             <ion-label>Távolság: {{ maxDistance }} km</ion-label>
             <ion-range
@@ -280,7 +285,12 @@
           <ion-label>Szivar</ion-label>
         </ion-item>
 
-        <ion-item lines="none" class="distance-filter">
+        <ion-item lines="none">
+          <ion-toggle slot="start" [(ngModel)]="useDistance"></ion-toggle>
+          <ion-label>Távolság szűrés</ion-label>
+        </ion-item>
+
+        <ion-item lines="none" class="distance-filter" *ngIf="useDistance">
           <ion-icon name="location-outline" slot="start"></ion-icon>
           <ion-label>Távolság: {{ maxDistance }} km</ion-label>
           <ion-range

@@ -184,22 +184,20 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
 
   openInGoogleMaps(lat: number | undefined, lng: number | undefined, label?: string, city?: string, address?: string) {
     if (!lat || !lng) return;
-    let query = '';
-    if (city && address) {
-      query = encodeURIComponent(`${city} ${address}`);
-    } else if (address) {
-      query = encodeURIComponent(address);
-    } else if (label) {
-      query = encodeURIComponent(label);
-    } else {
-      query = encodeURIComponent(`${lat},${lng}`);
-    }
+
+    // Mindig a pontos koordinátákat használjuk a kereséshez, hogy a marker a megfelelő helyen legyen.
+    // A query paraméterbe fűzhetjük a nevet is, ha támogatja a platform,
+    // de weben a legegyszerűbb és legmegbízhatóbb a lat,lng.
+    const query = encodeURIComponent(`${lat},${lng}`);
     const webUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+
     const ua = navigator.userAgent || '';
     const isAndroid = /android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
     if (isAndroid) {
-      const intentUrl = `intent://maps.google.com/maps?daddr=${query}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+      // Androidon a geo: intent a legbiztosabb a Google Maps megnyitására
+      const intentUrl = `geo:${lat},${lng}?q=${query}`;
       try {
         window.location.href = intentUrl;
         setTimeout(() => { window.location.href = webUrl; }, 1200);
@@ -207,10 +205,13 @@ export class ShopDetailsModalComponent implements OnInit, OnChanges {
       return;
     }
     if (isIOS) {
+      // iOS-en a maps:// URL scheme a natív Apple/Google Maps-hoz
       const appleScheme = `maps://?q=${query}`;
       try { window.location.href = appleScheme; } catch { window.open(webUrl, '_blank'); }
       return;
     }
+
+    // Weben simán megnyitjuk egy új lapon
     window.open(webUrl, '_blank');
   }
 

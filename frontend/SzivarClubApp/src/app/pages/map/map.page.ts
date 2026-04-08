@@ -27,7 +27,7 @@ import { ShopService, ShopDetails } from '../../services/shop.service';
 import { ShopDetailsModalComponent } from '../../components/shop-details-modal/shop-details-modal.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController, AlertController, IonToggle } from '@ionic/angular/standalone';
 
 // Fix Leaflet marker paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -55,7 +55,8 @@ L.Icon.Default.mergeOptions({
     IonCard, IonCardHeader, IonCardTitle, IonCardContent,
     IonSearchbar, IonRange,
     FormsModule,
-    ShopDetailsModalComponent
+    ShopDetailsModalComponent,
+    IonToggle
   ]
 })
 // #endregion
@@ -71,6 +72,7 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   searchText: string = '';
   filterCigars: boolean = false;
   maxDistance: number = 10;
+  useDistance: boolean = true;
   showFilters: boolean = false;
   isLoading: boolean = false;
   private currentTheme = true;
@@ -137,7 +139,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     private sanitizer: DomSanitizer,
     private searchService: SearchService,
     private shopService: ShopService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertController: AlertController
   ) {
     addIcons({ radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
                timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline,
@@ -205,6 +208,7 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
         this.searchText = state.searchText;
         this.filterCigars = state.filterCigars;
         this.maxDistance = state.maxDistance;
+        this.useDistance = state.useDistance;
       });
 
     // Subscribe to search triggers from list page
@@ -215,6 +219,7 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
           this.searchText = trigger.searchText;
           this.filterCigars = trigger.filterCigars;
           this.maxDistance = trigger.maxDistance;
+          this.useDistance = trigger.useDistance;
           // Execute search without triggering back to prevent loops
           this.executeVarosKereses(false);
         }
@@ -324,8 +329,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     // Dynamic maxDistance calculation based on map view:
     // When zooming out significantly we should increase maxDistance so results show up,
     // otherwise the 10km-20km slider restriction will hide them.
-    let searchDistance = this.maxDistance;
-    if (this.map && !triggerOtherPage) {
+    let searchDistance = this.useDistance ? this.maxDistance : 1000;
+    if (this.map && !triggerOtherPage && this.useDistance) {
       const bounds = this.map.getBounds();
       const pt1 = this.map.project(bounds.getNorthEast(), this.map.getZoom());
       const pt2 = this.map.project(bounds.getSouthWest(), this.map.getZoom());
@@ -378,7 +383,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
             this.searchService.triggerSearch('map', {
               searchText: this.searchText,
               filterCigars: this.filterCigars,
-              maxDistance: this.maxDistance
+              maxDistance: this.maxDistance,
+              useDistance: this.useDistance
             });
           }
         } else {
@@ -679,6 +685,7 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   private async User_Marker_Place() {
     try {
       let lat = 0, lng = 0;
+      let locationFailed = false;
       if (Capacitor.getPlatform() !== 'web') {
         try {
           await Geolocation.requestPermissions();
@@ -704,11 +711,17 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
             } else {
               this.errorLog.logError(`Browser geolocation error: ${msg}`);
             }
+            locationFailed = true;
             resolve();
           });
         });
       }
-      if (!lat && !lng) return;
+      if (!lat && !lng) {
+        if (locationFailed) {
+          await this.showLocationAlert();
+        }
+        return;
+      }
       this.userLat = lat; this.userLong = lng;
       if (this.userMarker) this.map?.removeLayer(this.userMarker);
       this.userMarker = L.marker([this.userLat, this.userLong], { icon: this.UserIcon }).addTo(this.map!);
@@ -721,26 +734,32 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
       console.warn('Geolocation error', err);
     }
   }
+
+  async showLocationAlert() {
+    const alert = await this.alertController.create({
+      header: 'Helymeghatározás',
+      message: 'Nem sikerült megállapítani a pontos helyzetedet. Biztosan engedélyezted az appnak a helyadatok használatát?',
+      buttons: ['Rendben']
+    });
+    await alert.present();
+  }
   // #endregion
 
   // #region Google Maps Integration
   openInGoogleMaps(lat: number, lng: number, label?: string, city?: string, address?: string) {
-    let query = '';
-    if (city && address) {
-      query = encodeURIComponent(`${city} ${address}`);
-    } else if (address) {
-      query = encodeURIComponent(address);
-    } else if (label) {
-      query = encodeURIComponent(label);
-    } else {
-      query = encodeURIComponent(`${lat},${lng}`);
-    }
+    if (!lat || !lng) return;
+
+    // Mindig a pontos koordinátákat használjuk a kereséshez, hogy a marker a megfelelő helyen legyen.
+    const query = encodeURIComponent(`${lat},${lng}`);
     const webUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+
     const ua = navigator.userAgent || '';
     const isAndroid = /android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
     if (isAndroid) {
-      const intentUrl = `intent://maps.google.com/maps?daddr=${query}#Intent;package=com.google.android.apps.maps;scheme=https;end`;
+      // Androidon a geo: intent a legbiztosabb a Google Maps megnyitására
+      const intentUrl = `geo:${lat},${lng}?q=${query}`;
       try {
         window.location.href = intentUrl;
         setTimeout(() => { window.location.href = webUrl; }, 1200);
@@ -748,10 +767,13 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
       return;
     }
     if (isIOS) {
+      // iOS-en a maps:// URL scheme a natív Apple/Google Maps-hoz
       const appleScheme = `maps://?q=${query}`;
       try { window.location.href = appleScheme; } catch { window.open(webUrl, '_blank'); }
       return;
     }
+
+    // Weben simán megnyitjuk egy új lapon
     window.open(webUrl, '_blank');
   }
   // #endregion

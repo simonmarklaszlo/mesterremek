@@ -5,6 +5,7 @@ export interface SearchState {
   searchText: string;
   filterCigars: boolean;
   maxDistance: number;
+  useDistance: boolean;
 }
 
 export interface SearchTrigger extends SearchState {
@@ -18,7 +19,8 @@ export class SearchService {
   private searchStateSubject = new BehaviorSubject<SearchState>({
     searchText: '',
     filterCigars: false,
-    maxDistance: 10
+    maxDistance: 10,
+    useDistance: true
   });
 
   private searchTriggeredSubject = new Subject<SearchTrigger>();
@@ -88,8 +90,8 @@ export class SearchService {
     this.searchStateSubject.next({
       searchText: '',
       filterCigars: false,
-      maxDistance: 10
+      maxDistance: 10,
+      useDistance: true
     });
   }
 }
-

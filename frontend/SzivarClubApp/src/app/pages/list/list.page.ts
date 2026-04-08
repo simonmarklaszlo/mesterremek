@@ -20,7 +20,9 @@ import {
   IonChip,
   IonRange,
   IonButton,
-  IonSpinner
+  IonSpinner,
+  AlertController,
+  IonToggle
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -66,13 +68,15 @@ import { takeUntil } from 'rxjs/operators';
     IonSpinner,
     CommonModule,
     FormsModule,
-    ShopDetailsModalComponent
+    ShopDetailsModalComponent,
+    IonToggle
   ]
 })
 export class ListPage implements OnInit, OnDestroy {
   searchText: string = '';
   filterCigars: boolean = false;
   maxDistance: number = 10;
+  useDistance: boolean = true;
   showFilters: boolean = false;
   isLoading: boolean = false;
   hasSearched: boolean = false;
@@ -88,7 +92,11 @@ export class ListPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private isUpdatingFromSync = false;
 
-  constructor(private shopService: ShopService, private searchService: SearchService) {
+  constructor(
+    private shopService: ShopService,
+    private searchService: SearchService,
+    private alertController: AlertController
+  ) {
     addIcons({
       listOutline,
       locationOutline,
@@ -113,6 +121,7 @@ export class ListPage implements OnInit, OnDestroy {
         this.searchText = state.searchText;
         this.filterCigars = state.filterCigars;
         this.maxDistance = state.maxDistance;
+        this.useDistance = state.useDistance;
         this.isUpdatingFromSync = false;
       });
 
@@ -125,6 +134,7 @@ export class ListPage implements OnInit, OnDestroy {
           this.searchText = trigger.searchText;
           this.filterCigars = trigger.filterCigars;
           this.maxDistance = trigger.maxDistance;
+          this.useDistance = trigger.useDistance;
           // Execute search without triggering back to prevent loops
           this.executeSearch(false);
         }
@@ -147,7 +157,7 @@ export class ListPage implements OnInit, OnDestroy {
           };
           console.log('User location:', this.userLocation);
         },
-        (error) => {
+        async (error) => {
           console.error('Geolocation error:', error);
           // Fallback: Budapest központ
           this.userLocation = {
@@ -155,6 +165,7 @@ export class ListPage implements OnInit, OnDestroy {
             longitude: 19.0402
           };
           console.log('Using fallback location (Budapest)');
+          await this.showLocationAlert();
         }
       );
     } else {
@@ -164,7 +175,17 @@ export class ListPage implements OnInit, OnDestroy {
         longitude: 19.0402
       };
       console.log('Geolocation not supported, using fallback location');
+      this.showLocationAlert();
     }
+  }
+
+  async showLocationAlert() {
+    const alert = await this.alertController.create({
+      header: 'Helymeghatározás',
+      message: 'Nem sikerült megállapítani a pontos helyzetedet. Biztosan engedélyezted az appnak a helyadatok használatát? A keresés továbbra is működik, alapértelmezetten a fővárosból számítva a távolságot.',
+      buttons: ['Rendben']
+    });
+    await alert.present();
   }
 
   // Szűrők megjelenítése/elrejtése
@@ -194,10 +215,12 @@ export class ListPage implements OnInit, OnDestroy {
     const safeSearch = this.sanitizeSearchText(this.searchText);
 
     // API hívás paraméterek
+    const distanceParam = this.useDistance ? this.maxDistance : 1000;
+
     const searchParams = {
       latitude: this.userLocation.latitude,
       longitude: this.userLocation.longitude,
-      maxDistance: this.maxDistance,
+      maxDistance: distanceParam,
       hasCigars: this.filterCigars ? true : undefined,
       search: safeSearch || undefined,
       limit: 20,
@@ -223,7 +246,8 @@ export class ListPage implements OnInit, OnDestroy {
           this.searchService.triggerSearch('list', {
             searchText: this.searchText,
             filterCigars: this.filterCigars,
-            maxDistance: this.maxDistance
+            maxDistance: this.maxDistance,
+            useDistance: this.useDistance
           });
         }
       },
