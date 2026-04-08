@@ -1,54 +1,70 @@
 <ion-header [translucent]="true" [class.mobile-header]="!isWideLayout">
   <ion-toolbar color="primary">
     <ion-title>Térkép</ion-title>
-    <!-- Mobile search bar in header on the right -->
-    <div *ngIf="!isWideLayout" slot="end" class="mobile-search-container">
-      <ion-input
-        *ngIf="showMobileSearch"
-        type="text"
-        name="varos"
-        id="varos"
-        class="mobile-search-input"
-        [(ngModel)]="searchText"
-        (keyup.enter)="toggleMobileSearch()"
-        placeholder="Város">
-      </ion-input>
-
-      <ion-item *ngIf="showMobileSearch" lines="none" class="mobile-filter-item" style="--padding-start: 0; --inner-padding-end: 0; --min-height: 32px;">
-        <ion-checkbox slot="start" [(ngModel)]="filterCigars" (ionChange)="onFilterCigarsChanged()"></ion-checkbox>
-        <ion-label style="font-size: 12px; color: var(--ion-color-light);">Szivar</ion-label>
-      </ion-item>
-
-      <ion-button fill="clear" shape="round" size="small" (click)="toggleMobileSearch()" class="mobile-search-button">
-        <ion-icon slot="icon-only" name="search" color="light" style="font-size: 28px;"></ion-icon>
-      </ion-button>
-    </div>
   </ion-toolbar>
 </ion-header>
 
 <!-- Desktop layout with sidebar -->
 <div class="map-layout" *ngIf="isWideLayout">
   <aside class="sidebar">
-    <div class="sidebar-controls">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <ion-item lines="none" style="--min-height: 38px; --padding-start: 0; --inner-padding-end: 0; margin: 0;">
-          <ion-checkbox slot="start" [(ngModel)]="filterCigars" (ionChange)="onFilterCigarsChanged()"></ion-checkbox>
-          <ion-label>Szivar</ion-label>
-        </ion-item>
-
-        <ion-input
-          style="flex: 1;"
-          type="text"
-          name="varos"
-          id="varos"
+    <div class="sidebar-search">
+      <div class="search-section">
+        <ion-searchbar
           [(ngModel)]="searchText"
-          (keyup.enter)="varos_kereses()"
-          placeholder="Város keresése">
-        </ion-input>
+          placeholder="Keresés..."
+          [animated]="true"
+          showClearButton="always"
+          [debounce]="0"
+          maxlength="100"
+          (keyup.enter)="searchShops()"
+        ></ion-searchbar>
+      </div>
 
-        <ion-button fill="clear" shape="round" size="small" (click)="varos_kereses()">
-          <ion-icon slot="icon-only" name="search" style="font-size: 28px;"></ion-icon>
-        </ion-button>
+      <div class="filter-toggle">
+        <ion-item lines="none" [button]="true" (click)="toggleFilters()" class="filter-header">
+          <ion-icon name="filter-outline" slot="start"></ion-icon>
+          <ion-label>Szűrők</ion-label>
+          <ion-icon
+            [name]="showFilters ? 'chevron-up-outline' : 'chevron-down-outline'"
+            slot="end"
+          ></ion-icon>
+        </ion-item>
+      </div>
+
+      <div class="filter-section" [class.expanded]="showFilters">
+        <div class="filter-content">
+          <ion-item lines="none">
+            <ion-checkbox
+              slot="start"
+              [(ngModel)]="filterCigars"
+              (ionChange)="onFilterCigarsChanged()"
+            ></ion-checkbox>
+            <ion-label>Szivar</ion-label>
+          </ion-item>
+
+          <ion-item lines="none" class="distance-filter">
+            <ion-icon name="location-outline" slot="start"></ion-icon>
+            <ion-label>Távolság: {{ maxDistance }} km</ion-label>
+            <ion-range
+              [(ngModel)]="maxDistance"
+              [min]="1"
+              [max]="20"
+              [step]="1"
+              [pin]="true"
+              color="primary"
+            ></ion-range>
+          </ion-item>
+
+          <ion-button
+            expand="block"
+            (click)="searchShops()"
+            [disabled]="isLoading"
+            class="search-button"
+          >
+            <ion-icon slot="start" [name]="isLoading ? 'sync-outline' : 'search-outline'"></ion-icon>
+            {{ isLoading ? 'Keresés...' : 'Keresés indítása' }}
+          </ion-button>
+        </div>
       </div>
     </div>
     <div class="sidebar-content">
@@ -229,6 +245,66 @@
 
 <!-- Mobile layout - map only -->
 <div class="map-layout-mobile" *ngIf="!isWideLayout">
+  <div class="mobile-floating-search">
+    <div class="search-section">
+      <ion-searchbar
+        [(ngModel)]="searchText"
+        placeholder="Keresés..."
+        [animated]="true"
+        showClearButton="always"
+        [debounce]="0"
+        maxlength="100"
+        (keyup.enter)="searchShops()"
+      ></ion-searchbar>
+    </div>
+
+    <div class="filter-toggle">
+      <ion-item lines="none" [button]="true" (click)="toggleFilters()" class="filter-header">
+        <ion-icon name="filter-outline" slot="start"></ion-icon>
+        <ion-label>Szűrők</ion-label>
+        <ion-icon
+          [name]="showFilters ? 'chevron-up-outline' : 'chevron-down-outline'"
+          slot="end"
+        ></ion-icon>
+      </ion-item>
+    </div>
+
+    <div class="filter-section" [class.expanded]="showFilters">
+      <div class="filter-content">
+        <ion-item lines="none">
+          <ion-checkbox
+            slot="start"
+            [(ngModel)]="filterCigars"
+            (ionChange)="onFilterCigarsChanged()"
+          ></ion-checkbox>
+          <ion-label>Szivar</ion-label>
+        </ion-item>
+
+        <ion-item lines="none" class="distance-filter">
+          <ion-icon name="location-outline" slot="start"></ion-icon>
+          <ion-label>Távolság: {{ maxDistance }} km</ion-label>
+          <ion-range
+            [(ngModel)]="maxDistance"
+            [min]="1"
+            [max]="20"
+            [step]="1"
+            [pin]="true"
+            color="primary"
+          ></ion-range>
+        </ion-item>
+
+        <ion-button
+          expand="block"
+          (click)="searchShops()"
+          [disabled]="isLoading"
+          class="search-button"
+        >
+          <ion-icon slot="start" [name]="isLoading ? 'sync-outline' : 'search-outline'"></ion-icon>
+          {{ isLoading ? 'Keresés...' : 'Keresés indítása' }}
+        </ion-button>
+      </div>
+    </div>
+  </div>
   <main class="map-main-mobile">
     <div id="log-container" style="white-space: pre-wrap; word-wrap: break-word;"></div>
   </main>

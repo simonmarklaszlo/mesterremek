@@ -1,19 +1,10 @@
 import shopAccess from "../../db/shopAccess";
 import {Request, Response} from "express";
 import {ShopFilter} from "../../model/shop";
-import jwt from "jsonwebtoken";
-import {config} from "../../config/config";
 import userActionsAccess from "../../db/userActionsAccess";
+import type { AuthenticatedRequest } from "../../middleware/auth";
 
 export async function handleShopSearch(req: Request, res: Response): Promise<void> {
-    if (!validateAuthToken(req.headers['authorization'])) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid or missing token"
-        });
-        return;
-    }
 
     const reqLat = req.query.latitude as string | undefined;
     const reqLong = req.query.longitude as string | undefined;
@@ -67,15 +58,6 @@ export async function handleShopSearch(req: Request, res: Response): Promise<voi
 }
 
 export async function handleShopDetails(req: Request, res: Response): Promise<void> {
-    if (!validateAuthToken(req.headers['authorization'])) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid or missing token"
-        });
-        return;
-    }
-
     const reqId = req.params.id as string | undefined;
     if (!reqId) {
         res.status(404).json({
@@ -88,29 +70,6 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
 
     const id = parseInt(reqId);
 
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Missing token"
-        });
-        return;
-    }
-
-    let payload: any;
-    try {
-        payload = jwt.verify(token, config.jwt.secret) as any;
-    } catch {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid token"
-        });
-        return;
-    }
-
     const details = await shopAccess.getShopDetails(id);
 
     if (!details) {
@@ -122,7 +81,7 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
         return;
     }
 
-    const userId = payload.userId;
+    const userId = (req as AuthenticatedRequest).user!.userId;
     let hasReceivedCigar = false;
     let lastReceivedAt: string | null = null;
     try {
@@ -147,15 +106,6 @@ export async function handleShopDetails(req: Request, res: Response): Promise<vo
 }
 
 export async function handleCityShops(req: Request, res: Response): Promise<void> {
-    if (!validateAuthToken(req.headers['authorization'])) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid or missing token"
-        });
-        return;
-    }
-
     const city = req.params.city as string | undefined;
 
     if (!city) {
@@ -176,38 +126,6 @@ export async function handleCityShops(req: Request, res: Response): Promise<void
 }
 
 export async function handleReceivedCigar(req: Request, res: Response): Promise<void> {
-    if (!validateAuthToken(req.headers['authorization'])) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid or missing token"
-        });
-        return;
-    }
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Missing token"
-        });
-        return;
-    }
-
-    let payload: any;
-    try {
-        payload = jwt.verify(token, config.jwt.secret) as any;
-    } catch {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized",
-            message: "Invalid token"
-        });
-        return;
-    }
-
     const reqId = req.params.id as string | undefined;
     if (!reqId) {
         res.status(400).json({
@@ -239,7 +157,7 @@ export async function handleReceivedCigar(req: Request, res: Response): Promise<
         return;
     }
 
-    const userId = payload.userId;
+    const userId = (req as AuthenticatedRequest).user!.userId;
 
     try {
         const { id, createdAt } = await userActionsAccess.recordReceivedCigar(userId, shopId);
@@ -262,16 +180,4 @@ export async function handleReceivedCigar(req: Request, res: Response): Promise<
     }
 }
 
-function validateAuthToken(authHeader: string | undefined): boolean {
-    try {
-        const token = authHeader && authHeader.split(' ')[1];
-        if (!token) {
-            return false;
-        }
-        jwt.verify(token, config.jwt.secret);
-
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
+// Auth is handled by route middleware (requireAuth)

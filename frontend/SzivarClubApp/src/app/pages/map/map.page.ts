@@ -6,7 +6,8 @@ import { IonInput, IonButton, IonIcon, IonHeader, IonToolbar, IonTitle,
          IonCheckbox,
          IonFab, IonFabButton,
          IonList, IonItem,
-         IonCard, IonCardHeader, IonCardTitle, IonCardContent } from '@ionic/angular/standalone';
+         IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+         IonSearchbar, IonRange } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -17,7 +18,8 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { addIcons } from 'ionicons';
 import { radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
-         timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline } from 'ionicons/icons';
+         timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline,
+         filterOutline, chevronDownOutline, chevronUpOutline, syncOutline } from 'ionicons/icons';
 import { ThemeService } from '../../services/theme.service';
 import { ErrorLogService } from '../../services/error-log.service';
 import { SearchService } from '../../services/search.service';
@@ -51,6 +53,7 @@ L.Icon.Default.mergeOptions({
     IonFab, IonFabButton,
     IonList, IonItem,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+    IonSearchbar, IonRange,
     FormsModule,
     ShopDetailsModalComponent
   ]
@@ -68,6 +71,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   searchText: string = '';
   filterCigars: boolean = false;
   maxDistance: number = 10;
+  showFilters: boolean = false;
+  isLoading: boolean = false;
   private currentTheme = true;
 
   // Modal state for mobile
@@ -78,9 +83,6 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   windowWidth: number = window.innerWidth;
   windowHeight: number = window.innerHeight;
   isWideLayout: boolean = (window.innerWidth / window.innerHeight) > 1;
-
-  // Mobile search visibility
-  showMobileSearch: boolean = false;
 
   // Sidebar state (remade)
   sidebar: { type: 'list', data: any[] } | { type: 'details', data: any } | null = null;
@@ -138,7 +140,8 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     private toastCtrl: ToastController
   ) {
     addIcons({ radioButtonOn, locationSharp, storefront, search, locate, arrowBack,
-               timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline });
+               timeOutline, starOutline, star, checkmarkCircle, closeCircle, locationOutline, mapOutline,
+               filterOutline, chevronDownOutline, chevronUpOutline, syncOutline });
     // Listen to window resize events
     window.addEventListener('resize', () => {
       this.windowWidth = window.innerWidth;
@@ -283,25 +286,17 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     this.searchService.updateFilterCigars(this.filterCigars);
   }
 
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  searchShops() {
+    this.varos_kereses();
+  }
+
   varos_kereses(event?: Event) {
     // Manual search - trigger other page
     this.executeVarosKereses(true, event);
-  }
-
-  toggleMobileSearch() {
-    if (!this.showMobileSearch) {
-      // Show search bar and focus on input
-      this.showMobileSearch = true;
-      setTimeout(() => {
-        const input = document.getElementById('varos') as HTMLInputElement;
-        if (input) {
-          input.focus();
-        }
-      }, 100);
-    } else {
-      // Perform search
-      this.varos_kereses();
-    }
   }
 
   private executeVarosKereses(triggerOtherPage: boolean = false, event?: Event) {
@@ -322,27 +317,41 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
     }
     const safeSearch = (raw ?? '').toString().trim();
 
-    // Use user location if available, else map center
-    const lat = (this.userLat && this.userLong)
-      ? this.userLat
-      : (this.map?.getCenter().lat ?? 47.4979);
-    const lng = (this.userLat && this.userLong)
-      ? this.userLong
-      : (this.map?.getCenter().lng ?? 19.0402);
+    // Use map center, fallback to user location or default
+    const lat = this.map?.getCenter().lat ?? (this.userLat && this.userLong ? this.userLat : 47.4979);
+    const lng = this.map?.getCenter().lng ?? (this.userLat && this.userLong ? this.userLong : 19.0402);
+
+    // Dynamic maxDistance calculation based on map view:
+    // When zooming out significantly we should increase maxDistance so results show up,
+    // otherwise the 10km-20km slider restriction will hide them.
+    let searchDistance = this.maxDistance;
+    if (this.map && !triggerOtherPage) {
+      const bounds = this.map.getBounds();
+      const pt1 = this.map.project(bounds.getNorthEast(), this.map.getZoom());
+      const pt2 = this.map.project(bounds.getSouthWest(), this.map.getZoom());
+      // Increase search distance based on map bounds loosely when searching on map manually
+      const distOnMapKm = this.map.distance(bounds.getNorthEast(), bounds.getSouthWest()) / 1000;
+      if (distOnMapKm / 2 > searchDistance) {
+        searchDistance = Math.min(Math.round(distOnMapKm / 2), 500); // max 500km
+      }
+    }
 
     // NOTE: map page uses the same search endpoint as list page so filters behave identically
     const params = {
       latitude: lat,
       longitude: lng,
-      maxDistance: this.maxDistance,
+      maxDistance: searchDistance,
       hasCigars: this.filterCigars ? true : undefined,
       search: safeSearch || undefined,
       limit: 200,
       offset: 0
     };
 
+    this.isLoading = true;
+
     this.shopService.searchShops(params).subscribe({
       next: (response) => {
+        this.isLoading = false;
         if (response && response.success && Array.isArray(response.data)) {
           this.Shop_Data = response.data as any[];
           this.Varos_Coords = this.Shop_Data
@@ -377,6 +386,7 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
         }
       },
       error: (err) => {
+        this.isLoading = false;
         console.error('Map search error:', err);
       }
     });
@@ -430,16 +440,34 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
       const avgLat = cluster.indices.reduce((sum:number, idx:number) => sum + coords[idx][0], 0) / cluster.indices.length;
       const avgLng = cluster.indices.reduce((sum:number, idx:number) => sum + coords[idx][1], 0) / cluster.indices.length;
       const count = cluster.shops.length;
-      let iconFilename = 'storefront.svg';
-      if (count > 1 && count <= 5) iconFilename = 'Store_cluster_2.svg';
-      else if (count > 5 && count < 20) iconFilename = 'Store_cluster_3.svg';
-      else if (count >= 20) iconFilename = 'Store_cluster_4.svg';
 
-      const clusterIcon = L.icon({
-        iconUrl: `assets/${iconFilename}`,
-        iconSize: [48,48],
-        iconAnchor: [24,24],
-        popupAnchor: [0,-20]
+      let clusterHtml = '';
+      if (count === 1) {
+        clusterHtml = `<div style="position: relative;">
+          <ion-icon name="storefront" style="font-size:32px; color: var(--ion-color-primary, #3880ff);"></ion-icon>
+        </div>`;
+      } else {
+        clusterHtml = `<div style="
+          background-color: var(--ion-color-primary, #3880ff);
+          color: white;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          border: 2px solid white;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        ">${count}</div>`;
+      }
+
+      const clusterIcon = L.divIcon({
+        className: 'custom-cluster-icon',
+        html: clusterHtml,
+        iconSize: count === 1 ? [32, 32] : [40, 40],
+        iconAnchor: count === 1 ? [16, 32] : [20, 20],
+        popupAnchor: [0, count === 1 ? -32 : -20]
       });
 
       const marker = L.marker([avgLat, avgLng], { icon: clusterIcon }).addTo(this.clusterMarkersLayer!);
@@ -671,7 +699,11 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
             resolve();
           }, (err) => {
             const msg = err?.message || 'navigator.geolocation failed';
-            this.errorLog.logError(`Browser geolocation error: ${msg}`);
+            if (msg.toLowerCase().includes('denied')) {
+              console.warn(`Browser geolocation warning: User denied Geolocation.`);
+            } else {
+              this.errorLog.logError(`Browser geolocation error: ${msg}`);
+            }
             resolve();
           });
         });
@@ -735,14 +767,6 @@ export class MapPage implements AfterViewInit, OnDestroy, OnInit {
   private setMapHeight = () => {
     const el = document.getElementById('map');
     if (!el) return;
-    const tabBar = document.querySelector('.main-tab-bar');
-    const header = document.querySelector('.map-header');
-    const tabBarHeight = tabBar ? (tabBar as HTMLElement).offsetHeight : 0;
-    const headerHeight = header ? (header as HTMLElement).offsetHeight : 0;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    const heightPx = Math.max(400, viewportHeight - tabBarHeight - headerHeight);
-    el.style.height = `${heightPx}px`;
-    el.style.width = '100%';
     try { this.map?.invalidateSize(); } catch {}
   }
 

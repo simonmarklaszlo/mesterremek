@@ -227,7 +227,15 @@ const suggestionAccess = {
     );
     const suggestion = r.rows[0];
     if (!suggestion) throw new Error("Suggestion not found");
-    if (suggestion.status_code !== "approved") throw new Error("Only approved suggestions can be applied");
+    // Intended behavior: apply is only allowed once the community vote reached +5 net likes.
+    // The DB trigger should flip status to 'approved' automatically at +5, but we also
+    // accept the case where net_votes is already >= 5 and the status is still 'pending'.
+    const netVotes = Number(suggestion.net_votes ?? 0);
+    const isApproved = suggestion.status_code === "approved";
+    const canAutoApprove = suggestion.status_code === "pending" && netVotes >= 5;
+    if (!isApproved && !canAutoApprove) {
+      throw new Error("Suggestion can only be applied when it is approved (net votes >= 5)");
+    }
 
     // Apply based on type_code
     if (suggestion.type_code === "edit_name") {
@@ -241,11 +249,13 @@ const suggestionAccess = {
       if (!Array.isArray(openingHours)) throw new Error("Missing openingHours in additionalData");
 
       // Map day name -> day_id from days_of_week
-      const daysRes = await pool.query(`SELECT id, name FROM days_of_week`);
-      const nameToId = new Map<string, number>(daysRes.rows.map((d: any) => [d.name, d.id]));
+      // NOTE: in the existing schema (database/szivar.sql) the column is called `day`.
+      const daysRes = await pool.query(`SELECT id, day FROM days_of_week`);
+      const nameToId = new Map<string, number>(daysRes.rows.map((d: any) => [d.day, d.id]));
 
       // Delete existing opening hours and insert new
-      await pool.query(`DELETE FROM opening_hours WHERE shop_id = $1`, [suggestion.shop_id]);
+      // NOTE: existing schema uses `shop_opening_hours`.
+      await pool.query(`DELETE FROM shop_opening_hours WHERE shop_id = $1`, [suggestion.shop_id]);
 
       for (const oh of openingHours) {
         const dayId = nameToId.get(oh.dayOfWeek);
@@ -253,7 +263,7 @@ const suggestionAccess = {
         const open = oh.openHour === "Zárva" ? null : oh.openHour;
         const close = oh.openHour === "Zárva" ? null : oh.closeHour;
         await pool.query(
-          `INSERT INTO opening_hours (shop_id, day_id, open_hour, close_hour)
+          `INSERT INTO shop_opening_hours (shop_id, day_id, open_hour, close_hour)
            VALUES ($1, $2, $3::time, $4::time)`,
           [suggestion.shop_id, dayId, open, close]
         );
@@ -271,11 +281,13 @@ const suggestionAccess = {
         throw new Error("Missing required additionalData for new_shop");
       }
 
-      // Try to insert into shops. This assumes shops has name,address,city,latitude,longitude columns.
+      // Try to insert into shops.
+      // IMPORTANT: current schema stores coordinates in `location geometry(Point,4326)`.
+      // So we derive `location` from longitude/latitude.
       await pool.query(
-        `INSERT INTO shops (name, address, city, latitude, longitude)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [name, address, city, latitude, longitude]
+        `INSERT INTO shops (name, address, city, location)
+         VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326))`,
+        [name, address, city, longitude, latitude]
       );
     }
 

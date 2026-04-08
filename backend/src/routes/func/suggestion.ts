@@ -1,47 +1,13 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { config } from "../../config/config";
 import suggestionAccess from "../../db/suggestionAccess";
-
-function validateAuthToken(authHeader: string | undefined): boolean {
-  try {
-    const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return false;
-    jwt.verify(token, config.jwt.secret);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function getUserIdFromAuthHeader(authHeader: string | undefined): number | null {
-  try {
-    const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return null;
-    const payload = jwt.verify(token, config.jwt.secret) as any;
-    const userId = payload?.userId;
-    return typeof userId === "number" ? userId : parseInt(userId);
-  } catch {
-    return null;
-  }
-}
+import type { AuthenticatedRequest } from "../../middleware/auth";
 
 export async function handleListSuggestions(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
+  const userId = (req as AuthenticatedRequest).user!.userId;
   const filter = (req.query.filter as string | undefined) ?? "all";
   const status = req.query.status as string | undefined;
   const type = req.query.type as string | undefined;
   const shopId = req.query.shopId ? parseInt(req.query.shopId as string) : undefined;
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
 
   const normalizedFilter = filter === "own" ? "own" : "all";
 
@@ -82,22 +48,13 @@ export async function handleListSuggestions(req: Request, res: Response): Promis
 }
 
 export async function handleGetSuggestionById(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
   const id = parseInt(req.params.id ?? "", 10);
   if (!Number.isFinite(id)) {
     res.status(400).json({ success: false, message: "Invalid id" });
     return;
   }
 
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const suggestion = await suggestionAccess.getSuggestionById(id, userId);
   if (!suggestion) {
@@ -109,16 +66,7 @@ export async function handleGetSuggestionById(req: Request, res: Response): Prom
 }
 
 export async function handleCreateSuggestion(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const { type, shopId, proposedValue, additionalData } = req.body ?? {};
 
@@ -139,16 +87,7 @@ export async function handleCreateSuggestion(req: Request, res: Response): Promi
 }
 
 export async function handleVoteSuggestion(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const id = parseInt(req.params.id ?? "", 10);
   const { voteType } = req.body ?? {};
@@ -158,27 +97,37 @@ export async function handleVoteSuggestion(req: Request, res: Response): Promise
   }
 
   await suggestionAccess.upsertVote({ suggestionId: id, userId, voteType });
-  const suggestion = await suggestionAccess.getSuggestionById(id, userId);
+  let suggestion = await suggestionAccess.getSuggestionById(id, userId);
 
   if (!suggestion) {
     res.status(404).json({ success: false, message: "Not found" });
     return;
   }
 
+  // Auto-apply immediately when community threshold is reached.
+  // DB trigger should flip status to 'approved' at net>=5, but we also allow pending+net>=5.
+  // This keeps the flow simple: user votes -> suggestion becomes applied automatically.
+  try {
+    const status = (suggestion.statusCode ?? "").toLowerCase();
+    const netVotes = Number((suggestion as any).netVotes ?? 0);
+    if ((status === "approved" || status === "pending") && netVotes >= 5) {
+      await suggestionAccess.applySuggestion(id);
+      suggestion = await suggestionAccess.getSuggestionById(id, userId);
+    }
+  } catch (e: any) {
+    // If apply fails because it's not eligible (race / trigger delay) we still return the vote result.
+    // For other errors (schema issues, etc.) we'd rather not hide them completely.
+    const msg = String(e?.message ?? "");
+    if (!msg.includes("only be applied") && !msg.includes("not found")) {
+      console.warn("[handleVoteSuggestion] auto-apply failed:", e);
+    }
+  }
+
   res.status(200).json({ success: true, suggestion });
 }
 
 export async function handleRemoveVote(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const id = parseInt(req.params.id ?? "", 10);
   if (!Number.isFinite(id)) {
@@ -187,27 +136,34 @@ export async function handleRemoveVote(req: Request, res: Response): Promise<voi
   }
 
   await suggestionAccess.removeVote({ suggestionId: id, userId });
-  const suggestion = await suggestionAccess.getSuggestionById(id, userId);
+  let suggestion = await suggestionAccess.getSuggestionById(id, userId);
 
   if (!suggestion) {
     res.status(404).json({ success: false, message: "Not found" });
     return;
   }
 
+  // Edge case: if a vote removal still leaves the suggestion at/above threshold due to other votes,
+  // we still want it auto-applied.
+  try {
+    const status = (suggestion.statusCode ?? "").toLowerCase();
+    const netVotes = Number((suggestion as any).netVotes ?? 0);
+    if ((status === "approved" || status === "pending") && netVotes >= 5) {
+      await suggestionAccess.applySuggestion(id);
+      suggestion = await suggestionAccess.getSuggestionById(id, userId);
+    }
+  } catch (e: any) {
+    const msg = String(e?.message ?? "");
+    if (!msg.includes("only be applied") && !msg.includes("not found")) {
+      console.warn("[handleRemoveVote] auto-apply failed:", e);
+    }
+  }
+
   res.status(200).json({ success: true, suggestion });
 }
 
 export async function handleApplySuggestion(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const id = parseInt(req.params.id ?? "", 10);
   if (!Number.isFinite(id)) {
@@ -225,16 +181,7 @@ export async function handleApplySuggestion(req: Request, res: Response): Promis
 }
 
 export async function handleDeleteSuggestion(req: Request, res: Response): Promise<void> {
-  if (!validateAuthToken(req.headers["authorization"])) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
-
-  const userId = getUserIdFromAuthHeader(req.headers["authorization"]);
-  if (!userId) {
-    res.status(401).json({ success: false, message: "Unauthorized" });
-    return;
-  }
+  const userId = (req as AuthenticatedRequest).user!.userId;
 
   const id = parseInt(req.params.id ?? "", 10);
   if (!Number.isFinite(id)) {
