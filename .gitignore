@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 /.angular
 /frontend/SzivarClubApp/ios
 .DS_Store
+/frontend/SzivarClubApp/android/
