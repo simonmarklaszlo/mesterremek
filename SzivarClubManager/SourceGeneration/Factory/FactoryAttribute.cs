@@ -2,6 +2,10 @@ using System;
 
 namespace SzivarClubManager.SourceGeneration.Factory;
 
+/// <summary>
+///
+/// <para></para>
+/// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class FactoryAttribute : Attribute
 {
