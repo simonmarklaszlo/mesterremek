@@ -18,9 +18,9 @@ public static class FieldStateExtensions
         {
             if (string.IsNullOrWhiteSpace(value)) return FieldState.None;
 
-            if (!predicate(value)) return FieldState.Invalid;
+            if (predicate(value)) return FieldState.Valid;
 
-            return FieldState.Valid;
+            return FieldState.Invalid;
         }
 
         public static FieldState CheckOptionalIntField(string value, Func<int, bool> predicate)
