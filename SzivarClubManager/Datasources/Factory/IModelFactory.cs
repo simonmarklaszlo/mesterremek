@@ -31,6 +31,19 @@ public interface IModelFactory<T> : IFactory where T : IModel
     /// <returns>The number of affected records.</returns>
     Task<int> DeleteRange(IEnumerable<T> items);
 
+    /// <summary>
+    /// Gets a model by its identifier.
+    /// </summary>
+    /// <param name="id">The identifier of the model to retrieve.</param>
+    /// <returns>
+    /// A model instance when found; otherwise <see langword="null"/>.
+    /// </returns>
     Task<T?> GetModel(int id);
+
+    /// <summary>
+    /// Gets models for the provided identifiers.
+    /// </summary>
+    /// <param name="ids">The identifiers of the models to retrieve.</param>
+    /// <returns>An array containing the matching models.</returns>
     Task<T[]> GetModel(IEnumerable<int> ids);
 }

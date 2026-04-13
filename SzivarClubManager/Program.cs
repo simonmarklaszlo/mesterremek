@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,7 +22,9 @@ sealed class Program
 
     private static void TaskSchedulerOnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        Console.WriteLine(e.Exception);
+        e.SetObserved();
+        var baseException = e.Exception.GetBaseException();
+        Console.WriteLine($"Unobserved task exception ({baseException.GetType()}): {baseException.Message}");
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

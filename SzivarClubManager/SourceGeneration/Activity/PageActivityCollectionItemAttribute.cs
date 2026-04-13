@@ -1,7 +1,12 @@
 using System;
+using SzivarClubManager.SourceGeneration.Generated;
 
 namespace SzivarClubManager.SourceGeneration.Activity;
 
+/// <summary>
+/// <para> Adds page activity to <see cref="ActivityCollection"/></para>
+/// <para> Specifies the display name, model type, and order group of a page activity.</para>
+/// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class PageActivityCollectionItemAttribute : Attribute
 {
