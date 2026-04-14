@@ -57,5 +57,13 @@
         <DependentUpon>ChangeActivityView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\Activities\Suggestions\FlaggedSuggestionsActivityView.axaml.cs">
+        <DependentUpon>FlaggedSuggestionsActivityView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Activities\Suggestions\FlaggedSuggestionsPlaceholderView.axaml.cs">
+        <DependentUpon>FlaggedSuggestionsPlaceholderView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

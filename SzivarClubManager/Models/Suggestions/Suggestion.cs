@@ -1,7 +1,4 @@
 using System;
-using System.Threading.Tasks;
-using SzivarClubManager.Datasources.Database.Factories;
-using SzivarClubManager.Datasources.Factory;
 
 namespace SzivarClubManager.Models.Suggestions;
 
@@ -19,6 +16,7 @@ public abstract class Suggestion : IModel
     public string UpdatedAtString => field ??= UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss");
 
     public bool CanBeApproved => Status.Id is not 2 and not 4;
+    public bool CanBeDenied => Status.Id is not 3 and not 4;
 
     protected Suggestion(int id, SuggestionType type, SuggestionStatus status, User user, DateTime createdAt, DateTime updatedAt, SuggestionVotes votes)
     {

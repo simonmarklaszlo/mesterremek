@@ -2,28 +2,23 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SzivarClubManager.Configs;
-using SzivarClubManager.Datasources.Database.Factories;
-using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models.Suggestions;
 using SzivarClubManager.Services;
-using SzivarClubManager.SourceGeneration.Activity;
-using SuggestionWrapperViewModel = SzivarClubManager.ViewModels.Components.Suggestions.SuggestionWrapperViewModel;
+using SzivarClubManager.ViewModels.Components.Suggestions;
 
-namespace SzivarClubManager.ViewModels.Activities.FlaggedSuggestions;
+namespace SzivarClubManager.ViewModels.Activities.Suggestions;
 
-[ActivityCollectionItem("Problémás javaslatok", 3)]
-public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService popupService) : ActivityViewModel(popupService)
+public abstract partial class SuggestionActivityBaseViewModel(PopupService popupService) : ActivityViewModel(popupService)
 {
     public ObservableCollection<SuggestionWrapperViewModel> SuggestionsViewModels { get; } = [];
-    private readonly SuggestionFactory _suggestionsFactory = (SuggestionFactory)FactoryProvider.Instance.GetPageFactory<Suggestion>();
+    protected IPageFactory<Suggestion> SuggestionsFactory { get; } = FactoryProvider.Instance.GetPageFactory<Suggestion>();
 
     [ObservableProperty] private bool _showData = true;
     [ObservableProperty] private bool _showPlaceholder;
 
 
-    private int _currentPage = 1;
+    protected int CurrentPage { get; private set; } = 1;
     private bool _isLoading = false;
     private bool _hasMore = true;
 
@@ -39,7 +34,7 @@ public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService pop
 
         _isLoading = true;
 
-        var items = await _suggestionsFactory.GetPageOnFlagged(_currentPage, GlobalConfig.Instance.UserPreferences.PageSize, SuggestionFilter.Empty);
+        var items = await GetCurrentPageData();
 
         if (items.Length == 0)
         {
@@ -47,12 +42,12 @@ public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService pop
         }
         else
         {
-            foreach (var suggestion in items) SuggestionsViewModels.Add(new SuggestionWrapperViewModel(suggestion, OnSuggestionEdited));
+            foreach (var suggestion in items) SuggestionsViewModels.Add(new SuggestionWrapperViewModel(suggestion, OnSuggestionApproved));
 
-            _currentPage++;
+            CurrentPage++;
         }
 
-        if (_currentPage == 1 && items.Length == 0)
+        if (CurrentPage == 1 && items.Length == 0)
         {
             ShowData = false;
             ShowPlaceholder = true;
@@ -66,10 +61,12 @@ public sealed partial class FlaggedSuggestionsActivityViewModel(PopupService pop
         _isLoading = false;
     }
 
-    private async Task OnSuggestionEdited()
+    protected abstract Task<Suggestion[]> GetCurrentPageData();
+
+    private async Task OnSuggestionApproved()
     {
         SuggestionsViewModels.Clear();
-        _currentPage = 1;
+        CurrentPage = 1;
         await LoadNextPage();
     }
 }

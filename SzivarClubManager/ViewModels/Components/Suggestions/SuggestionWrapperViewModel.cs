@@ -18,6 +18,7 @@ public sealed partial class SuggestionWrapperViewModel : ViewModelBase
     public bool IsToggleable { get; }
     public bool NotToggleable => !IsToggleable;
     public bool CanBeApproved => Suggestion.CanBeApproved;
+    public bool CanBeDenied => Suggestion.CanBeDenied;
 
 
     private readonly Func<Task> _suggestionEditedCallback;
@@ -45,7 +46,7 @@ public sealed partial class SuggestionWrapperViewModel : ViewModelBase
         return SuggestionFactory.ApproveSuggestion(Suggestion);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanBeDenied))]
     private Task DenySuggestion()
     {
         _suggestionEditedCallback.Invoke();

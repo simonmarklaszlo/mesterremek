@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.FlaggedSuggestions"
+             xmlns:vm="clr-namespace:SzivarClubManager.ViewModels.Activities.Suggestions"
              xmlns:behaviors="clr-namespace:SzivarClubManager.Behaviors"
              xmlns:suggestions="clr-namespace:SzivarClubManager.Views.Components.Suggestions"
-             xmlns:flaggedSuggestions="clr-namespace:SzivarClubManager.Views.Activities.FlaggedSuggestions"
+             xmlns:flaggedSuggestions="clr-namespace:SzivarClubManager.Views.Activities.Suggestions"
+             xmlns:vm1="clr-namespace:SzivarClubManager.ViewModels.Activities.Suggestions"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SzivarClubManager.Views.Activities.FlaggedSuggestions.FlaggedSuggestionsActivityView"
-             x:DataType="vm:FlaggedSuggestionsActivityViewModel">
+             x:Class="SzivarClubManager.Views.Activities.Suggestions.FlaggedSuggestionsActivityView"
+             x:DataType="vm1:FlaggedSuggestionsActivityViewModel">
     <Grid>
         <ScrollViewer IsVisible="{Binding ShowData}">
             <Interaction.Behaviors>
