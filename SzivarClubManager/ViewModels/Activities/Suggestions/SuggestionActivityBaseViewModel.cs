@@ -67,6 +67,7 @@ public abstract partial class SuggestionActivityBaseViewModel(PopupService popup
     {
         SuggestionsViewModels.Clear();
         CurrentPage = 1;
+        _hasMore = true;
         await LoadNextPage();
     }
 }
