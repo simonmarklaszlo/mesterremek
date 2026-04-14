@@ -1,0 +1,3 @@
+Windows/Output/
+Windows/InnoScripts/*
+!Windows/InnoScripts/szivarclubmanager_install_win-x64.iss
