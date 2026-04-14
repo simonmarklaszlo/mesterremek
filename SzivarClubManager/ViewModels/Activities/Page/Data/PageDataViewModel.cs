@@ -55,6 +55,7 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
     private readonly IPageFactory<TModel> _factory;
     private readonly PopupService _popupService;
     private readonly PageController<TModel> _controller;
+    private Task? _loadCurrentPageTask;
 
     protected abstract TFilter Filter { get; }
     public abstract MinimalFilterViewModel<TFilter, TModel> MinimalFilterViewModel { get; }
@@ -71,7 +72,17 @@ public abstract partial class PageDataViewModel<TModel, TFilter> : ViewModelBase
 
     public Task InitializeAsync() => LoadCurrentPage();
 
-    private async Task LoadCurrentPage()
+    public override void OnOpening() => _ = LoadCurrentPage();
+
+    private Task LoadCurrentPage()
+    {
+        if (_loadCurrentPageTask is { IsCompleted: false }) return _loadCurrentPageTask;
+
+        _loadCurrentPageTask = LoadCurrentPageCore();
+        return _loadCurrentPageTask;
+    }
+
+    private async Task LoadCurrentPageCore()
     {
         CurrentPageData = await _factory.GetPage(CurrentPage, GlobalConfig.Instance.UserPreferences.PageSize, Filter);
 
