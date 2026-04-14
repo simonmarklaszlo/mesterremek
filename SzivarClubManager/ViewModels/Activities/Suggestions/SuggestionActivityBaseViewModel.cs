@@ -32,6 +32,8 @@ public abstract partial class SuggestionActivityBaseViewModel(PopupService popup
     {
         if (_isLoading || !_hasMore) return;
 
+        await Task.Delay(50);
+
         _isLoading = true;
 
         var items = await GetCurrentPageData();

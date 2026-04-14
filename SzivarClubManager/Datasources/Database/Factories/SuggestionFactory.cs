@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Datasources.Factory;
 using SzivarClubManager.Models;
 using SzivarClubManager.Models.Suggestions;
+using SzivarClubManager.Models.Time;
 using SzivarClubManager.SourceGeneration.Factory;
 
 namespace SzivarClubManager.Datasources.Database.Factories;
@@ -199,12 +201,126 @@ public sealed class SuggestionFactory : IPageFactory<Suggestion>
 
     public async Task ApproveSuggestion(Suggestion suggestion)
     {
-        // TODO : Implement
+        switch (suggestion)
+        {
+            case EditShopNameSuggestion editNameSuggestion:
+                await using (var command = _connection.CreateCommand("""
+                                                                     UPDATE shops
+                                                                     SET name = @name,
+                                                                         updated_at = NOW()
+                                                                     WHERE id = @shopId;
+                                                                     """))
+                {
+                    command.Parameters.AddWithValue("name", editNameSuggestion.NewName);
+                    command.Parameters.AddWithValue("shopId", editNameSuggestion.Shop.Id);
+                    if (await command.ExecuteNonQueryAsync() == 0)
+                    {
+                        throw new InvalidOperationException($"Shop {editNameSuggestion.Shop.Id} not found.");
+                    }
+                }
+
+                break;
+
+            case EditShopAddressSuggestion editAddressSuggestion:
+                {
+                    await using var command = _connection.CreateCommand("""
+                                                                    UPDATE shops
+                                                                    SET address = @address,
+                                                                        updated_at = NOW()
+                                                                    WHERE id = @shopId;
+                                                                    """);
+
+                    command.Parameters.AddWithValue("address", editAddressSuggestion.NewAddress);
+                    command.Parameters.AddWithValue("shopId", editAddressSuggestion.Shop.Id);
+                    if (await command.ExecuteNonQueryAsync() == 0)
+                    {
+                        throw new InvalidOperationException($"Shop {editAddressSuggestion.Shop.Id} not found.");
+                    }
+                }
+                break;
+
+            case EditShopOpeningHours editHoursSuggestion:
+                await using (var deleteCommand = _connection.CreateCommand("""
+                                                                           DELETE FROM shop_opening_hours
+                                                                           WHERE shop_id = @shopId;
+                                                                           """))
+                {
+                    deleteCommand.Parameters.AddWithValue("shopId", editHoursSuggestion.Shop.Id);
+                    await deleteCommand.ExecuteNonQueryAsync();
+                }
+
+                foreach (ShopOpeningHour openingHour in editHoursSuggestion.NewOpeningHours.OpeningHours)
+                {
+                    if (openingHour is EmptyShopOpeningHour) continue;
+
+                    await using var insertCommand = _connection.CreateCommand("""
+                                                                              INSERT INTO shop_opening_hours (shop_id, day_id, open_hour, close_hour)
+                                                                              VALUES (@shopId, @dayId, @openHour, @closeHour);
+                                                                              """);
+
+                    insertCommand.Parameters.AddWithValue("shopId", editHoursSuggestion.Shop.Id);
+                    insertCommand.Parameters.AddWithValue("dayId", (int)openingHour.DayOfWeek);
+                    insertCommand.Parameters.AddWithValue("openHour", openingHour.OpeningHour);
+                    insertCommand.Parameters.AddWithValue("closeHour", openingHour.ClosingHour);
+                    await insertCommand.ExecuteNonQueryAsync();
+                }
+
+                break;
+
+            case NewShopSuggestion newShopSuggestion:
+                {
+                    const double latitude = 0d;
+                    const double longitude = 0d;
+
+                    await using var command = _connection.CreateCommand("""
+                                                                    INSERT INTO shops (name, address, city, location, created_at, updated_at)
+                                                                    VALUES (@name, @address, @city,
+                                                                            ST_SetSRID(ST_MakePoint(@longitude, @latitude), 4326),
+                                                                            NOW(), NOW());
+                                                                    """);
+
+                    command.Parameters.AddWithValue("name", newShopSuggestion.Name);
+                    command.Parameters.AddWithValue("address", newShopSuggestion.Address);
+                    command.Parameters.AddWithValue("city", newShopSuggestion.City);
+                    command.Parameters.AddWithValue("longitude", longitude);
+                    command.Parameters.AddWithValue("latitude", latitude);
+                    await command.ExecuteNonQueryAsync();
+                }
+                break;
+
+            default:
+                throw new NotSupportedException($"Suggestion type {suggestion.GetType().Name} is not supported.");
+        }
+
+        await using (var command = _connection.CreateCommand("""
+                                                             UPDATE suggestions
+                                                             SET status_id = (SELECT id FROM suggestion_statuses WHERE code = 'applied'),
+                                                                 updated_at = NOW()
+                                                             WHERE id = @id;
+                                                             """))
+        {
+            command.Parameters.AddWithValue("id", suggestion.Id);
+            if (await command.ExecuteNonQueryAsync() == 0)
+            {
+                throw new InvalidOperationException($"Suggestion {suggestion.Id} not found.");
+            }
+        }
     }
 
     public async Task DenySuggestion(Suggestion suggestion)
     {
-        // TODO : Implement
+        await using var command = _connection.CreateCommand("""
+                                                            UPDATE suggestions
+                                                            SET status_id = 3,
+                                                                updated_at = NOW()
+                                                            WHERE id = @id;
+                                                            """);
+
+        command.Parameters.AddWithValue("id", suggestion.Id);
+        if (await command.ExecuteNonQueryAsync() == 0)
+        {
+            throw new InvalidOperationException($"Suggestion {suggestion.Id} not found.");
+        }
     }
 
     public Task<Suggestion[]> GetModel(IEnumerable<int> ids)
