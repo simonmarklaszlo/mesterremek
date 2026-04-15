@@ -50,20 +50,6 @@ if (!(Test-Path $generatedFile)) {
 }
 
 # ----------------------------
-# FIX .ENV (optional)
-# ----------------------------
-$envFile = Join-Path $publishDir ".env"
-
-if (Test-Path $envFile) {
-    $lines = Get-Content $envFile
-    if ($lines.Count -gt 0) {
-        $lines[0] = "DB_HOST=$serverIp"
-        Set-Content $envFile $lines
-        Write-Host ".env updated"
-    }
-}
-
-# ----------------------------
 # UPDATE SOURCE PATH SAFETY
 # ----------------------------
 $content = Get-Content $generatedFile -Raw
