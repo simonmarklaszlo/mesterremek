@@ -40,17 +40,17 @@ public sealed partial class SuggestionWrapperViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanBeApproved))]
-    private Task ApproveSuggestion()
+    private async Task ApproveSuggestion()
     {
-        _suggestionEditedCallback.Invoke();
-        return SuggestionFactory.ApproveSuggestion(Suggestion);
+        await SuggestionFactory.ApproveSuggestion(Suggestion);
+        _ = _suggestionEditedCallback.Invoke();
     }
 
     [RelayCommand(CanExecute = nameof(CanBeDenied))]
-    private Task DenySuggestion()
+    private async Task DenySuggestion()
     {
-        _suggestionEditedCallback.Invoke();
-        return SuggestionFactory.DenySuggestion(Suggestion);
+        await SuggestionFactory.DenySuggestion(Suggestion);
+        _ = _suggestionEditedCallback.Invoke();
     }
 
     private static SuggestionFactory SuggestionFactory => field ??= (SuggestionFactory)FactoryProvider.Instance.GetFactory<Suggestion>();
