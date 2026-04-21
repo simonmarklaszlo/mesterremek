@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using SzivarClubManager.Datasources.Database.Filters;
 using SzivarClubManager.Models;
@@ -24,7 +23,6 @@ public abstract partial class FilterViewModel<TFilter, TModel> : ViewModelBase
     [RelayCommand]
     private void Cancel()
     {
-        Debugger.Break();
         PopupService.ClosePopup();
     }
 
