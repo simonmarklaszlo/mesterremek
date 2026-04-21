@@ -14,7 +14,7 @@ namespace SzivarClubManager.Datasources.Database.Factories;
 [Factory]
 public sealed class ShopFactory : IPageFactory<Shop>
 {
-    private const string NamePlaceholder = "Traffik";
+    private const string NamePlaceholder = "Trafik";
     private const string TableName = "shops";
     private readonly DatabaseConnection _connection;
 
