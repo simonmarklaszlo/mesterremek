@@ -9,7 +9,7 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem("Cigi Márkák", typeof(Brand), 1)]
+[PageActivityCollectionItem("Szivar Márkák", typeof(Brand), 1)]
 public sealed class BrandActivityViewModel(
     PopupService popupService,
     IPageFactory<Brand> factory

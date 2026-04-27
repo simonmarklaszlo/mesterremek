@@ -9,7 +9,7 @@ using SzivarClubManager.ViewModels.Activities.Page.ItemEdit;
 
 namespace SzivarClubManager.ViewModels.Activities.Page.Wrapper;
 
-[PageActivityCollectionItem("Cigik", typeof(Cigar), 1)]
+[PageActivityCollectionItem("Szivarok", typeof(Cigar), 1)]
 public sealed class CigarActivityViewModel(
     PopupService popupService,
     IPageFactory<Cigar> factory
