@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using SzivarClubManager.SourceGenerator.Generators.Filters.Target;
 using SzivarClubManager.SourceGenerator.Generators.FilterViewModels.Target;
@@ -126,18 +127,16 @@ public static class ModelFilterViewModel
     {
         sb.Append("    private bool CanApply => ");
 
-        bool anyBefore = false;
-
-        foreach (var prop in filter.Properties)
+        var props = filter.Properties.ToArray();
+        for (int i = 0; i < props.Length; i++)
         {
-            if (!anyBefore) anyBefore = true;
-            else sb.Append("                             ");
+            var prop = props[i];
+            var end = i == props.Length - 1 ? ";" : " &&";
 
-            sb.AppendLine($"{prop.Name}State is not {FieldState}.Invalid &&");
+            if (i != 0) sb.Append("                             ");
+            sb.Append($"{prop.Name}State is not {FieldState}.Invalid");
+            sb.AppendLine(end);
         }
-
-        sb.Remove(sb.Length - 5, 5); // " &&\n";
-        sb.AppendLine(";");
     }
 
     private static void GenerateOnChangedMethods(StringBuilder sb, FilterModel filter)
